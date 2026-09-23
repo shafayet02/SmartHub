@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Smart Hub V4</title>
+    <meta name="description" content="A cloud-connected smart home dashboard for monitoring power, cost and automations across your devices.">
+    <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23007aff'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <style>
+        :root { color-scheme: light dark; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; min-height: 100vh; overflow-x: hidden; transition: background-color 0.5s ease, color 0.5s ease; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+        .ambient-bg { position: fixed; inset: 0; z-index: -1; transition: opacity 0.5s ease; pointer-events: none; }
+        .bg-orb { position: absolute; border-radius: 50%; filter: blur(120px); animation: float 15s infinite ease-in-out alternate; }
+        @keyframes float { 0% { transform: translateY(0) scale(1); } 100% { transform: translateY(80px) scale(1.1); } }
+
+        body { color: #1c1c1e; background-color: #f2f2f7; }
+        .ambient-light { background: linear-gradient(135deg, #e0eafc, #cfdef3); opacity: 1; }
+        .ambient-dark { opacity: 0; }
+        .ambient-light .bg-orb { mix-blend-mode: multiply; }
+        .ambient-light .orb-1 { width: 55vw; height: 55vw; background: rgba(52, 199, 89, 0.25); top: -10%; left: -10%; }
+        .ambient-light .orb-2 { width: 65vw; height: 65vw; background: rgba(0, 122, 255, 0.2); bottom: -10%; right: -10%; animation-delay: -5s; }
+
+        .apple-card { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(40px) saturate(150%); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 28px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); transition: 0.3s; }
+        .apple-input { background: rgba(0,0,0,0.04); border: none; border-radius: 14px; color: #1c1c1e; transition: 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+        .apple-input:focus { background: rgba(0,0,0,0.08); outline: none; }
+        .apple-sub { color: #8e8e93; }
+
+        .dark body { color: #f2f2f7; background-color: #000000; }
+        .dark .ambient-light { opacity: 0; }
+        .dark .ambient-dark { background: linear-gradient(135deg, #09090b, #18181b); opacity: 1; }
+        .dark .ambient-dark .bg-orb { mix-blend-mode: screen; }
+        .dark .ambient-dark .orb-1 { width: 55vw; height: 55vw; background: rgba(10, 132, 255, 0.25); top: -10%; left: -10%; }
+        .dark .ambient-dark .orb-2 { width: 65vw; height: 65vw; background: rgba(94, 92, 230, 0.2); bottom: -10%; right: -10%; animation-delay: -5s; }
+        .dark .apple-card { background: rgba(30, 30, 32, 0.55); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); }
+        .dark .apple-input { background: rgba(255,255,255,0.08); color: #f2f2f7; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
+        .dark .apple-input:focus { background: rgba(255,255,255,0.15); }
+        .dark .apple-sub { color: #98989d; }
+
+        .apple-btn { background: #007aff; color: white; border-radius: 14px; font-weight: 600; transition: 0.2s; }
+        .apple-btn:active { transform: scale(0.95); }
+        .apple-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .power-btn { width: 150px; height: 150px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
+        .power-off { background: linear-gradient(145deg, #ff3b30, #dc3545); box-shadow: 0 15px 35px rgba(255, 59, 48, 0.4); color: white; border: none; }
+        @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.6); } 70% { box-shadow: 0 0 0 20px rgba(52, 199, 89, 0); } 100% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); } }
+        .power-on { background: linear-gradient(145deg, #34c759, #28a745); color: white; animation: pulse-ring 2.5s infinite; border: none; }
+        .power-btn:active { transform: scale(0.92); }
+        .power-btn:disabled { cursor: not-allowed; opacity: 0.6; animation: none; }
+
+        .toggle-wrapper { position: relative; width: 50px; height: 28px; display: inline-block; flex-shrink: 0; }
+        .toggle-checkbox { opacity: 0; width: 0; height: 0; position: absolute; }
+        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #d1d1d6; transition: .3s cubic-bezier(0.4, 0.0, 0.2, 1); border-radius: 34px; }
+        .dark .toggle-slider { background-color: #39393d; }
+        .toggle-slider:before { position: absolute; content: ""; height: 24px; width: 24px; left: 2px; bottom: 2px; background-color: white; transition: .3s cubic-bezier(0.4, 0.0, 0.2, 1); border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .toggle-checkbox:checked + .toggle-slider { background-color: #34c759; }
+        .toggle-checkbox:checked + .toggle-slider:before { transform: translateX(22px); }
+
+        .mode-active { border: 2px solid #007aff !important; color: #007aff !important; font-weight: 700; background: rgba(0,122,255,0.1); }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+
+        /* --- New: boot skeleton --- */
+        .skeleton-overlay { position: fixed; inset: 0; z-index: 90; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; background: inherit; }
+        .spinner { width: 44px; height: 44px; border-radius: 50%; border: 4px solid rgba(120,120,128,0.25); border-top-color: #007aff; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* --- New: offline banner --- */
+        .offline-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 95; text-align: center; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.05em; padding: 0.6rem; background: #ff9500; color: white; transform: translateY(-100%); transition: transform 0.35s ease; padding-top: calc(0.6rem + env(safe-area-inset-top, 0px)); }
+        .offline-banner.show { transform: translateY(0); }
+
+        /* --- New: toasts --- */
+        .toast-container { position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%); z-index: 110; display: flex; flex-direction: column-reverse; gap: 0.5rem; width: min(92vw, 380px); pointer-events: none; }
+        .toast { pointer-events: auto; padding: 0.85rem 1.1rem; border-radius: 16px; font-size: 0.85rem; font-weight: 600; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.25); animation: toastIn 0.25s ease; display: flex; align-items: center; gap: 0.5rem; }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .toast-success { background: #34c759; } .toast-error { background: #ff3b30; } .toast-info { background: #007aff; }
+
+        /* --- New: device grid --- */
+        .device-chip { border-radius: 20px; padding: 0.9rem; display: flex; flex-direction: column; gap: 0.5rem; cursor: pointer; transition: 0.2s; text-align: left; border: 2px solid transparent; }
+        .device-chip.active-device { border-color: #007aff; }
+        .status-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+        /* --- New: activity log --- */
+        .activity-row { display: flex; gap: 0.75rem; align-items: flex-start; padding: 0.65rem 0; border-bottom: 1px solid rgba(120,120,128,0.15); font-size: 0.82rem; }
+        .activity-row:last-child { border-bottom: none; }
+        .activity-icon { width: 30px; height: 30px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+    </style>
+</head>
+<body class="p-4 sm:p-6 lg:p-10">
+    <div class="ambient-bg ambient-light"><div class="bg-orb orb-1"></div><div class="bg-orb orb-2"></div></div>
+    <div class="ambient-bg ambient-dark"><div class="bg-orb orb-1"></div><div class="bg-orb orb-2"></div></div>
+
+    <div id="offlineBanner" class="offline-banner">⚠️ <span data-i18n="Connection lost - retrying...">Connection lost — retrying...</span></div>
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Boot skeleton, removed once first successful data load completes -->
+    <div id="bootSkeleton" class="skeleton-overlay">
+        <div class="spinner"></div>
+        <p class="apple-sub font-bold text-sm" data-i18n="Connecting to your hub...">Connecting to your hub...</p>
+    </div>
+
+
+    <div class="max-w-4xl mx-auto space-y-6 relative z-10">
+        <!-- Header -->
+        <div class="apple-card p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-extrabold tracking-tight" id="clockTime">00:00</h1>
+                <p class="apple-sub font-semibold text-sm mt-1" id="clockDate">Loading Date...</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3 hidden sm:flex text-right mr-2">
+                    <div>
+                        <p class="font-bold text-sm" id="weatherTemp">--°C</p>
+                        <p class="apple-sub text-xs" id="weatherDesc">Loading...</p>
+                    </div>
+                    <div class="text-3xl" id="weatherIcon">⛅</div>
+                </div>
+                <select id="deviceSelector" onchange="switchDevice()" aria-label="Select device" class="apple-input font-bold px-4 py-2 cursor-pointer appearance-none text-sm"></select>
+                <button id="installBtn" onclick="triggerInstall()" class="hidden w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 items-center justify-center hover:bg-black/10 transition text-base" title="Install App" aria-label="Install App">⬇️</button>
+                <button onclick="toggleLang()" class="w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center hover:bg-black/10 transition font-extrabold text-sm text-blue-500" id="langBtn" aria-label="Toggle language">EN</button>
+                <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center hover:bg-black/10 transition" id="themeBtn" aria-label="Toggle theme">🌙</button>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="apple-card p-2 flex gap-2 overflow-x-auto no-scrollbar">
+            <button onclick="switchTab('tab-overview')" id="btn-tab-overview" data-i18n="Overview" class="tab-btn flex-1 py-2 px-4 rounded-xl font-bold text-sm bg-black/10 dark:bg-white/10 transition">Overview</button>
+            <button onclick="switchTab('tab-analytics')" id="btn-tab-analytics" data-i18n="Analytics" class="tab-btn flex-1 py-2 px-4 rounded-xl font-bold text-sm transition hover:bg-black/5">Analytics</button>
+            <button onclick="switchTab('tab-automation')" id="btn-tab-automation" data-i18n="Automation" class="tab-btn flex-1 py-2 px-4 rounded-xl font-bold text-sm transition hover:bg-black/5">Automation</button>
+            <button onclick="switchTab('tab-settings')" id="btn-tab-settings" data-i18n="Settings" class="tab-btn flex-1 py-2 px-4 rounded-xl font-bold text-sm transition hover:bg-black/5">Settings</button>
+        </div>
+
+        <!-- TAB: OVERVIEW -->
+        <div id="tab-overview" class="tab-content fade-in space-y-6">
+            <div class="apple-card p-10 flex flex-col items-center justify-center">
+                <div id="statusBadge" class="mb-8 px-4 py-1.5 rounded-full bg-gray-500/20 text-xs font-extrabold tracking-widest text-gray-500 transition-colors" data-i18n="CONNECTING">CONNECTING</div>
+                <button id="powerBtn" class="power-btn power-off" onclick="togglePower()" aria-label="Toggle power">
+                    <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </button>
+                <p id="powerText" class="text-4xl font-black mt-8 tracking-widest text-red-500 transition-colors" data-i18n="OFF">OFF</p>
+                <p id="timerText" class="text-sm mt-3 font-bold text-orange-500 hidden"></p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="apple-card p-6 text-center">
+                    <p class="apple-sub text-xs font-extrabold tracking-widest mb-2" data-i18n="VOLTAGE">VOLTAGE</p>
+                    <p class="text-3xl font-black text-blue-500" id="voltage">--</p>
+                </div>
+                <div class="apple-card p-6 text-center">
+                    <p class="apple-sub text-xs font-extrabold tracking-widest mb-2" data-i18n="WATTAGE">WATTAGE</p>
+                    <p class="text-3xl font-black text-orange-500" id="power">--</p>
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="masterToggle(true)" data-i18n="Master ON" class="flex-1 apple-card bg-green-500/10 text-green-600 font-bold py-4 rounded-2xl transition hover:bg-green-500/20">Master ON</button>
+                <button onclick="masterToggle(false)" data-i18n="Master OFF" class="flex-1 apple-card bg-red-500/10 text-red-600 font-bold py-4 rounded-2xl transition hover:bg-red-500/20">Master OFF</button>
+            </div>
+
+            <!-- New: All-devices at-a-glance grid -->
+            <div class="apple-card p-6">
+                <h2 class="text-lg font-extrabold mb-4" data-i18n="All Devices">All Devices</h2>
+                <div id="deviceGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+            </div>
+        </div>
+
+        <!-- TAB: ANALYTICS -->
+        <div id="tab-analytics" class="tab-content hidden space-y-6 fade-in">
+            <div class="apple-card p-8">
+                <div class="flex flex-wrap justify-between items-center mb-6 border-b border-gray-500/20 pb-5 gap-4">
+                    <h2 class="text-2xl font-extrabold" data-i18n="Insights">Insights</h2>
+                    <div class="flex gap-2">
+                        <select id="chartTimeframe" class="apple-input px-3 py-2 cursor-pointer text-sm font-bold" onchange="handleMetricOptions(); updateChart()">
+                            <option value="realtime" data-i18n="Live">Live</option><option value="hourly" data-i18n="Today (Hourly)">Today (Hourly)</option>
+                            <option value="daily" data-i18n="7 Days">7 Days</option><option value="weekly" data-i18n="4 Weeks">4 Weeks</option><option value="monthly" data-i18n="6 Months">6 Months</option>
+                        </select>
+                        <select id="chartDataType" class="apple-input px-3 py-2 cursor-pointer text-sm font-bold" onchange="updateChart()">
+                            <option value="energy" id="opt-energy" data-i18n="Energy">Energy</option><option value="cost" id="opt-cost" data-i18n="Cost">Cost</option>
+                            <option value="power" id="opt-power" data-i18n="Power (W)">Power (W)</option><option value="voltage" id="opt-voltage" data-i18n="Voltage (V)">Voltage (V)</option>
+                        </select>
+                        <select id="chartStyle" class="apple-input px-3 py-2 cursor-pointer text-sm font-bold" onchange="updateChart()">
+                            <option value="bar" data-i18n="Bar">Bar</option><option value="line" data-i18n="Line">Line</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+                    <div class="p-5 bg-black/5 dark:bg-white/5 rounded-3xl">
+                        <p class="apple-sub text-xs font-extrabold tracking-widest" data-i18n="TODAY vs YESTERDAY">TODAY vs YESTERDAY</p>
+                        <div class="flex items-end gap-2 mt-2">
+                            <p class="text-3xl font-black text-green-500" id="todayUsage">--</p>
+                            <p class="text-sm font-bold mb-1" id="usageDiff">--</p>
+                        </div>
+                    </div>
+                    <div class="p-5 bg-black/5 dark:bg-white/5 rounded-3xl">
+                        <p class="apple-sub text-xs font-extrabold tracking-widest" data-i18n="MONTHLY FORECAST">MONTHLY FORECAST</p>
+                        <p class="text-3xl font-black mt-2 text-purple-500" id="monthForecast">--</p>
+                    </div>
+                    <div class="p-5 bg-black/5 dark:bg-white/5 rounded-3xl col-span-2 sm:col-span-1">
+                        <p class="apple-sub text-xs font-extrabold tracking-widest" data-i18n="PEAK HOUR TODAY">PEAK HOUR TODAY</p>
+                        <p class="text-3xl font-black mt-2 text-orange-500" id="peakHour">--</p>
+                    </div>
+                </div>
+                <div style="height: 250px;"><canvas id="usageChart"></canvas></div>
+            </div>
+
+            <div class="apple-card p-8">
+                 <div class="flex justify-between text-xs font-bold mb-3">
+                    <span class="apple-sub" data-i18n="BUDGET PROGRESS:">BUDGET PROGRESS: <span id="budgetDisplay" class="text-current inline ml-1"></span></span>
+                    <span id="budgetPercent" class="text-blue-500 font-black">0%</span>
+                </div>
+                <div class="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                    <div id="budgetBar" class="bg-blue-500 h-3 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: AUTOMATION -->
+        <div id="tab-automation" class="tab-content hidden space-y-6 fade-in">
+            <div class="apple-card p-8">
+                <h2 class="text-xl font-extrabold mb-5" data-i18n="Operating Mode">Operating Mode</h2>
+                <div class="grid grid-cols-2 gap-3 mb-5">
+                    <button id="mode-manual" onclick="setMode('manual')" data-i18n="Manual" class="apple-input border border-transparent font-semibold py-3 rounded-2xl text-sm">Manual</button>
+                    <button id="mode-day" onclick="setMode('day')" data-i18n="Day" class="apple-input border border-transparent font-semibold py-3 rounded-2xl text-sm">☀️ Day</button>
+                    <button id="mode-night" onclick="setMode('night')" data-i18n="Night" class="apple-input border border-transparent font-semibold py-3 rounded-2xl text-sm">🌙 Night</button>
+                    <button onclick="activateSleepMode()" data-i18n="Sleep (3h)" class="apple-input border border-transparent font-semibold py-3 rounded-2xl text-sm text-indigo-500">💤 Sleep (3h)</button>
+                </div>
+            </div>
+
+            <div class="apple-card p-8 space-y-4">
+                <div class="flex justify-between items-center bg-black/5 dark:bg-white/5 p-4 rounded-2xl">
+                    <div>
+                        <p class="font-bold text-sm" data-i18n="Standby Auto-Kill">Standby Auto-Kill</p>
+                        <p class="text-xs apple-sub font-medium mt-1" data-i18n="Stops power if <5W for 10m">Stops power if &lt;5W for 10m</p>
+                    </div>
+                    <label class="toggle-wrapper">
+                        <input type="checkbox" id="standbyToggle" onchange="toggleAutomation('standbyKill')" class="toggle-checkbox"/>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="bg-black/5 dark:bg-white/5 p-4 rounded-2xl">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-bold text-sm" data-i18n="Voltage Guard">Voltage Guard</p>
+                            <p class="text-xs apple-sub font-medium mt-1 text-red-500" data-i18n="Auto-kill on dangerous voltage">Auto-kill on dangerous voltage</p>
+                        </div>
+                        <label class="toggle-wrapper">
+                            <input type="checkbox" id="voltageToggle" onchange="toggleAutomation('voltageProtect')" class="toggle-checkbox"/>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="flex gap-4 mt-4 pt-4 border-t border-gray-500/20">
+                        <div class="flex-1">
+                            <label class="text-xs apple-sub font-extrabold tracking-wider block mb-2" data-i18n="MIN (V)">MIN (V)</label>
+                            <input type="number" id="vMinInput" onchange="saveVoltageLimits()" class="apple-input px-3 py-2 w-full text-sm font-bold">
+                        </div>
+                        <div class="flex-1">
+                            <label class="text-xs apple-sub font-extrabold tracking-wider block mb-2" data-i18n="MAX (V)">MAX (V)</label>
+                            <input type="number" id="vMaxInput" onchange="saveVoltageLimits()" class="apple-input px-3 py-2 w-full text-sm font-bold">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center bg-black/5 dark:bg-white/5 p-4 rounded-2xl mb-6">
+                    <div>
+                        <p class="font-bold text-sm" data-i18n="Strict Budget Lock">Strict Budget Lock</p>
+                        <p class="text-xs apple-sub font-medium mt-1" data-i18n="Auto-kill if budget hits 100%">Auto-kill if budget hits 100%</p>
+                    </div>
+                    <label class="toggle-wrapper">
+                        <input type="checkbox" id="budgetToggle" onchange="toggleAutomation('budgetKill')" class="toggle-checkbox"/>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <hr class="border-gray-500/20 my-6">
+
+                <div class="mb-5 flex gap-2">
+                    <input type="number" id="timerMins" placeholder="Mins" min="1" class="apple-input px-4 py-3 w-20 text-sm font-bold">
+                    <select id="timerAction" class="apple-input px-3 py-3 text-sm font-bold"><option value="true" data-i18n="ON">ON</option><option value="false" data-i18n="OFF">OFF</option></select>
+                    <button onclick="setTimer()" data-i18n="Timer" class="apple-btn px-5 py-3 text-sm">Timer</button>
+                </div>
+                <div>
+                    <div class="flex gap-2 mb-4">
+                        <input type="time" id="schedTime" class="apple-input px-3 py-3 flex-1 text-sm font-bold">
+                        <select id="schedAction" class="apple-input px-3 py-3 text-sm font-bold"><option value="true" data-i18n="ON">ON</option><option value="false" data-i18n="OFF">OFF</option></select>
+                        <button onclick="addSchedule()" class="apple-btn px-5 py-3 text-sm">+</button>
+                    </div>
+                    <div id="scheduleList" class="space-y-2 max-h-32 overflow-y-auto pr-2"></div>
+                </div>
+            </div>
+
+            <!-- New: Activity Log -->
+            <div class="apple-card p-8">
+                <h2 class="text-xl font-extrabold mb-3" data-i18n="Recent Activity">Recent Activity</h2>
+                <div id="activityLog" class="max-h-64 overflow-y-auto pr-1">
+                    <p class="apple-sub text-sm" data-i18n="No recent activity yet.">No recent activity yet.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: SETTINGS -->
+        <div id="tab-settings" class="tab-content hidden space-y-6 fade-in">
+            <div class="apple-card p-8">
+                <h2 class="text-xl font-extrabold mb-5" data-i18n="Tariff & Preferences">Tariff & Preferences</h2>
+                <div class="flex gap-4 mb-6">
+                    <div class="flex-1">
+                        <label class="text-xs apple-sub font-extrabold tracking-wider block mb-2" data-i18n="RATE">RATE</label>
+                        <input type="number" id="rateInput" step="0.5" min="0" onchange="saveSettings()" class="apple-input px-4 py-3 w-full text-sm font-bold">
+                    </div>
+                    <div class="flex-1">
+                        <label class="text-xs apple-sub font-extrabold tracking-wider block mb-2" data-i18n="CURRENCY">CURRENCY</label>
+                        <select id="currencySelect" onchange="saveSettings()" class="apple-input px-4 py-3 w-full text-sm font-bold">
+                            <option value="BDT">BDT (৳)</option><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option><option value="CNY">CNY (¥)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <label class="text-xs apple-sub font-extrabold tracking-wider block mb-2" data-i18n="WEATHER LOCATION">WEATHER LOCATION</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="locInput" class="apple-input px-4 py-3 w-full text-sm font-bold">
+                        <button onclick="saveLocation()" data-i18n="Save" class="apple-btn px-4 text-sm">Save</button>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="promptBudget()" data-i18n="Set Budget" class="flex-1 apple-input text-xs font-bold py-3 rounded-2xl hover:bg-black/5 transition">Set Budget</button>
+                    <button onclick="exportData()" data-i18n="Export CSV" class="flex-1 bg-blue-500/10 text-blue-500 text-xs font-bold py-3 rounded-2xl hover:bg-blue-500/20 transition">📥 Export CSV</button>
+                </div>
+            </div>
+
+            <div class="apple-card p-8">
+                <h2 class="text-xl font-extrabold mb-5" data-i18n="System Management">System Management</h2>
+                <div class="flex gap-3 mb-4">
+                    <button onclick="addNewDevice()" data-i18n="Add Device" class="apple-btn py-3 px-4 flex-1 text-sm">Add Device</button>
+                    <button onclick="renameDevice()" data-i18n="Rename" class="bg-black/5 dark:bg-white/10 font-bold py-3 px-4 rounded-2xl text-sm transition hover:bg-black/10">Rename</button>
+                    <button onclick="removeDevice()" data-i18n="Remove Device" class="bg-red-500/15 text-red-600 font-bold py-3 px-4 rounded-2xl text-sm transition hover:bg-red-500/25">Remove Device</button>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="powerCycle()" data-i18n="Reboot" class="flex-1 bg-orange-500/10 text-orange-500 font-bold py-3 rounded-2xl text-sm hover:bg-orange-500/20 transition">🔌 Reboot</button>
+                    <button onclick="clearData()" data-i18n="Clear History DB" class="flex-1 bg-red-500/10 text-red-500 text-xs font-bold py-3 rounded-2xl transition hover:bg-red-500/20">Clear History DB</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="/app.js"></script>
+</body>
+</html>

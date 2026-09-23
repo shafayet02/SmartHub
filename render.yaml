@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: smarthub
+    runtime: node
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: MONGODB_URI
+        sync: false
+      - key: TUYA_CLIENT_ID
+        sync: false
+      - key: TUYA_SECRET
+        sync: false
+      - key: HUB_TIMEZONE
+        value: Asia/Dhaka

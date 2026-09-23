@@ -1,0 +1,25 @@
+{
+  "name": "smart-ac-hub",
+  "version": "4.0.2",
+  "description": "Cloud-connected Smart AC / IoT hub with live power monitoring, cost tracking, automations and a multi-device dashboard",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "check": "node --check server.js && node --check public/app.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "compression": "^1.7.5",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "mongodb": "^6.12.0"
+  },
+  "license": "MIT"
+}
