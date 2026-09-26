@@ -43,12 +43,13 @@
         .dark .apple-input:focus { background: rgba(255,255,255,0.15); }
         .dark .apple-sub { color: #98989d; }
 
-        .apple-btn { background: #007aff; color: white; border-radius: 14px; font-weight: 600; transition: 0.2s; }
+        .apple-btn { background: linear-gradient(145deg, #007aff, #0056b3); color: white; border-radius: 14px; font-weight: 600; transition: 0.2s; box-shadow: 0 4px 14px rgba(0,122,255,0.3); border: none; }
         .apple-btn:active { transform: scale(0.95); }
         .apple-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .power-btn { width: 130px; height: 130px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); margin: 0 auto; z-index: 10; position: relative; }
-        .power-off { background: linear-gradient(145deg, #ff3b30, #dc3545); box-shadow: 0 15px 35px rgba(255, 59, 48, 0.4); color: white; border: none; }
+        .power-btn { width: 120px; height: 120px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); margin: 0 auto; z-index: 10; position: relative; }
+        @media (min-width: 640px) { .power-btn { width: 140px; height: 140px; } }
+        .power-off { background: linear-gradient(145deg, #ff3b30, #dc3545); box-shadow: 0 10px 25px rgba(255, 59, 48, 0.4); color: white; border: none; }
         @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.6); } 70% { box-shadow: 0 0 0 20px rgba(52, 199, 89, 0); } 100% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); } }
         .power-on { background: linear-gradient(145deg, #34c759, #28a745); color: white; animation: pulse-ring 2.5s infinite; border: none; }
         .power-btn:active { transform: scale(0.92); }
@@ -62,7 +63,6 @@
         .toggle-checkbox:checked + .toggle-slider { background-color: #34c759; }
         .toggle-checkbox:checked + .toggle-slider:before { transform: translateX(22px); }
 
-        .mode-active { border: 2px solid #007aff !important; color: #007aff !important; font-weight: 700; background: rgba(0,122,255,0.1); }
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -72,26 +72,26 @@
         .spinner { width: 44px; height: 44px; border-radius: 50%; border: 4px solid rgba(120,120,128,0.25); border-top-color: #007aff; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .offline-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 95; text-align: center; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.05em; padding: 0.6rem; background: #ff9500; color: white; transform: translateY(-100%); transition: transform 0.35s ease; padding-top: calc(0.6rem + env(safe-area-inset-top, 0px)); }
+        .offline-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 95; text-align: center; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.05em; padding: 0.6rem; background: linear-gradient(135deg, #ff9500, #ffcc00); color: white; transform: translateY(-100%); transition: transform 0.35s ease; padding-top: calc(0.6rem + env(safe-area-inset-top, 0px)); }
         .offline-banner.show { transform: translateY(0); }
 
-        .toast-container { position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%); z-index: 110; display: flex; flex-direction: column-reverse; gap: 0.5rem; width: min(92vw, 380px); pointer-events: none; }
+        .toast-container { position: fixed; bottom: max(5.5rem, calc(1.25rem + env(safe-area-inset-bottom))); left: 50%; transform: translateX(-50%); z-index: 110; display: flex; flex-direction: column-reverse; gap: 0.5rem; width: min(92vw, 380px); pointer-events: none; }
         .toast { pointer-events: auto; padding: 0.85rem 1.1rem; border-radius: 16px; font-size: 0.85rem; font-weight: 600; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.25); animation: toastIn 0.25s ease; display: flex; align-items: center; gap: 0.5rem; }
         @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .toast-success { background: #34c759; } .toast-error { background: #ff3b30; } .toast-info { background: #007aff; }
 
         .device-chip { border-radius: 20px; padding: 0.9rem; display: flex; flex-direction: column; gap: 0.5rem; cursor: pointer; transition: 0.2s; text-align: left; border: 2px solid transparent; }
-        .device-chip.active-device { border-color: #007aff; }
+        .device-chip.active-device { border-color: #007aff; background: rgba(0,122,255,0.05); }
         .status-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 
         .activity-row { display: flex; gap: 0.75rem; align-items: flex-start; padding: 0.65rem 0; border-bottom: 1px solid rgba(120,120,128,0.15); font-size: 0.82rem; }
         .activity-row:last-child { border-bottom: none; }
-        .activity-icon { width: 30px; height: 30px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+        .activity-icon { width: 34px; height: 34px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; background: linear-gradient(135deg, rgba(120,120,128,0.1), rgba(120,120,128,0.2)); }
         
-        .activity-rings circle { transition: stroke-dashoffset 1s cubic-bezier(0.4, 0.0, 0.2, 1); }
+        .ring-svg circle { transition: stroke-dashoffset 1s cubic-bezier(0.4, 0.0, 0.2, 1); }
     </style>
 </head>
-<body class="p-4 sm:p-6 lg:p-10">
+<body class="p-4 sm:p-6 lg:p-10 pb-28 sm:pb-10">
     <div class="ambient-bg ambient-light"><div class="bg-orb orb-1"></div><div class="bg-orb orb-2"></div></div>
     <div class="ambient-bg ambient-dark"><div class="bg-orb orb-1"></div><div class="bg-orb orb-2"></div></div>
 
@@ -130,132 +130,185 @@
         <p class="apple-sub font-bold text-sm" data-i18n="Connecting to your hub...">Connecting to your hub...</p>
     </div>
 
-    <div class="max-w-4xl mx-auto space-y-6 relative z-10">
+    <div class="max-w-4xl mx-auto space-y-5 sm:space-y-6 relative z-10">
         <!-- Header -->
-        <div class="apple-card p-4 sm:p-6 flex flex-wrap justify-between items-center gap-4">
-            <div>
-                <h1 class="text-3xl font-extrabold tracking-tight" id="clockTime">00:00</h1>
-                <p class="apple-sub font-semibold text-sm mt-1" id="clockDate">Loading Date...</p>
+        <div class="apple-card p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center sm:items-start gap-4">
+            <div class="w-full sm:w-auto flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-extrabold tracking-tight" id="clockTime">00:00</h1>
+                    <p class="apple-sub font-semibold text-sm mt-1" id="clockDate">Loading Date...</p>
+                </div>
+                <div class="flex gap-2 sm:hidden">
+                    <button onclick="toggleLang()" class="w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center hover:bg-black/10 transition font-extrabold text-sm text-blue-500" id="langBtn" aria-label="Toggle language">EN</button>
+                    <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center hover:bg-black/10 transition" aria-label="Toggle theme">🌙</button>
+                </div>
             </div>
-            <div class="flex flex-wrap items-center gap-4">
-                <div class="flex items-center gap-2 sm:gap-3 text-right mr-2">
-                    <div>
+            
+            <div class="flex w-full sm:w-auto items-center justify-between sm:justify-end gap-3 sm:gap-4">
+                <div class="flex items-center gap-2 text-right">
+                    <div class="hidden sm:block">
                         <p class="font-bold text-sm" id="weatherTemp">--°C</p>
                         <p class="apple-sub text-xs" id="weatherDesc">Loading...</p>
                     </div>
-                    <div class="text-3xl" id="weatherIcon">⛅</div>
+                    <div class="text-2xl sm:text-3xl" id="weatherIcon">⛅</div>
+                    <div class="sm:hidden text-left leading-tight">
+                        <p class="font-bold text-sm" id="weatherTempMobile">--°C</p>
+                    </div>
                 </div>
-                <select id="deviceSelector" onchange="switchDevice()" aria-label="Select device" class="apple-input font-bold px-4 py-2 cursor-pointer appearance-none text-sm"></select>
-                <button id="installBtn" onclick="triggerInstall()" class="hidden w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 items-center justify-center hover:bg-black/10 transition text-base" title="Install App" aria-label="Install App">⬇️</button>
-                <button onclick="toggleLang()" class="w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center hover:bg-black/10 transition font-extrabold text-sm text-blue-500" id="langBtn" aria-label="Toggle language">EN</button>
-                <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center hover:bg-black/10 transition" id="themeBtn" aria-label="Toggle theme">🌙</button>
+                
+                <select id="deviceSelector" onchange="switchDevice()" aria-label="Select device" class="apple-input font-bold px-4 py-3 sm:py-2 w-full sm:w-auto cursor-pointer appearance-none text-sm"></select>
+                
+                <button id="installBtn" onclick="triggerInstall()" class="hidden w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 items-center justify-center hover:bg-black/10 transition text-base shrink-0" title="Install App" aria-label="Install App">⬇️</button>
+                
+                <div class="hidden sm:flex gap-2 shrink-0">
+                    <button onclick="toggleLang()" class="w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center hover:bg-black/10 transition font-extrabold text-sm text-blue-500" aria-label="Toggle language">EN</button>
+                    <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center hover:bg-black/10 transition" aria-label="Toggle theme">🌙</button>
+                </div>
             </div>
         </div>
 
-        <!-- Navigation -->
-        <div class="apple-card p-2 flex gap-2 overflow-x-auto no-scrollbar">
-            <button onclick="switchTab('tab-overview')" id="btn-tab-overview" data-i18n="Overview" class="tab-btn flex-1 py-2 px-4 rounded-xl font-bold text-sm bg-black/10 dark:bg-white/10 transition">Overview</button>
-            <button onclick="switchTab('tab-analytics')" id="btn-tab-analytics" data-i18n="Analytics" class="tab-btn flex-1 py-2 px-4 rounded-xl font-bold text-sm transition hover:bg-black/5">Analytics</button>
-            <button onclick="switchTab('tab-automation')" id="btn-tab-automation" data-i18n="Automation" class="tab-btn flex-1 py-2 px-4 rounded-xl font-bold text-sm transition hover:bg-black/5">Automation</button>
-            <button onclick="switchTab('tab-settings')" id="btn-tab-settings" data-i18n="Settings" class="tab-btn flex-1 py-2 px-4 rounded-xl font-bold text-sm transition hover:bg-black/5">Settings</button>
+        <!-- Sticky Bottom Navigation for Mobile / Top Nav for Desktop -->
+        <div class="fixed bottom-0 left-0 right-0 z-50 sm:relative sm:z-auto apple-card sm:bg-transparent sm:backdrop-blur-none sm:shadow-none sm:border-none border-x-0 border-b-0 rounded-none sm:rounded-2xl flex justify-around sm:justify-start gap-1 p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:p-0">
+            <button onclick="switchTab('tab-overview')" id="btn-tab-overview" class="tab-btn flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-4 rounded-xl font-bold text-[10px] sm:text-sm bg-black/10 dark:bg-white/10 transition hover:bg-black/10 dark:hover:bg-white/10">
+                <span class="text-xl sm:text-base">🏠</span> <span class="hidden sm:inline" data-i18n="Overview">Overview</span>
+            </button>
+            <button onclick="switchTab('tab-analytics')" id="btn-tab-analytics" class="tab-btn flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-4 rounded-xl font-bold text-[10px] sm:text-sm transition hover:bg-black/5 dark:hover:bg-white/5">
+                <span class="text-xl sm:text-base">📊</span> <span class="hidden sm:inline" data-i18n="Analytics">Analytics</span>
+            </button>
+            <button onclick="switchTab('tab-automation')" id="btn-tab-automation" class="tab-btn flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-4 rounded-xl font-bold text-[10px] sm:text-sm transition hover:bg-black/5 dark:hover:bg-white/5">
+                <span class="text-xl sm:text-base">⚡</span> <span class="hidden sm:inline" data-i18n="Automation">Automation</span>
+            </button>
+            <button onclick="switchTab('tab-settings')" id="btn-tab-settings" class="tab-btn flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-4 rounded-xl font-bold text-[10px] sm:text-sm transition hover:bg-black/5 dark:hover:bg-white/5">
+                <span class="text-xl sm:text-base">⚙️</span> <span class="hidden sm:inline" data-i18n="Settings">Settings</span>
+            </button>
         </div>
 
         <!-- TAB: OVERVIEW -->
-        <div id="tab-overview" class="tab-content fade-in space-y-6">
+        <div id="tab-overview" class="tab-content fade-in space-y-5 sm:space-y-6">
+            
+            <!-- Power Control & Badge -->
             <div class="apple-card p-6 flex flex-col items-center justify-center relative overflow-hidden">
-                <div id="statusBadge" class="mb-6 px-4 py-1.5 rounded-full bg-gray-500/20 text-xs font-extrabold tracking-widest text-gray-500 transition-colors z-10" data-i18n="CONNECTING">CONNECTING</div>
+                <div id="statusBadge" class="mb-4 sm:mb-6 px-4 py-1.5 rounded-full bg-gray-500/20 text-xs font-extrabold tracking-widest text-gray-500 transition-colors z-10" data-i18n="CONNECTING">CONNECTING</div>
                 
-                <!-- Activity Rings & Power Button -->
-                <div class="relative w-64 h-64 flex justify-center items-center mb-6">
-                    <!-- SVG Rings (Rotated to start at 12 o'clock) -->
-                    <svg viewBox="0 0 200 200" class="absolute inset-0 w-full h-full transform -rotate-90 activity-rings pointer-events-none z-0">
-                        <!-- Voltage (Blue) - Outer -->
-                        <circle cx="100" cy="100" r="90" fill="none" stroke="#32ade6" stroke-opacity="0.15" stroke-width="10"></circle>
-                        <circle cx="100" cy="100" r="90" fill="none" stroke="#32ade6" stroke-width="10" stroke-dasharray="565" stroke-dashoffset="565" id="ring-voltage" stroke-linecap="round"></circle>
-                        <!-- Power (Orange) -->
-                        <circle cx="100" cy="100" r="76" fill="none" stroke="#ff9500" stroke-opacity="0.15" stroke-width="10"></circle>
-                        <circle cx="100" cy="100" r="76" fill="none" stroke="#ff9500" stroke-width="10" stroke-dasharray="477" stroke-dashoffset="477" id="ring-power" stroke-linecap="round"></circle>
-                        <!-- Energy (Green) -->
-                        <circle cx="100" cy="100" r="62" fill="none" stroke="#34c759" stroke-opacity="0.15" stroke-width="10"></circle>
-                        <circle cx="100" cy="100" r="62" fill="none" stroke="#34c759" stroke-width="10" stroke-dasharray="389" stroke-dashoffset="389" id="ring-energy" stroke-linecap="round"></circle>
-                        <!-- Cost (Purple) - Inner -->
-                        <circle cx="100" cy="100" r="48" fill="none" stroke="#af52de" stroke-opacity="0.15" stroke-width="10"></circle>
-                        <circle cx="100" cy="100" r="48" fill="none" stroke="#af52de" stroke-width="10" stroke-dasharray="301" stroke-dashoffset="301" id="ring-cost" stroke-linecap="round"></circle>
-                    </svg>
-
-                    <!-- Inner Button -->
-                    <button id="powerBtn" class="power-btn power-off" onclick="togglePower()" aria-label="Toggle power">
-                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                    </button>
-                </div>
+                <button id="powerBtn" class="power-btn power-off" onclick="togglePower()" aria-label="Toggle power">
+                    <svg class="w-12 h-12 sm:w-14 sm:h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </button>
                 
-                <p id="powerText" class="text-4xl font-black tracking-widest text-red-500 transition-colors z-10" data-i18n="OFF">OFF</p>
+                <p id="powerText" class="text-3xl sm:text-4xl font-black mt-4 sm:mt-6 tracking-widest text-red-500 transition-colors z-10" data-i18n="OFF">OFF</p>
                 <p id="timerText" class="text-sm mt-3 font-bold text-orange-500 hidden z-10"></p>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
-                <div class="apple-card p-6 text-center">
-                    <p class="apple-sub text-xs font-extrabold tracking-widest mb-2" data-i18n="VOLTAGE">VOLTAGE</p>
-                    <p class="text-3xl font-black text-blue-500" id="voltage">--</p>
+            <!-- Activity Rings (2x2 Grid) -->
+            <div class="grid grid-cols-2 gap-3 sm:gap-4">
+                <!-- Voltage Ring -->
+                <div class="apple-card p-4 flex flex-col items-center justify-center relative">
+                    <div class="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center ring-svg">
+                        <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 80 80">
+                            <circle cx="40" cy="40" r="36" fill="none" stroke="#32ade640" stroke-width="7"></circle>
+                            <circle cx="40" cy="40" r="36" fill="none" stroke="#32ade6" stroke-width="7" stroke-dasharray="226" stroke-dashoffset="226" id="ring-volt" stroke-linecap="round"></circle>
+                        </svg>
+                        <span class="text-xl sm:text-2xl z-10 text-blue-500 font-bold">⚡</span>
+                    </div>
+                    <p class="mt-3 font-black text-lg sm:text-xl text-blue-500" id="val-volt">-- V</p>
+                    <p class="text-[10px] sm:text-xs apple-sub font-extrabold tracking-widest mt-1" data-i18n="VOLTAGE">VOLTAGE</p>
                 </div>
-                <div class="apple-card p-6 text-center">
-                    <p class="apple-sub text-xs font-extrabold tracking-widest mb-2" data-i18n="WATTAGE">WATTAGE</p>
-                    <p class="text-3xl font-black text-orange-500" id="power">--</p>
+                
+                <!-- Power Ring -->
+                <div class="apple-card p-4 flex flex-col items-center justify-center relative">
+                    <div class="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center ring-svg">
+                        <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 80 80">
+                            <circle cx="40" cy="40" r="36" fill="none" stroke="#ff950040" stroke-width="7"></circle>
+                            <circle cx="40" cy="40" r="36" fill="none" stroke="#ff9500" stroke-width="7" stroke-dasharray="226" stroke-dashoffset="226" id="ring-power" stroke-linecap="round"></circle>
+                        </svg>
+                        <span class="text-xl sm:text-2xl z-10 text-orange-500 font-bold">🔌</span>
+                    </div>
+                    <p class="mt-3 font-black text-lg sm:text-xl text-orange-500" id="val-power">-- W</p>
+                    <p class="text-[10px] sm:text-xs apple-sub font-extrabold tracking-widest mt-1" data-i18n="WATTAGE">WATTAGE</p>
+                </div>
+                
+                <!-- Energy Ring -->
+                <div class="apple-card p-4 flex flex-col items-center justify-center relative">
+                    <div class="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center ring-svg">
+                        <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 80 80">
+                            <circle cx="40" cy="40" r="36" fill="none" stroke="#34c75940" stroke-width="7"></circle>
+                            <circle cx="40" cy="40" r="36" fill="none" stroke="#34c759" stroke-width="7" stroke-dasharray="226" stroke-dashoffset="226" id="ring-energy" stroke-linecap="round"></circle>
+                        </svg>
+                        <span class="text-xl sm:text-2xl z-10 text-green-500 font-bold">🔋</span>
+                    </div>
+                    <p class="mt-3 font-black text-lg sm:text-xl text-green-500" id="val-energy">-- kWh</p>
+                    <p class="text-[10px] sm:text-xs apple-sub font-extrabold tracking-widest mt-1" data-i18n="Energy">Energy</p>
+                </div>
+                
+                <!-- Cost Ring -->
+                <div class="apple-card p-4 flex flex-col items-center justify-center relative">
+                    <div class="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center ring-svg">
+                        <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 80 80">
+                            <circle cx="40" cy="40" r="36" fill="none" stroke="#af52de40" stroke-width="7"></circle>
+                            <circle cx="40" cy="40" r="36" fill="none" stroke="#af52de" stroke-width="7" stroke-dasharray="226" stroke-dashoffset="226" id="ring-cost" stroke-linecap="round"></circle>
+                        </svg>
+                        <span class="text-xl sm:text-2xl z-10 text-purple-500 font-bold">💰</span>
+                    </div>
+                    <p class="mt-3 font-black text-lg sm:text-xl text-purple-500" id="val-cost">--</p>
+                    <p class="text-[10px] sm:text-xs apple-sub font-extrabold tracking-widest mt-1" data-i18n="Cost">Cost</p>
                 </div>
             </div>
 
-            <div class="flex gap-4">
-                <button onclick="masterToggle(true)" data-i18n="Master ON" class="flex-1 apple-card bg-green-500/10 text-green-600 font-bold py-4 rounded-2xl transition hover:bg-green-500/20">Master ON</button>
-                <button onclick="masterToggle(false)" data-i18n="Master OFF" class="flex-1 apple-card bg-red-500/10 text-red-600 font-bold py-4 rounded-2xl transition hover:bg-red-500/20">Master OFF</button>
+            <div class="flex gap-3 sm:gap-4">
+                <button onclick="masterToggle(true)" class="flex-1 apple-card bg-gradient-to-br from-green-500/10 to-green-600/10 text-green-600 font-bold py-4 rounded-2xl transition hover:bg-green-500/20 shadow-sm flex items-center justify-center gap-2">
+                    <span class="text-lg">⚡</span> <span data-i18n="Master ON">Master ON</span>
+                </button>
+                <button onclick="masterToggle(false)" class="flex-1 apple-card bg-gradient-to-br from-red-500/10 to-red-600/10 text-red-600 font-bold py-4 rounded-2xl transition hover:bg-red-500/20 shadow-sm flex items-center justify-center gap-2">
+                    <span class="text-lg">🛑</span> <span data-i18n="Master OFF">Master OFF</span>
+                </button>
             </div>
 
-            <div class="apple-card p-6">
+            <div class="apple-card p-5 sm:p-6">
                 <h2 class="text-lg font-extrabold mb-4" data-i18n="All Devices">All Devices</h2>
                 <div id="deviceGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
             </div>
         </div>
 
         <!-- TAB: ANALYTICS -->
-        <div id="tab-analytics" class="tab-content hidden space-y-6 fade-in">
-            <div class="apple-card p-8">
-                <div class="flex flex-wrap justify-between items-center mb-6 border-b border-gray-500/20 pb-5 gap-4">
-                    <h2 class="text-2xl font-extrabold" data-i18n="Insights">Insights</h2>
-                    <div class="flex gap-2">
-                        <select id="chartTimeframe" class="apple-input px-3 py-2 cursor-pointer text-sm font-bold" onchange="updateChart()">
+        <div id="tab-analytics" class="tab-content hidden space-y-5 sm:space-y-6 fade-in">
+            <div class="apple-card p-5 sm:p-8">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-gray-500/20 pb-5 gap-4">
+                    <h2 class="text-xl sm:text-2xl font-extrabold" data-i18n="Insights">Insights</h2>
+                    <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                        <select id="chartTimeframe" class="apple-input px-3 py-2 cursor-pointer text-sm font-bold flex-1 sm:flex-none" onchange="updateChart()">
                             <option value="realtime" data-i18n="Live">Live</option><option value="hourly" data-i18n="Today (Hourly)">Today (Hourly)</option>
                             <option value="daily" data-i18n="7 Days">7 Days</option><option value="weekly" data-i18n="4 Weeks">4 Weeks</option><option value="monthly" data-i18n="6 Months">6 Months</option>
                         </select>
-                        <select id="chartDataType" class="apple-input px-3 py-2 cursor-pointer text-sm font-bold" onchange="updateChart()">
+                        <select id="chartDataType" class="apple-input px-3 py-2 cursor-pointer text-sm font-bold flex-1 sm:flex-none" onchange="updateChart()">
                             <option value="energy" id="opt-energy" data-i18n="Energy">Energy</option><option value="cost" id="opt-cost" data-i18n="Cost">Cost</option>
                             <option value="power" id="opt-power" data-i18n="Power (W)">Power (W)</option><option value="voltage" id="opt-voltage" data-i18n="Voltage (V)">Voltage (V)</option>
                         </select>
-                        <select id="chartStyle" class="apple-input px-3 py-2 cursor-pointer text-sm font-bold" onchange="updateChart()">
+                        <select id="chartStyle" class="apple-input px-3 py-2 cursor-pointer text-sm font-bold flex-1 sm:flex-none" onchange="updateChart()">
                             <option value="bar" data-i18n="Bar">Bar</option><option value="line" data-i18n="Line">Line</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
-                    <div class="p-5 bg-black/5 dark:bg-white/5 rounded-3xl">
-                        <p class="apple-sub text-xs font-extrabold tracking-widest" data-i18n="TODAY vs YESTERDAY">TODAY vs YESTERDAY</p>
-                        <div class="flex items-end gap-2 mt-2">
-                            <p class="text-3xl font-black text-green-500" id="todayUsage">--</p>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+                    <div class="p-4 sm:p-5 bg-black/5 dark:bg-white/5 rounded-3xl">
+                        <p class="apple-sub text-[10px] sm:text-xs font-extrabold tracking-widest" data-i18n="TODAY vs YESTERDAY">TODAY vs YESTERDAY</p>
+                        <div class="flex flex-wrap items-end gap-2 mt-2">
+                            <p class="text-2xl sm:text-3xl font-black text-green-500" id="todayUsage">--</p>
                             <p class="text-sm font-bold mb-1" id="usageDiff">--</p>
                         </div>
                     </div>
-                    <div class="p-5 bg-black/5 dark:bg-white/5 rounded-3xl">
-                        <p class="apple-sub text-xs font-extrabold tracking-widest" data-i18n="MONTHLY FORECAST">MONTHLY FORECAST</p>
-                        <p class="text-3xl font-black mt-2 text-purple-500" id="monthForecast">--</p>
+                    <div class="p-4 sm:p-5 bg-black/5 dark:bg-white/5 rounded-3xl">
+                        <p class="apple-sub text-[10px] sm:text-xs font-extrabold tracking-widest" data-i18n="MONTHLY FORECAST">MONTHLY FORECAST</p>
+                        <p class="text-2xl sm:text-3xl font-black mt-2 text-purple-500" id="monthForecast">--</p>
                     </div>
-                    <div class="p-5 bg-black/5 dark:bg-white/5 rounded-3xl col-span-2 sm:col-span-1">
-                        <p class="apple-sub text-xs font-extrabold tracking-widest" data-i18n="PEAK HOUR TODAY">PEAK HOUR TODAY</p>
-                        <p class="text-3xl font-black mt-2 text-orange-500" id="peakHour">--</p>
+                    <div class="p-4 sm:p-5 bg-black/5 dark:bg-white/5 rounded-3xl col-span-2 sm:col-span-1">
+                        <p class="apple-sub text-[10px] sm:text-xs font-extrabold tracking-widest" data-i18n="PEAK HOUR TODAY">PEAK HOUR TODAY</p>
+                        <p class="text-2xl sm:text-3xl font-black mt-2 text-orange-500" id="peakHour">--</p>
                     </div>
                 </div>
-                <div style="height: 250px;"><canvas id="usageChart"></canvas></div>
+                <div style="height: 250px; width: 100%;"><canvas id="usageChart"></canvas></div>
             </div>
 
-            <div class="apple-card p-8">
+            <div class="apple-card p-5 sm:p-8">
                  <div class="flex justify-between text-xs font-bold mb-3">
                     <span class="apple-sub" data-i18n="BUDGET PROGRESS:">BUDGET PROGRESS: <span id="budgetDisplay" class="text-current inline ml-1"></span></span>
                     <span id="budgetPercent" class="text-blue-500 font-black">0%</span>
@@ -267,26 +320,38 @@
         </div>
 
         <!-- TAB: AUTOMATION -->
-        <div id="tab-automation" class="tab-content hidden space-y-6 fade-in">
-            <div class="apple-card p-8">
-                <h2 class="text-xl font-extrabold mb-5" data-i18n="Operating Mode">Operating Mode</h2>
-                <div class="grid grid-cols-2 gap-3 mb-5">
-                    <button id="mode-manual" onclick="setMode('manual')" data-i18n="Manual" class="apple-input border border-transparent font-semibold py-3 rounded-2xl text-sm">Manual</button>
-                    <button id="mode-day" onclick="setMode('day')" data-i18n="Day" class="apple-input border border-transparent font-semibold py-3 rounded-2xl text-sm">☀️ Day</button>
-                    <button id="mode-night" onclick="setMode('night')" data-i18n="Night" class="apple-input border border-transparent font-semibold py-3 rounded-2xl text-sm">🌙 Night</button>
-                    <button onclick="activateSleepMode()" data-i18n="Sleep (3h)" class="apple-input border border-transparent font-semibold py-3 rounded-2xl text-sm text-indigo-500">💤 Sleep (3h)</button>
+        <div id="tab-automation" class="tab-content hidden space-y-5 sm:space-y-6 fade-in">
+            <div class="apple-card p-5 sm:p-8">
+                <h2 class="text-lg sm:text-xl font-extrabold mb-4 sm:mb-5" data-i18n="Operating Mode">Operating Mode</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                    <button id="mode-manual" onclick="setMode('manual')" class="mode-btn flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl border-2 transition hover:bg-black/5 dark:hover:bg-white/5 bg-transparent">
+                        <span class="text-2xl sm:text-3xl mb-1 sm:mb-2">🖐️</span>
+                        <span class="text-[11px] sm:text-sm font-bold" data-i18n="Manual">Manual</span>
+                    </button>
+                    <button id="mode-day" onclick="setMode('day')" class="mode-btn flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl border-2 transition hover:bg-black/5 dark:hover:bg-white/5 bg-transparent">
+                        <span class="text-2xl sm:text-3xl mb-1 sm:mb-2">☀️</span>
+                        <span class="text-[11px] sm:text-sm font-bold" data-i18n="Day">Day</span>
+                    </button>
+                    <button id="mode-night" onclick="setMode('night')" class="mode-btn flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl border-2 transition hover:bg-black/5 dark:hover:bg-white/5 bg-transparent">
+                        <span class="text-2xl sm:text-3xl mb-1 sm:mb-2">🌙</span>
+                        <span class="text-[11px] sm:text-sm font-bold" data-i18n="Night">Night</span>
+                    </button>
+                    <button onclick="activateSleepMode()" class="flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl border-2 border-transparent transition hover:bg-black/5 dark:hover:bg-white/5 bg-transparent text-indigo-500">
+                        <span class="text-2xl sm:text-3xl mb-1 sm:mb-2">💤</span>
+                        <span class="text-[11px] sm:text-sm font-bold" data-i18n="Sleep">Sleep (3h)</span>
+                    </button>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 bg-black/5 dark:bg-white/5 p-4 rounded-2xl">
                     <div>
-                        <label class="text-xs apple-sub font-extrabold tracking-wider block mb-2">DAY TIME (START/END)</label>
+                        <label class="text-[10px] sm:text-xs apple-sub font-extrabold tracking-wider block mb-2">DAY TIME (START/END)</label>
                         <div class="flex gap-2">
                             <input type="time" id="dayStart" onchange="saveDayNightTimes()" class="apple-input px-2 py-2 w-full text-xs font-bold">
                             <input type="time" id="dayEnd" onchange="saveDayNightTimes()" class="apple-input px-2 py-2 w-full text-xs font-bold">
                         </div>
                     </div>
                     <div>
-                        <label class="text-xs apple-sub font-extrabold tracking-wider block mb-2">NIGHT TIME (START/END)</label>
+                        <label class="text-[10px] sm:text-xs apple-sub font-extrabold tracking-wider block mb-2">NIGHT TIME (START/END)</label>
                         <div class="flex gap-2">
                             <input type="time" id="nightStart" onchange="saveDayNightTimes()" class="apple-input px-2 py-2 w-full text-xs font-bold">
                             <input type="time" id="nightEnd" onchange="saveDayNightTimes()" class="apple-input px-2 py-2 w-full text-xs font-bold">
@@ -295,11 +360,24 @@
                 </div>
             </div>
 
-            <div class="apple-card p-8 space-y-4">
+            <div class="apple-card p-5 sm:p-8 space-y-4">
+                
+                <!-- Outage Recovery Toggle -->
+                <div class="flex justify-between items-center bg-gradient-to-r from-blue-500/10 to-transparent p-4 rounded-2xl border border-blue-500/20">
+                    <div>
+                        <p class="font-bold text-sm text-blue-600 dark:text-blue-400" data-i18n="Power Outage Recovery">Power Outage Recovery</p>
+                        <p class="text-[11px] sm:text-xs apple-sub font-medium mt-1" data-i18n="Restore state when power returns">Restore state when power returns</p>
+                    </div>
+                    <label class="toggle-wrapper">
+                        <input type="checkbox" id="outageToggle" onchange="toggleAutomation('powerOutageRecovery')" class="toggle-checkbox"/>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
                 <div class="flex justify-between items-center bg-black/5 dark:bg-white/5 p-4 rounded-2xl">
                     <div>
                         <p class="font-bold text-sm" data-i18n="Standby Auto-Kill">Standby Auto-Kill</p>
-                        <p class="text-xs apple-sub font-medium mt-1" data-i18n="Stops power if <5W for 10m">Stops power if &lt;5W for 10m</p>
+                        <p class="text-[11px] sm:text-xs apple-sub font-medium mt-1" data-i18n="Stops power if <5W for 10m">Stops power if &lt;5W for 10m</p>
                     </div>
                     <label class="toggle-wrapper">
                         <input type="checkbox" id="standbyToggle" onchange="toggleAutomation('standbyKill')" class="toggle-checkbox"/>
@@ -311,7 +389,7 @@
                     <div class="flex justify-between items-center">
                         <div>
                             <p class="font-bold text-sm" data-i18n="Voltage Guard">Voltage Guard</p>
-                            <p class="text-xs apple-sub font-medium mt-1 text-red-500" data-i18n="Auto-kill on dangerous voltage">Auto-kill on dangerous voltage</p>
+                            <p class="text-[11px] sm:text-xs apple-sub font-medium mt-1 text-red-500" data-i18n="Auto-kill on dangerous voltage">Auto-kill on dangerous voltage</p>
                         </div>
                         <label class="toggle-wrapper">
                             <input type="checkbox" id="voltageToggle" onchange="toggleAutomation('voltageProtect')" class="toggle-checkbox"/>
@@ -320,11 +398,11 @@
                     </div>
                     <div class="flex gap-4 mt-4 pt-4 border-t border-gray-500/20">
                         <div class="flex-1">
-                            <label class="text-xs apple-sub font-extrabold tracking-wider block mb-2" data-i18n="MIN (V)">MIN (V)</label>
+                            <label class="text-[10px] sm:text-xs apple-sub font-extrabold tracking-wider block mb-2" data-i18n="MIN (V)">MIN (V)</label>
                             <input type="number" id="vMinInput" onchange="saveVoltageLimits()" class="apple-input px-3 py-2 w-full text-sm font-bold">
                         </div>
                         <div class="flex-1">
-                            <label class="text-xs apple-sub font-extrabold tracking-wider block mb-2" data-i18n="MAX (V)">MAX (V)</label>
+                            <label class="text-[10px] sm:text-xs apple-sub font-extrabold tracking-wider block mb-2" data-i18n="MAX (V)">MAX (V)</label>
                             <input type="number" id="vMaxInput" onchange="saveVoltageLimits()" class="apple-input px-3 py-2 w-full text-sm font-bold">
                         </div>
                     </div>
@@ -333,7 +411,7 @@
                 <div class="flex justify-between items-center bg-black/5 dark:bg-white/5 p-4 rounded-2xl mb-6">
                     <div>
                         <p class="font-bold text-sm" data-i18n="Strict Budget Lock">Strict Budget Lock</p>
-                        <p class="text-xs apple-sub font-medium mt-1" data-i18n="Auto-kill if budget hits 100%">Auto-kill if budget hits 100%</p>
+                        <p class="text-[11px] sm:text-xs apple-sub font-medium mt-1" data-i18n="Auto-kill if budget hits 100%">Auto-kill if budget hits 100%</p>
                     </div>
                     <label class="toggle-wrapper">
                         <input type="checkbox" id="budgetToggle" onchange="toggleAutomation('budgetKill')" class="toggle-checkbox"/>
@@ -343,10 +421,10 @@
 
                 <hr class="border-gray-500/20 my-6">
 
-                <div class="mb-5 flex gap-2">
-                    <input type="number" id="timerMins" placeholder="Mins" min="1" class="apple-input px-4 py-3 w-20 text-sm font-bold">
-                    <select id="timerAction" class="apple-input px-3 py-3 text-sm font-bold"><option value="true" data-i18n="ON">ON</option><option value="false" data-i18n="OFF">OFF</option></select>
-                    <button onclick="setTimer()" data-i18n="Timer" class="apple-btn px-5 py-3 text-sm">Timer</button>
+                <div class="mb-5 flex flex-wrap sm:flex-nowrap gap-2">
+                    <input type="number" id="timerMins" placeholder="Mins" min="1" class="apple-input px-4 py-3 w-full sm:w-24 text-sm font-bold">
+                    <select id="timerAction" class="apple-input px-3 py-3 flex-1 text-sm font-bold"><option value="true" data-i18n="ON">ON</option><option value="false" data-i18n="OFF">OFF</option></select>
+                    <button onclick="setTimer()" data-i18n="Timer" class="apple-btn px-5 py-3 w-full sm:w-auto text-sm">Timer</button>
                 </div>
                 <div>
                     <div class="flex gap-2 mb-4">
@@ -358,8 +436,8 @@
                 </div>
             </div>
 
-            <div class="apple-card p-8">
-                <h2 class="text-xl font-extrabold mb-3" data-i18n="Recent Activity">Recent Activity</h2>
+            <div class="apple-card p-5 sm:p-8">
+                <h2 class="text-lg sm:text-xl font-extrabold mb-3" data-i18n="Recent Activity">Recent Activity</h2>
                 <div id="activityLog" class="max-h-64 overflow-y-auto pr-1">
                     <p class="apple-sub text-sm" data-i18n="No recent activity yet.">No recent activity yet.</p>
                 </div>
@@ -367,44 +445,60 @@
         </div>
 
         <!-- TAB: SETTINGS -->
-        <div id="tab-settings" class="tab-content hidden space-y-6 fade-in">
-            <div class="apple-card p-8">
-                <h2 class="text-xl font-extrabold mb-5" data-i18n="Tariff & Preferences">Tariff & Preferences</h2>
-                <div class="flex gap-4 mb-6">
+        <div id="tab-settings" class="tab-content hidden space-y-5 sm:space-y-6 fade-in">
+            <div class="apple-card p-5 sm:p-8">
+                <h2 class="text-lg sm:text-xl font-extrabold mb-5" data-i18n="Tariff & Preferences">Tariff & Preferences</h2>
+                <div class="flex flex-col sm:flex-row gap-4 mb-6">
                     <div class="flex-1">
-                        <label class="text-xs apple-sub font-extrabold tracking-wider block mb-2" data-i18n="RATE">RATE</label>
+                        <label class="text-[10px] sm:text-xs apple-sub font-extrabold tracking-wider block mb-2" data-i18n="RATE">RATE</label>
                         <input type="number" id="rateInput" step="0.5" min="0" onchange="saveSettings()" class="apple-input px-4 py-3 w-full text-sm font-bold">
                     </div>
                     <div class="flex-1">
-                        <label class="text-xs apple-sub font-extrabold tracking-wider block mb-2" data-i18n="CURRENCY">CURRENCY</label>
+                        <label class="text-[10px] sm:text-xs apple-sub font-extrabold tracking-wider block mb-2" data-i18n="CURRENCY">CURRENCY</label>
                         <select id="currencySelect" onchange="saveSettings()" class="apple-input px-4 py-3 w-full text-sm font-bold">
                             <option value="BDT">BDT (৳)</option><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option><option value="CNY">CNY (¥)</option>
                         </select>
                     </div>
                 </div>
                 <div class="mb-6">
-                    <label class="text-xs apple-sub font-extrabold tracking-wider block mb-2" data-i18n="WEATHER LOCATION">WEATHER LOCATION</label>
+                    <label class="text-[10px] sm:text-xs apple-sub font-extrabold tracking-wider block mb-2" data-i18n="WEATHER LOCATION">WEATHER LOCATION</label>
                     <div class="flex gap-2">
                         <input type="text" id="locInput" class="apple-input px-4 py-3 w-full text-sm font-bold">
                         <button onclick="saveLocation()" data-i18n="Save" class="apple-btn px-4 text-sm">Save</button>
                     </div>
                 </div>
                 <div class="flex gap-3">
-                    <button onclick="promptBudget()" data-i18n="Set Budget" class="flex-1 apple-input text-xs font-bold py-3 rounded-2xl hover:bg-black/5 transition">Set Budget</button>
-                    <button onclick="exportData()" data-i18n="Export CSV" class="flex-1 bg-blue-500/10 text-blue-500 text-xs font-bold py-3 rounded-2xl hover:bg-blue-500/20 transition">📥 Export CSV</button>
+                    <button onclick="promptBudget()" class="flex-1 apple-input text-xs font-bold py-3 rounded-2xl hover:bg-black/5 transition flex items-center justify-center gap-2">
+                        <span>🎯</span> <span data-i18n="Set Budget">Set Budget</span>
+                    </button>
+                    <button onclick="exportData()" class="flex-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold py-3 rounded-2xl hover:bg-blue-500/20 transition flex items-center justify-center gap-2">
+                        <span>📥</span> <span data-i18n="Export CSV">Export CSV</span>
+                    </button>
                 </div>
             </div>
 
-            <div class="apple-card p-8">
-                <h2 class="text-xl font-extrabold mb-5" data-i18n="System Management">System Management</h2>
-                <div class="flex gap-3 mb-4">
-                    <button onclick="addNewDevice()" data-i18n="Add Device" class="apple-btn py-3 px-4 flex-1 text-sm">Add Device</button>
-                    <button onclick="renameDevice()" data-i18n="Rename" class="bg-black/5 dark:bg-white/10 font-bold py-3 px-4 rounded-2xl text-sm transition hover:bg-black/10">Rename</button>
-                    <button onclick="removeDevice()" data-i18n="Remove Device" class="bg-red-500/15 text-red-600 font-bold py-3 px-4 rounded-2xl text-sm transition hover:bg-red-500/25">Remove Device</button>
+            <div class="apple-card p-5 sm:p-8">
+                <h2 class="text-lg sm:text-xl font-extrabold mb-5" data-i18n="System Management">System Management</h2>
+                <div class="flex flex-col sm:flex-row gap-3 mb-4">
+                    <button onclick="addNewDevice()" class="apple-btn py-3 px-4 flex-1 text-sm flex items-center justify-center gap-2">
+                        <span>➕</span> <span data-i18n="Add Device">Add Device</span>
+                    </button>
+                    <div class="flex gap-3 flex-1">
+                        <button onclick="renameDevice()" class="bg-black/5 dark:bg-white/10 font-bold flex-1 py-3 px-2 rounded-2xl text-sm transition hover:bg-black/10 flex items-center justify-center gap-2">
+                            <span>✏️</span> <span data-i18n="Rename">Rename</span>
+                        </button>
+                        <button onclick="removeDevice()" class="bg-red-500/15 text-red-600 font-bold flex-1 py-3 px-2 rounded-2xl text-sm transition hover:bg-red-500/25 flex items-center justify-center gap-2">
+                            <span>🗑️</span> <span data-i18n="Remove Device" class="hidden sm:inline">Remove</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="flex gap-3">
-                    <button onclick="powerCycle()" data-i18n="Reboot" class="flex-1 bg-orange-500/10 text-orange-500 font-bold py-3 rounded-2xl text-sm hover:bg-orange-500/20 transition">🔌 Reboot</button>
-                    <button onclick="clearData()" data-i18n="Clear History DB" class="flex-1 bg-red-500/10 text-red-500 text-xs font-bold py-3 rounded-2xl transition hover:bg-red-500/20">Clear History DB</button>
+                    <button onclick="powerCycle()" class="flex-1 bg-gradient-to-br from-orange-400/10 to-orange-600/10 border border-orange-500/20 text-orange-500 font-bold py-3 rounded-2xl text-sm hover:bg-orange-500/20 transition flex items-center justify-center gap-2">
+                        <span>🔌</span> <span data-i18n="Reboot">Reboot</span>
+                    </button>
+                    <button onclick="clearData()" class="flex-1 bg-gradient-to-br from-red-500/10 to-red-700/10 border border-red-500/20 text-red-500 text-xs font-bold py-3 rounded-2xl transition hover:bg-red-500/20 flex items-center justify-center gap-2">
+                        <span>🧹</span> <span data-i18n="Clear History DB">Clear History</span>
+                    </button>
                 </div>
             </div>
         </div>
