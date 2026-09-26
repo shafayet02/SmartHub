@@ -120,17 +120,17 @@ const dict = {
         'BUDGET PROGRESS:': 'বাজেট অগ্রগতি:', 'Live': 'লাইভ', 'Today (Hourly)': 'আজ (ঘণ্টা)',
         '7 Days': '৭ দিন', '4 Weeks': '৪ সপ্তাহ', '6 Months': '৬ মাস',
         'Energy': 'এনার্জি', 'Cost': 'খরচ', 'Power (W)': 'পাওয়ার (W)', 'Voltage (V)': 'ভোল্টেজ (V)', 'Bar': 'বার', 'Line': 'লাইন',
-        'Operating Mode': 'অপারেটিং মোড', 'Manual': 'ম্যানুয়াল', 'Day': '☀️ দিন', 'Night': '🌙 রাত', 'Sleep (3h)': '💤 স্লিপ (৩ ঘঃ)',
+        'Operating Mode': 'অপারেটিং মোড', 'Manual': 'ম্যানুয়াল', 'Day': 'দিন', 'Night': 'রাত', 'Sleep': 'স্লিপ',
         'Standby Auto-Kill': 'অটো-কিল', 'Stops power if <5W for 10m': '<৫ ওয়াট হলে ১০ মিনিটে বন্ধ', 'Timer': 'টাইমার',
         'Voltage Guard': 'ভোল্টেজ গার্ড', 'Auto-kill on dangerous voltage': 'বিপজ্জনক ভোল্টেজে অটো-কিল',
         'MIN (V)': 'সর্বনিম্ন (V)', 'MAX (V)': 'সর্বোচ্চ (V)',
         'Strict Budget Lock': 'কঠোর বাজেট লক', 'Auto-kill if budget hits 100%': 'বাজেট ১০০% ছুঁলে এসি বন্ধ',
+        'Power Outage Recovery': 'বিদ্যুৎ বিভ্রাট পুনরুদ্ধার', 'Restore state when power returns': 'বিদ্যুৎ ফিরলে অবস্থা পুনরুদ্ধার করুন',
         'Tariff & Preferences': 'ট্যারিফ এবং পছন্দসমূহ', 'RATE': 'রেট', 'CURRENCY': 'মুদ্রা', 'WEATHER LOCATION': 'আবহাওয়ার অবস্থান',
         'Save': 'সংরক্ষণ', 'Set Budget': 'বাজেট সেট করুন', 'Export CSV': '📥 এক্সপোর্ট CSV',
         'System Management': 'সিস্টেম ম্যানেজমেন্ট', 'Add Device': 'ডিভাইস যোগ করুন', 'Remove Device': 'ডিভাইস মুছুন', 'Rename': 'নাম পরিবর্তন',
         'Reboot': '🔌 রিবুট', 'Clear History DB': 'হিস্ট্রি মুছুন',
         'Recent Activity': 'সাম্প্রতিক কার্যকলাপ', 'No recent activity yet.': 'কোনো কার্যকলাপ নেই।',
-        'Connection': 'সংযোগ',
         'Connection lost - retrying...': 'সংযোগ বিচ্ছিন্ন — পুনরায় চেষ্টা করা হচ্ছে...',
         'Connecting to your hub...': 'আপনার হাবের সাথে সংযোগ হচ্ছে...',
     },
@@ -306,8 +306,8 @@ function setNoDeviceState() {
     const powerBtn = document.getElementById('powerBtn');
     powerBtn.disabled = true;
     updatePowerUI(false, false);
-    document.getElementById('voltage').innerText = '--';
-    document.getElementById('power').innerText = '--';
+    document.getElementById('val-volt').innerText = '-- V';
+    document.getElementById('val-power').innerText = '-- W';
     renderDeviceGrid();
 }
 
@@ -405,47 +405,55 @@ async function masterToggle(isOn) {
 }
 
 // ---------------------------------------------------------------------------
-// Rendering: device controls / stats
+// Rendering: 2x2 Separated Activity Rings
 // ---------------------------------------------------------------------------
 function updateActivityRings(todayKwh, todayCost) {
+    const voltRaw = parseFloat(document.getElementById('val-volt').innerText) || 0;
+    const voltPct = Math.min(1, Math.max(0, voltRaw / 260));
+    document.getElementById('ring-volt').style.strokeDashoffset = 226 - (226 * voltPct);
+
+    const powerRaw = parseFloat(document.getElementById('val-power').innerText) || 0;
+    const powerPct = Math.min(1, Math.max(0, powerRaw / 3000));
+    document.getElementById('ring-power').style.strokeDashoffset = 226 - (226 * powerPct);
+
     const curr = state.db.settings.currency;
     const rate = state.db.settings.baseRateBDT * (state.db.currentRates[curr] || 1);
     const budgetCost = (state.db.settings.monthlyBudget || 500) * (state.db.currentRates[curr] || 1);
-    const dailyBudgetCost = budgetCost / 30;
-    const dailyBudgetKwh = dailyBudgetCost / rate;
-
-    // Outer Ring (Blue): Voltage (0-260V limit)
-    const voltRaw = parseFloat(document.getElementById('voltage').innerText) || 0;
-    const voltPct = Math.min(1, Math.max(0, voltRaw / 260));
-    document.getElementById('ring-voltage').style.strokeDashoffset = 565 - (565 * voltPct);
-
-    // Ring 2 (Orange): Power (0-3000W limit)
-    const powerRaw = parseFloat(document.getElementById('power').innerText) || 0;
-    const powerPct = Math.min(1, Math.max(0, powerRaw / 3000));
-    document.getElementById('ring-power').style.strokeDashoffset = 465 - (465 * powerPct);
-
-    // Ring 3 (Green): Energy vs Daily Budget
+    
+    const dailyBudgetKwh = (budgetCost / 30) / rate;
     const energyPct = Math.min(1, Math.max(0, todayKwh / (dailyBudgetKwh || 1)));
-    document.getElementById('ring-energy').style.strokeDashoffset = 364 - (364 * energyPct);
+    document.getElementById('ring-energy').style.strokeDashoffset = 226 - (226 * energyPct);
+    document.getElementById('val-energy').innerText = (state.lang === 'bn' ? todayKwh.toLocaleString('bn-BD', { maximumFractionDigits: 2 }) : todayKwh.toFixed(2)) + ' kWh';
 
-    // Inner Ring (Purple): Cost vs Daily Budget
+    const dailyBudgetCost = budgetCost / 30;
     const costPct = Math.min(1, Math.max(0, todayCost / (dailyBudgetCost || 1)));
-    document.getElementById('ring-cost').style.strokeDashoffset = 264 - (264 * costPct);
+    document.getElementById('ring-cost').style.strokeDashoffset = 226 - (226 * costPct);
+    document.getElementById('val-cost').innerText = symbols[curr] + (state.lang === 'bn' ? todayCost.toLocaleString('bn-BD', { maximumFractionDigits: 0 }) : todayCost.toFixed(0));
 }
 
+// ---------------------------------------------------------------------------
+// Rendering: device controls / stats
+// ---------------------------------------------------------------------------
 function renderDeviceUI() {
     if (!state.activeId || !state.db) return;
     const auto = state.db.automations[state.activeId];
     const usage = state.db.usage[state.activeId];
     if (!auto || !usage) return;
 
-    document.querySelectorAll('#mode-manual, #mode-day, #mode-night').forEach((b) => b.classList.remove('mode-active'));
+    document.querySelectorAll('.mode-btn').forEach((b) => {
+        b.classList.remove('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400');
+        b.classList.add('border-transparent');
+    });
     const modeBtn = document.getElementById(`mode-${auto.mode}`);
-    if (modeBtn) modeBtn.classList.add('mode-active');
+    if (modeBtn) {
+        modeBtn.classList.add('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400');
+        modeBtn.classList.remove('border-transparent');
+    }
 
     if (document.getElementById('standbyToggle').checked !== (auto.standbyKill || false)) document.getElementById('standbyToggle').checked = auto.standbyKill || false;
     if (document.getElementById('voltageToggle').checked !== (auto.voltageProtect || false)) document.getElementById('voltageToggle').checked = auto.voltageProtect || false;
     if (document.getElementById('budgetToggle').checked !== (auto.budgetKill || false)) document.getElementById('budgetToggle').checked = auto.budgetKill || false;
+    if (document.getElementById('outageToggle').checked !== (auto.powerOutageRecovery !== false)) document.getElementById('outageToggle').checked = auto.powerOutageRecovery !== false;
 
     if (document.activeElement !== document.getElementById('vMinInput')) document.getElementById('vMinInput').value = auto.voltageMin || 170;
     if (document.activeElement !== document.getElementById('vMaxInput')) document.getElementById('vMaxInput').value = auto.voltageMax || 260;
@@ -620,8 +628,23 @@ async function promptBudget() {
 }
 
 async function setMode(mode) {
-    try { await apiFetch(`/api/automations/${state.activeId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode }) }); await fetchDB(); }
-    catch (e) { actionError(e, 'Could not change mode'); }
+    if(!state.activeId) return;
+    // Optimistic UI update
+    document.querySelectorAll('.mode-btn').forEach((b) => {
+        b.classList.remove('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400');
+        b.classList.add('border-transparent');
+    });
+    const modeBtn = document.getElementById(`mode-${mode}`);
+    if (modeBtn) {
+        modeBtn.classList.add('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400');
+        modeBtn.classList.remove('border-transparent');
+    }
+    
+    try { 
+        await apiFetch(`/api/automations/${state.activeId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode }) }); 
+        toast('Mode updated', 'success');
+        await fetchDB(true);
+    } catch (e) { actionError(e, 'Could not change mode'); fetchDB(true); }
 }
 
 async function saveDayNightTimes() {
@@ -639,7 +662,7 @@ async function saveDayNightTimes() {
 }
 
 async function toggleAutomation(key) {
-    const elId = key === 'standbyKill' ? 'standbyToggle' : key === 'voltageProtect' ? 'voltageToggle' : 'budgetToggle';
+    const elId = key === 'standbyKill' ? 'standbyToggle' : key === 'voltageProtect' ? 'voltageToggle' : key === 'budgetKill' ? 'budgetToggle' : 'outageToggle';
     const isChecked = document.getElementById(elId).checked;
     const payload = { [key]: isChecked };
     try { await apiFetch(`/api/automations/${state.activeId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); }
@@ -663,7 +686,7 @@ async function setTimer() {
         await fetchDB();
     } catch (e) { actionError(e, 'Could not set timer'); }
 }
-function activateSleepMode() { document.getElementById('timerMins').value = 180; document.getElementById('timerAction').value = 'false'; setTimer(); }
+function activateSleepMode() { document.getElementById('timerMins').value = 180; document.getElementById('timerAction').value = 'false'; setTimer(); setMode('manual'); }
 
 async function addSchedule() {
     const timeVal = document.getElementById('schedTime').value;
@@ -690,8 +713,8 @@ async function fetchStatus() {
         markFetchSuccess();
         if (data.success && data.result) {
             const status = data.result; updatePowerUI(status.isPowerOn, status.online);
-            document.getElementById('voltage').innerText = (state.lang === 'bn' ? status.voltage.toLocaleString('bn-BD', { maximumFractionDigits: 1 }) : status.voltage.toFixed(1)) + ' V';
-            document.getElementById('power').innerText = (state.lang === 'bn' ? status.power.toLocaleString('bn-BD', { maximumFractionDigits: 1 }) : status.power.toFixed(1)) + ' W';
+            document.getElementById('val-volt').innerText = (state.lang === 'bn' ? status.voltage.toLocaleString('bn-BD', { maximumFractionDigits: 1 }) : status.voltage.toFixed(1)) + ' V';
+            document.getElementById('val-power').innerText = (state.lang === 'bn' ? status.power.toLocaleString('bn-BD', { maximumFractionDigits: 1 }) : status.power.toFixed(1)) + ' W';
 
             const sampleAt = Number(status.sampledAt) || 0;
             if (status.online && sampleAt && state.lastSampleAtByDevice[state.activeId] !== sampleAt) {
@@ -713,6 +736,10 @@ async function togglePower() {
     const newState = !state.isPowerOn;
     btn.disabled = true;
     updatePowerUI(newState, true);
+    
+    // Changing power manually defaults to manual mode
+    setMode('manual');
+
     try {
         await apiFetch(`/api/toggle/${state.activeId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ state: newState }) });
         setTimeout(fetchDB, 500);
@@ -724,17 +751,17 @@ function updatePowerUI(isOn, isOnline = true) {
     state.isPowerOn = isOn;
     const btn = document.getElementById('powerBtn'); const txt = document.getElementById('powerText'); const badge = document.getElementById('statusBadge');
     if (!isOnline) {
-        btn.className = 'power-btn bg-gray-600 cursor-not-allowed'; txt.innerText = t('OFFLINE'); txt.className = 'text-4xl font-black mt-8 text-gray-500 tracking-widest';
-        badge.innerText = t('OFFLINE'); badge.className = 'mb-8 px-4 py-1.5 rounded-full bg-red-500/20 text-red-500 text-xs font-extrabold tracking-widest';
+        btn.className = 'power-btn bg-gray-600 cursor-not-allowed'; txt.innerText = t('OFFLINE'); txt.className = 'text-4xl font-black mt-6 text-gray-500 tracking-widest';
+        badge.innerText = t('OFFLINE'); badge.className = 'px-4 py-1.5 rounded-full bg-red-500/20 text-red-500 text-xs font-extrabold tracking-widest';
         return;
     }
     if (isOn) {
-        btn.className = 'power-btn power-on'; txt.innerText = t('ON'); txt.className = 'text-4xl font-black mt-8 text-green-500 tracking-widest transition-colors';
-        badge.innerText = t('ONLINE'); badge.className = 'mb-8 px-4 py-1.5 rounded-full bg-green-500/20 text-green-500 text-xs font-extrabold tracking-widest transition-colors';
+        btn.className = 'power-btn power-on'; txt.innerText = t('ON'); txt.className = 'text-4xl font-black mt-6 text-green-500 tracking-widest transition-colors';
+        badge.innerText = t('ONLINE'); badge.className = 'px-4 py-1.5 rounded-full bg-green-500/20 text-green-500 text-xs font-extrabold tracking-widest transition-colors';
     } else {
-        btn.className = 'power-btn power-off'; txt.innerText = t('OFF'); txt.className = 'text-4xl font-black mt-8 text-red-500 tracking-widest transition-colors';
-        badge.innerText = t('STANDBY'); badge.className = 'mb-8 px-4 py-1.5 rounded-full bg-gray-500/20 text-gray-500 text-xs font-extrabold tracking-widest transition-colors';
-        document.getElementById('power').innerText = state.lang === 'bn' ? '০.০ W' : '0.0 W';
+        btn.className = 'power-btn power-off'; txt.innerText = t('OFF'); txt.className = 'text-4xl font-black mt-6 text-red-500 tracking-widest transition-colors';
+        badge.innerText = t('STANDBY'); badge.className = 'px-4 py-1.5 rounded-full bg-gray-500/20 text-gray-500 text-xs font-extrabold tracking-widest transition-colors';
+        document.getElementById('val-power').innerText = state.lang === 'bn' ? '০.০ W' : '0.0 W';
     }
     
     // Update live ring when toggled
@@ -748,7 +775,7 @@ function updatePowerUI(isOn, isOnline = true) {
 }
 
 // ---------------------------------------------------------------------------
-// Charting (Unlocked Cross-Analytics)
+// Charting
 // ---------------------------------------------------------------------------
 function getDynamicLabels(type) {
     const now = new Date();
@@ -766,6 +793,24 @@ function getDynamicLabels(type) {
         }
     }
     return labels;
+}
+
+function handleMetricOptions() {
+    const tf = document.getElementById('chartTimeframe').value;
+    const selector = document.getElementById('chartDataType');
+    const energy = document.getElementById('opt-energy');
+    const cost = document.getElementById('opt-cost');
+    const power = document.getElementById('opt-power');
+    const voltage = document.getElementById('opt-voltage');
+
+    const realtime = tf === 'realtime';
+    energy.disabled = realtime;
+    cost.disabled = realtime;
+    power.disabled = !realtime;
+    voltage.disabled = !realtime;
+
+    if (realtime && (selector.value === 'energy' || selector.value === 'cost')) selector.value = 'power';
+    if (!realtime && (selector.value === 'power' || selector.value === 'voltage')) selector.value = 'energy';
 }
 
 function updateChart() {
@@ -788,7 +833,7 @@ function updateChart() {
         if (dt === 'voltage') { data = state.liveVoltage; label = t('Voltage (V)'); color = '#32ade6'; }
         else if (dt === 'power') { data = state.livePower; label = t('Power (W)'); color = '#ff9500'; }
         else if (dt === 'energy') { 
-            let acc = 0; // Synthesize a cumulative energy plot from the live power buffer
+            let acc = 0; 
             data = state.livePower.map(p => { acc += (p/1000)*(3/3600); return acc; }); 
             label = t('Energy (kWh)'); color = '#34c759';
         }
@@ -799,15 +844,12 @@ function updateChart() {
         }
     } else {
         let baseData = state.db.usage[state.activeId][tf] || [];
-        
-        // Synthesize Historical Power from Energy: Energy (kWh) * 1000 / Hours
         const hoursInPeriod = tf === 'hourly' ? 1 : tf === 'daily' ? 24 : tf === 'weekly' ? 168 : 720;
         
         if (dt === 'cost') { data = baseData.map((v) => v * rate); label = t('Cost'); color = '#af52de'; }
         else if (dt === 'energy') { data = baseData; label = t('Energy'); color = '#34c759'; }
         else if (dt === 'power') { data = baseData.map((v) => (v * 1000) / hoursInPeriod); label = t('Avg Power (W)'); color = '#ff9500'; }
         else if (dt === 'voltage') { 
-            // Fake historical voltage around 220-230V based on energy curve to fulfill UI requirement
             data = baseData.map(v => v > 0 ? 220 + (v % 10) : 0); 
             label = t('Avg Voltage (V)'); color = '#32ade6'; 
         }
