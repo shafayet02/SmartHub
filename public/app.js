@@ -174,9 +174,18 @@ function toggleTheme() {
 
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach((el) => el.classList.add('hidden'));
-    document.querySelectorAll('.tab-btn').forEach((el) => el.classList.remove('bg-black/10', 'dark:bg-white/10'));
+    
+    document.querySelectorAll('.tab-btn').forEach((el) => {
+        el.classList.remove('active-tab', 'text-white');
+        el.classList.add('text-gray-500', 'dark:text-gray-400', 'hover:bg-black/5', 'dark:hover:bg-white/5');
+    });
+    
     document.getElementById(tabId).classList.remove('hidden');
-    document.getElementById('btn-' + tabId).classList.add('bg-black/10', 'dark:bg-white/10');
+    
+    const activeBtn = document.getElementById('btn-' + tabId);
+    activeBtn.classList.add('active-tab', 'text-white');
+    activeBtn.classList.remove('text-gray-500', 'dark:text-gray-400', 'hover:bg-black/5', 'dark:hover:bg-white/5');
+
     if (tabId === 'tab-analytics') updateChart();
 }
 
@@ -220,7 +229,8 @@ async function fetchWeather() {
 
         if (data.current) {
             const temp = Math.round(data.current.temperature_2m);
-            document.getElementById('weatherTemp').innerText = `${state.lang === 'bn' ? temp.toLocaleString('bn-BD') : temp}°C`;
+            const tempStr = `${state.lang === 'bn' ? temp.toLocaleString('bn-BD') : temp}°C`;
+            document.getElementById('weatherTemp').innerText = tempStr;
             const code = data.current.weather_code;
             let desc = 'Partly Cloudy', icon = '⛅';
             if (code === 0) { desc = state.lang === 'bn' ? 'পরিষ্কার' : 'Clear Sky'; icon = '☀️'; }
@@ -577,7 +587,7 @@ function renderActivityLog() {
     container.innerHTML = '';
     items.slice(0, 20).forEach((item) => {
         const row = document.createElement('div'); row.className = 'activity-row';
-        const icon = document.createElement('div'); icon.className = 'activity-icon bg-black/5 dark:bg-white/10';
+        const icon = document.createElement('div'); icon.className = 'activity-icon bg-black/5 dark:bg-white/10 text-white';
         icon.textContent = activityIcons[item.type] || activityIcons.default;
         const text = document.createElement('div'); text.className = 'flex-1';
         const line1 = document.createElement('p'); line1.className = 'font-bold';
@@ -737,7 +747,6 @@ async function togglePower() {
     btn.disabled = true;
     updatePowerUI(newState, true);
     
-    // Changing power manually defaults to manual mode
     setMode('manual');
 
     try {
@@ -750,21 +759,29 @@ async function togglePower() {
 function updatePowerUI(isOn, isOnline = true) {
     state.isPowerOn = isOn;
     const btn = document.getElementById('powerBtn'); const txt = document.getElementById('powerText'); const badge = document.getElementById('statusBadge');
+    
+    const baseTxtClasses = 'text-3xl sm:text-4xl font-black mt-2 tracking-widest transition-colors z-10 relative ';
+
     if (!isOnline) {
-        btn.className = 'power-btn bg-gray-600 cursor-not-allowed'; txt.innerText = t('OFFLINE'); txt.className = 'text-4xl font-black mt-6 text-gray-500 tracking-widest';
-        badge.innerText = t('OFFLINE'); badge.className = 'px-4 py-1.5 rounded-full bg-red-500/20 text-red-500 text-xs font-extrabold tracking-widest';
+        btn.className = 'power-btn bg-gray-600 cursor-not-allowed'; 
+        txt.innerText = t('OFFLINE'); 
+        txt.className = baseTxtClasses + 'text-gray-500';
+        badge.innerText = t('OFFLINE'); badge.className = 'mb-2 sm:mb-4 px-4 py-1.5 rounded-full bg-red-500/20 text-red-500 text-xs font-extrabold tracking-widest';
         return;
     }
     if (isOn) {
-        btn.className = 'power-btn power-on'; txt.innerText = t('ON'); txt.className = 'text-4xl font-black mt-6 text-green-500 tracking-widest transition-colors';
-        badge.innerText = t('ONLINE'); badge.className = 'px-4 py-1.5 rounded-full bg-green-500/20 text-green-500 text-xs font-extrabold tracking-widest transition-colors';
+        btn.className = 'power-btn power-on'; 
+        txt.innerText = t('ON'); 
+        txt.className = baseTxtClasses + 'text-green-500';
+        badge.innerText = t('ONLINE'); badge.className = 'mb-2 sm:mb-4 px-4 py-1.5 rounded-full bg-green-500/20 text-green-500 text-xs font-extrabold tracking-widest transition-colors';
     } else {
-        btn.className = 'power-btn power-off'; txt.innerText = t('OFF'); txt.className = 'text-4xl font-black mt-6 text-red-500 tracking-widest transition-colors';
-        badge.innerText = t('STANDBY'); badge.className = 'px-4 py-1.5 rounded-full bg-gray-500/20 text-gray-500 text-xs font-extrabold tracking-widest transition-colors';
+        btn.className = 'power-btn power-off'; 
+        txt.innerText = t('OFF'); 
+        txt.className = baseTxtClasses + 'text-red-500';
+        badge.innerText = t('STANDBY'); badge.className = 'mb-2 sm:mb-4 px-4 py-1.5 rounded-full bg-gray-500/20 text-gray-500 text-xs font-extrabold tracking-widest transition-colors';
         document.getElementById('val-power').innerText = state.lang === 'bn' ? '০.০ W' : '0.0 W';
     }
     
-    // Update live ring when toggled
     const usage = state.db?.usage[state.activeId];
     if (usage) {
         const todayKwh = usage.daily[usage.daily.length - 1] || 0;
@@ -775,7 +792,7 @@ function updatePowerUI(isOn, isOnline = true) {
 }
 
 // ---------------------------------------------------------------------------
-// Charting
+// Charting (Unlocked Cross-Analytics)
 // ---------------------------------------------------------------------------
 function getDynamicLabels(type) {
     const now = new Date();
