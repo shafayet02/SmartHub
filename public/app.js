@@ -174,16 +174,19 @@ function toggleTheme() {
 
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach((el) => el.classList.add('hidden'));
+    
+    // Reset all tabs to inactive, stripping backgrounds and setting neutral text
     document.querySelectorAll('.tab-btn').forEach((el) => {
-        el.classList.remove('bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400');
+        el.classList.remove('bg-white', 'dark:bg-[#2c2c2e]', 'text-black', 'dark:text-white', 'shadow-sm');
         el.classList.add('text-gray-500', 'dark:text-gray-400');
     });
     
     document.getElementById(tabId).classList.remove('hidden');
     
+    // Apply the floating pill style to the active tab
     const activeBtn = document.getElementById('btn-' + tabId);
     activeBtn.classList.remove('text-gray-500', 'dark:text-gray-400');
-    activeBtn.classList.add('bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400');
+    activeBtn.classList.add('bg-white', 'dark:bg-[#2c2c2e]', 'text-black', 'dark:text-white', 'shadow-sm');
     
     if (tabId === 'tab-analytics') updateChart();
 }
