@@ -27,6 +27,7 @@ const SECRET = process.env.TUYA_SECRET;
 const BASE_URL = process.env.TUYA_BASE_URL || 'https://openapi-sg.iotbing.com';
 const PORT = Number(process.env.PORT) || 5000;
 const HUB_TIMEZONE = process.env.HUB_TIMEZONE || 'Asia/Dhaka';
+const HUB_PIN = process.env.HUB_PIN || '1234'; // Default PIN
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
     .split(',')
     .map((s) => s.trim())
@@ -61,9 +62,6 @@ app.use(helmet({
         directives: {
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.tailwindcss.com', 'https://cdn.jsdelivr.net'],
-            // Helmet's default CSP includes `script-src-attr 'none'`, which blocks
-            // this dashboard's inline onclick/onchange handlers. Explicitly allow
-            // those handlers so the UI controls remain functional.
             scriptSrcAttr: ["'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'"],
             imgSrc: ["'self'", 'data:'],
@@ -106,6 +104,18 @@ const apiLimiter = rateLimit({
 app.use('/api/', apiLimiter);
 
 // -----------------------------------------------------------------------------
+// PIN Auth Middleware
+// -----------------------------------------------------------------------------
+app.use('/api/', (req, res, next) => {
+    if (req.path === '/health' || req.path === '/ping') return next();
+    const clientPin = req.headers['x-pin'];
+    if (clientPin !== HUB_PIN) {
+        return res.status(401).json({ success: false, error: 'Unauthorized: Invalid PIN' });
+    }
+    next();
+});
+
+// -----------------------------------------------------------------------------
 // In-memory state + defaults
 // -----------------------------------------------------------------------------
 let accessToken = '';
@@ -137,6 +147,10 @@ function defaultAutomation() {
         schedules: [],
         timer: { active: false, executeAt: 0, action: false },
         mode: 'manual',
+        dayStart: '08:00',
+        dayEnd: '18:00',
+        nightStart: '22:00',
+        nightEnd: '06:00',
         standbyKill: false,
         standbyTimer: 0,
         voltageProtect: false,
@@ -150,6 +164,8 @@ function defaultDeviceCache() {
     const now = Date.now();
     return {
         isPowerOn: false,
+        intendedState: false, // Power Outage State Recovery
+        wasOffline: false,
         power: 0,
         voltage: 0,
         online: false,
@@ -183,6 +199,10 @@ function normalizeAutomation(value) {
         ...(merged.timer && typeof merged.timer === 'object' ? merged.timer : {}),
     };
     merged.mode = ['manual', 'day', 'night'].includes(merged.mode) ? merged.mode : 'manual';
+    merged.dayStart = TIME_RE.test(merged.dayStart) ? merged.dayStart : '08:00';
+    merged.dayEnd = TIME_RE.test(merged.dayEnd) ? merged.dayEnd : '18:00';
+    merged.nightStart = TIME_RE.test(merged.nightStart) ? merged.nightStart : '22:00';
+    merged.nightEnd = TIME_RE.test(merged.nightEnd) ? merged.nightEnd : '06:00';
     merged.voltageMin = Number.isFinite(Number(merged.voltageMin)) ? Number(merged.voltageMin) : 170;
     merged.voltageMax = Number.isFinite(Number(merged.voltageMax)) ? Number(merged.voltageMax) : 260;
     if (merged.voltageMin >= merged.voltageMax) {
@@ -317,7 +337,7 @@ function checkTimeRotation() {
 }
 
 // -----------------------------------------------------------------------------
-// MongoDB persistence: serialized + debounced, never attempts to $set _id
+// MongoDB persistence
 // -----------------------------------------------------------------------------
 let stateDirty = false;
 let saveTimer = null;
@@ -449,7 +469,7 @@ async function updateExchangeRates() {
 const exchangeRateTimer = setInterval(updateExchangeRates, 12 * 60 * 60 * 1000);
 
 // -----------------------------------------------------------------------------
-// Health endpoints, intentionally unauthenticated for Render / cron monitors
+// Health endpoints
 // -----------------------------------------------------------------------------
 app.get('/api/ping', (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
@@ -552,6 +572,7 @@ async function sendToggleCommand(deviceId, state, allowRetry = true) {
         if (res.data?.success) {
             if (deviceCache[deviceId]) {
                 deviceCache[deviceId].isPowerOn = state;
+                deviceCache[deviceId].intendedState = state; // Update intended state
                 deviceCache[deviceId].updatedAt = Date.now();
             }
             return true;
@@ -587,8 +608,8 @@ function markDeviceOffline(deviceId, data) {
     const cache = deviceCache[deviceId];
     if (cache) {
         cache.online = false;
+        cache.wasOffline = true; // Mark offline for recovery logic
         cache.updatedAt = Date.now();
-        // Do not backfill unknown energy usage after an outage.
         cache.lastCalcTime = Date.now();
     }
     if (isTuyaAuthError(data)) invalidateTuyaToken();
@@ -761,6 +782,11 @@ app.post('/api/automations/:id', (req, res) => {
         if (!['manual', 'day', 'night'].includes(body.mode)) return res.status(400).json({ success: false, error: 'Invalid mode' });
         patch.mode = body.mode;
     }
+    if (body.dayStart !== undefined && TIME_RE.test(body.dayStart)) patch.dayStart = body.dayStart;
+    if (body.dayEnd !== undefined && TIME_RE.test(body.dayEnd)) patch.dayEnd = body.dayEnd;
+    if (body.nightStart !== undefined && TIME_RE.test(body.nightStart)) patch.nightStart = body.nightStart;
+    if (body.nightEnd !== undefined && TIME_RE.test(body.nightEnd)) patch.nightEnd = body.nightEnd;
+    
     if (body.standbyKill !== undefined) patch.standbyKill = !!body.standbyKill;
     if (body.voltageProtect !== undefined) patch.voltageProtect = !!body.voltageProtect;
     if (body.budgetKill !== undefined) patch.budgetKill = !!body.budgetKill;
@@ -826,7 +852,7 @@ app.delete('/api/usage/:id', (req, res) => {
 app.get('/api/activity', (req, res) => res.json({ success: true, result: db.activityLog || [] }));
 
 // -----------------------------------------------------------------------------
-// Time-based automation ticker: timers and schedules do not wait for Tuya polling
+// Time-based automation ticker
 // -----------------------------------------------------------------------------
 let automationTickerRunning = false;
 let scheduleExecutionDate = '';
@@ -875,7 +901,6 @@ async function runTimeAutomations() {
                 if (!schedule.enabled || !TIME_RE.test(String(schedule.time || ''))) continue;
                 const [hh, mm] = schedule.time.split(':').map(Number);
 
-                // Check today and, when the ticker crosses midnight, the previous calendar day.
                 for (const dayOffset of [0, -1]) {
                     const scheduledAt = new Date(now);
                     scheduledAt.setDate(scheduledAt.getDate() + dayOffset);
@@ -888,7 +913,6 @@ async function runTimeAutomations() {
             }
 
             if (scheduleCandidates.length) {
-                // If multiple schedules become due together, the latest due schedule / list order wins.
                 scheduleCandidates.sort((a, b) => a.scheduledClockMs - b.scheduledClockMs);
                 const candidate = scheduleCandidates[scheduleCandidates.length - 1];
                 const schedule = candidate.schedule;
@@ -914,10 +938,16 @@ async function runTimeAutomations() {
 const automationTimer = setInterval(runTimeAutomations, AUTOMATION_TICK_MS);
 
 // -----------------------------------------------------------------------------
-// Tuya status polling: sensor values, energy accounting, safety automations
+// Tuya status polling & Power Outage State Recovery
 // -----------------------------------------------------------------------------
 let polling = false;
 let pollTimer = null;
+
+function timeToMins(t) {
+    if (!t || typeof t !== 'string') return 0;
+    const [h, m] = t.split(':').map(Number);
+    return (h || 0) * 60 + (m || 0);
+}
 
 async function pollTuya() {
     if (polling) return;
@@ -939,6 +969,7 @@ async function pollTuya() {
 
         const now = hubNow();
         const hour = now.getHours();
+        const nowMins = now.getHours() * 60 + now.getMinutes();
         const nowMs = Date.now();
 
         for (const device of db.devices) {
@@ -973,11 +1004,28 @@ async function pollTuya() {
                 const switchValue = status.find((s) => s.code === 'switch_1' || s.code === 'switch')?.value;
                 const powerRaw = Number(status.find((s) => s.code === 'cur_power')?.value);
                 const voltageRaw = Number(status.find((s) => s.code === 'cur_voltage')?.value);
+                
                 const isPowerOn = typeof switchValue === 'boolean' ? switchValue : cache.isPowerOn;
+
+                // --- POWER OUTAGE STATE RECOVERY ---
+                if (cache.wasOffline) {
+                    cache.wasOffline = false;
+                    if (isPowerOn !== cache.intendedState) {
+                        const restored = await toggleDevice(device.id, cache.intendedState);
+                        if (restored) {
+                            logActivity(device.id, 'power_cycle', `Power restored. Device returned to intended state: ${cache.intendedState ? 'ON' : 'OFF'}`);
+                        }
+                        continue; // Skip the rest of the loop to let the state settle
+                    }
+                } else {
+                    // Sync intended state if toggled externally (e.g. via Tuya physical app)
+                    cache.intendedState = isPowerOn;
+                }
+                // -----------------------------------
+
                 const currentPower = Number.isFinite(powerRaw) ? (powerRaw / 10) * POWER_CALIBRATION : 0;
                 const currentVoltage = Number.isFinite(voltageRaw) ? (voltageRaw / 10) * VOLTAGE_CALIBRATION : 0;
 
-                // Clamp elapsed time so a network outage cannot fabricate hours of usage at one stale wattage.
                 const maxDeltaMs = Math.max(TUYA_POLL_INTERVAL_MS * 3, 180_000);
                 const elapsedMs = Math.max(0, Math.min(nowMs - cache.lastCalcTime, maxDeltaMs));
                 const deltaHours = elapsedMs / 3_600_000;
@@ -998,7 +1046,6 @@ async function pollTuya() {
                     usage.monthly[usage.monthly.length - 1] += kwh;
                 }
 
-                // Safety: voltage guard
                 if (auto.voltageProtect && isPowerOn) {
                     const vMin = Number(auto.voltageMin) || 170;
                     const vMax = Number(auto.voltageMax) || 260;
@@ -1013,7 +1060,6 @@ async function pollTuya() {
                     }
                 }
 
-                // Safety: budget lock
                 if (auto.budgetKill && isPowerOn) {
                     const monthKwh = usage.monthly[usage.monthly.length - 1] || 0;
                     const currency = db.settings.currency;
@@ -1031,7 +1077,6 @@ async function pollTuya() {
                     }
                 }
 
-                // Safety: standby auto-kill
                 if (isPowerOn && currentPower < 5) {
                     auto.standbyTimer = (Number(auto.standbyTimer) || 0) + deltaHours * 3600;
                     if (auto.standbyKill && auto.standbyTimer >= 600) {
@@ -1047,14 +1092,17 @@ async function pollTuya() {
                     auto.standbyTimer = 0;
                 }
 
-                // Persistent day / night operating modes.
                 let targetState = isPowerOn;
                 let modeReason = null;
                 if (auto.mode === 'day') {
-                    targetState = hour >= 8 && hour < 18;
+                    const start = timeToMins(auto.dayStart);
+                    const end = timeToMins(auto.dayEnd);
+                    targetState = start <= end ? (nowMins >= start && nowMins < end) : (nowMins >= start || nowMins < end);
                     modeReason = 'Day mode';
                 } else if (auto.mode === 'night') {
-                    targetState = hour >= 22 || hour < 6;
+                    const start = timeToMins(auto.nightStart);
+                    const end = timeToMins(auto.nightEnd);
+                    targetState = start <= end ? (nowMins >= start && nowMins < end) : (nowMins >= start || nowMins < end);
                     modeReason = 'Night mode';
                 }
 
