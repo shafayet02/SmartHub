@@ -27,7 +27,7 @@ const SECRET = process.env.TUYA_SECRET;
 const BASE_URL = process.env.TUYA_BASE_URL || 'https://openapi-sg.iotbing.com';
 const PORT = Number(process.env.PORT) || 5000;
 const HUB_TIMEZONE = process.env.HUB_TIMEZONE || 'Asia/Dhaka';
-const HUB_PIN = process.env.HUB_PIN || '1234'; // Default PIN
+const HUB_PIN = process.env.HUB_PIN || '1234';
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
     .split(',')
     .map((s) => s.trim())
@@ -151,6 +151,7 @@ function defaultAutomation() {
         dayEnd: '18:00',
         nightStart: '22:00',
         nightEnd: '06:00',
+        powerOutageRecovery: true,
         standbyKill: false,
         standbyTimer: 0,
         voltageProtect: false,
@@ -164,7 +165,7 @@ function defaultDeviceCache() {
     const now = Date.now();
     return {
         isPowerOn: false,
-        intendedState: false, // Power Outage State Recovery
+        intendedState: false, 
         wasOffline: false,
         power: 0,
         voltage: 0,
@@ -210,6 +211,7 @@ function normalizeAutomation(value) {
         merged.voltageMax = 260;
     }
     merged.standbyTimer = Number.isFinite(Number(merged.standbyTimer)) ? Math.max(0, Number(merged.standbyTimer)) : 0;
+    merged.powerOutageRecovery = merged.powerOutageRecovery !== false;
     merged.standbyKill = !!merged.standbyKill;
     merged.voltageProtect = !!merged.voltageProtect;
     merged.budgetKill = !!merged.budgetKill;
@@ -228,6 +230,12 @@ function logActivity(deviceId, type, message, deviceNameOverride) {
         message,
     });
     if (db.activityLog.length > MAX_ACTIVITY_LOG) db.activityLog.length = MAX_ACTIVITY_LOG;
+}
+
+function timeToMins(t) {
+    if (!t || typeof t !== 'string') return 0;
+    const [h, m] = t.split(':').map(Number);
+    return (h || 0) * 60 + (m || 0);
 }
 
 // -----------------------------------------------------------------------------
@@ -572,7 +580,7 @@ async function sendToggleCommand(deviceId, state, allowRetry = true) {
         if (res.data?.success) {
             if (deviceCache[deviceId]) {
                 deviceCache[deviceId].isPowerOn = state;
-                deviceCache[deviceId].intendedState = state; // Update intended state
+                deviceCache[deviceId].intendedState = state;
                 deviceCache[deviceId].updatedAt = Date.now();
             }
             return true;
@@ -608,7 +616,7 @@ function markDeviceOffline(deviceId, data) {
     const cache = deviceCache[deviceId];
     if (cache) {
         cache.online = false;
-        cache.wasOffline = true; // Mark offline for recovery logic
+        cache.wasOffline = true;
         cache.updatedAt = Date.now();
         cache.lastCalcTime = Date.now();
     }
@@ -787,6 +795,7 @@ app.post('/api/automations/:id', (req, res) => {
     if (body.nightStart !== undefined && TIME_RE.test(body.nightStart)) patch.nightStart = body.nightStart;
     if (body.nightEnd !== undefined && TIME_RE.test(body.nightEnd)) patch.nightEnd = body.nightEnd;
     
+    if (body.powerOutageRecovery !== undefined) patch.powerOutageRecovery = !!body.powerOutageRecovery;
     if (body.standbyKill !== undefined) patch.standbyKill = !!body.standbyKill;
     if (body.voltageProtect !== undefined) patch.voltageProtect = !!body.voltageProtect;
     if (body.budgetKill !== undefined) patch.budgetKill = !!body.budgetKill;
@@ -852,7 +861,7 @@ app.delete('/api/usage/:id', (req, res) => {
 app.get('/api/activity', (req, res) => res.json({ success: true, result: db.activityLog || [] }));
 
 // -----------------------------------------------------------------------------
-// Time-based automation ticker
+// Time-based automation ticker (Runs every 5 seconds)
 // -----------------------------------------------------------------------------
 let automationTickerRunning = false;
 let scheduleExecutionDate = '';
@@ -868,6 +877,7 @@ async function runTimeAutomations() {
         const now = hubNow();
         const today = dateKey(now);
         const nowMs = Date.now();
+        const nowMins = now.getHours() * 60 + now.getMinutes();
         const nowClockMs = now.getTime();
         const maxScheduleCatchupMs = 15 * 60 * 1000;
         const previousClockMs = lastAutomationClockMs || (nowClockMs - AUTOMATION_TICK_MS * 2);
@@ -884,6 +894,7 @@ async function runTimeAutomations() {
             const cache = deviceCache[device.id];
             if (!auto || !cache) continue;
 
+            // 1. Timers
             if (auto.timer?.active && nowMs >= auto.timer.executeAt) {
                 const desired = !!auto.timer.action;
                 const success = await toggleDevice(device.id, desired);
@@ -896,6 +907,33 @@ async function runTimeAutomations() {
                 }
             }
 
+            // 2. Day/Night Mode Instant Responsiveness
+            if (cache.online && auto.mode !== 'manual') {
+                let targetState = cache.isPowerOn;
+                let modeReason = null;
+                
+                if (auto.mode === 'day') {
+                    const start = timeToMins(auto.dayStart);
+                    const end = timeToMins(auto.dayEnd);
+                    targetState = start <= end ? (nowMins >= start && nowMins < end) : (nowMins >= start || nowMins < end);
+                    modeReason = 'Day mode';
+                } else if (auto.mode === 'night') {
+                    const start = timeToMins(auto.nightStart);
+                    const end = timeToMins(auto.nightEnd);
+                    targetState = start <= end ? (nowMins >= start && nowMins < end) : (nowMins >= start || nowMins < end);
+                    modeReason = 'Night mode';
+                }
+
+                if (targetState !== cache.isPowerOn) {
+                    const success = await toggleDevice(device.id, targetState);
+                    if (success && modeReason) {
+                        logActivity(device.id, 'mode', `${modeReason} active: turned ${targetState ? 'ON' : 'OFF'}`);
+                        markStateDirty();
+                    }
+                }
+            }
+
+            // 3. Schedules
             const scheduleCandidates = [];
             for (const schedule of (auto.schedules || [])) {
                 if (!schedule.enabled || !TIME_RE.test(String(schedule.time || ''))) continue;
@@ -943,12 +981,6 @@ const automationTimer = setInterval(runTimeAutomations, AUTOMATION_TICK_MS);
 let polling = false;
 let pollTimer = null;
 
-function timeToMins(t) {
-    if (!t || typeof t !== 'string') return 0;
-    const [h, m] = t.split(':').map(Number);
-    return (h || 0) * 60 + (m || 0);
-}
-
 async function pollTuya() {
     if (polling) return;
     polling = true;
@@ -969,7 +1001,6 @@ async function pollTuya() {
 
         const now = hubNow();
         const hour = now.getHours();
-        const nowMins = now.getHours() * 60 + now.getMinutes();
         const nowMs = Date.now();
 
         for (const device of db.devices) {
@@ -1010,15 +1041,16 @@ async function pollTuya() {
                 // --- POWER OUTAGE STATE RECOVERY ---
                 if (cache.wasOffline) {
                     cache.wasOffline = false;
-                    if (isPowerOn !== cache.intendedState) {
+                    if (auto.powerOutageRecovery && isPowerOn !== cache.intendedState) {
                         const restored = await toggleDevice(device.id, cache.intendedState);
                         if (restored) {
-                            logActivity(device.id, 'power_cycle', `Power restored. Device returned to intended state: ${cache.intendedState ? 'ON' : 'OFF'}`);
+                            logActivity(device.id, 'power_cycle', `Power restored. Returned to intended state: ${cache.intendedState ? 'ON' : 'OFF'}`);
                         }
-                        continue; // Skip the rest of the loop to let the state settle
+                        continue; 
+                    } else if (!auto.powerOutageRecovery) {
+                        cache.intendedState = isPowerOn;
                     }
                 } else {
-                    // Sync intended state if toggled externally (e.g. via Tuya physical app)
                     cache.intendedState = isPowerOn;
                 }
                 // -----------------------------------
@@ -1090,27 +1122,6 @@ async function pollTuya() {
                     }
                 } else {
                     auto.standbyTimer = 0;
-                }
-
-                let targetState = isPowerOn;
-                let modeReason = null;
-                if (auto.mode === 'day') {
-                    const start = timeToMins(auto.dayStart);
-                    const end = timeToMins(auto.dayEnd);
-                    targetState = start <= end ? (nowMins >= start && nowMins < end) : (nowMins >= start || nowMins < end);
-                    modeReason = 'Day mode';
-                } else if (auto.mode === 'night') {
-                    const start = timeToMins(auto.nightStart);
-                    const end = timeToMins(auto.nightEnd);
-                    targetState = start <= end ? (nowMins >= start && nowMins < end) : (nowMins >= start || nowMins < end);
-                    modeReason = 'Night mode';
-                }
-
-                if (targetState !== isPowerOn) {
-                    const success = await toggleDevice(device.id, targetState);
-                    if (success && modeReason) {
-                        logActivity(device.id, 'mode', `${modeReason}: turned ${targetState ? 'ON' : 'OFF'}`);
-                    }
                 }
             } catch (error) {
                 cycleHadError = true;
