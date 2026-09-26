@@ -144,7 +144,12 @@ function applyTranslations() {
         else if (el.childNodes.length > 0 && el.childNodes[0].nodeType === 3) el.childNodes[0].nodeValue = text;
         else el.innerText = text;
     });
-    document.getElementById('langBtn').innerText = state.lang === 'en' ? 'BN' : 'EN';
+    
+    // Synchronize both language toggles without erroring
+    document.querySelectorAll('.lang-toggle-cb').forEach(cb => {
+        cb.checked = (state.lang === 'bn');
+    });
+
     const badgeText = document.getElementById('statusBadge').innerText;
     updatePowerUI(state.isPowerOn, badgeText !== 'OFFLINE' && badgeText !== 'অফলাইন');
     if (!document.getElementById('tab-analytics').classList.contains('hidden')) updateChart();
@@ -172,21 +177,25 @@ function toggleTheme() {
     updateChart();
 }
 
+// ---------------------------------------------------------------------------
+// Absolute Navigation Tab Switcher
+// ---------------------------------------------------------------------------
 function switchTab(tabId) {
+    // 1. Hide all tab content
     document.querySelectorAll('.tab-content').forEach((el) => el.classList.add('hidden'));
     
-    // Reset all tabs to inactive, stripping backgrounds and setting neutral text
+    // 2. Bruteforce reset ALL tab buttons to the exact inactive styling 
+    // (This guarantees no ghost classes get left behind)
     document.querySelectorAll('.tab-btn').forEach((el) => {
-        el.classList.remove('bg-white', 'dark:bg-[#2c2c2e]', 'text-black', 'dark:text-white', 'shadow-sm');
-        el.classList.add('text-gray-500', 'dark:text-gray-400');
+        el.className = "tab-btn flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-5 rounded-xl sm:rounded-full font-bold text-[10px] sm:text-sm transition-all duration-300 hover:scale-[0.98] text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white";
     });
     
+    // 3. Show selected tab content
     document.getElementById(tabId).classList.remove('hidden');
     
-    // Apply the floating pill style to the active tab
+    // 4. Force inject exact active pill classes to the selected button
     const activeBtn = document.getElementById('btn-' + tabId);
-    activeBtn.classList.remove('text-gray-500', 'dark:text-gray-400');
-    activeBtn.classList.add('bg-white', 'dark:bg-[#2c2c2e]', 'text-black', 'dark:text-white', 'shadow-sm');
+    activeBtn.className = "tab-btn flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-5 rounded-xl sm:rounded-full font-bold text-[10px] sm:text-sm transition-all duration-300 hover:scale-[0.98] bg-white dark:bg-[#2c2c2e] text-black dark:text-white shadow-sm";
     
     if (tabId === 'tab-analytics') updateChart();
 }
@@ -451,13 +460,26 @@ function renderDeviceUI() {
     const usage = state.db.usage[state.activeId];
     if (!auto || !usage) return;
 
-    // Refresh Mode UI
+    // Reset all mode buttons (Manual, Day, Night, Sleep)
     document.querySelectorAll('.mode-btn').forEach((b) => {
-        b.classList.remove('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400', 'shadow-md');
+        b.classList.remove('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400', 'shadow-md', 'border-indigo-500', 'bg-indigo-500/10', 'text-indigo-600', 'dark:text-indigo-400');
         b.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
     });
+
+    // Handle Conditional Sleep Highlight Logic
+    let highlightedSleep = false;
+    if (auto.timer && auto.timer.active && auto.timer.action === false) {
+        const sleepBtn = document.getElementById('mode-sleep');
+        if (sleepBtn) {
+            sleepBtn.classList.add('border-indigo-500', 'bg-indigo-500/10', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-md');
+            sleepBtn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+            highlightedSleep = true;
+        }
+    }
+
+    // Handle standard Mode highlight if sleep isn't overriding Manual
     const modeBtn = document.getElementById(`mode-${auto.mode}`);
-    if (modeBtn) {
+    if (modeBtn && !(auto.mode === 'manual' && highlightedSleep)) {
         modeBtn.classList.add('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400', 'shadow-md');
         modeBtn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
     }
@@ -641,9 +663,10 @@ async function promptBudget() {
 
 async function setMode(mode) {
     if(!state.activeId) return;
-    // Optimistic UI update
+    
+    // Optimistic UI update (clears sleep as well)
     document.querySelectorAll('.mode-btn').forEach((b) => {
-        b.classList.remove('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400', 'shadow-md');
+        b.classList.remove('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400', 'shadow-md', 'border-indigo-500', 'bg-indigo-500/10', 'text-indigo-600', 'dark:text-indigo-400');
         b.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
     });
     const modeBtn = document.getElementById(`mode-${mode}`);
@@ -653,6 +676,10 @@ async function setMode(mode) {
     }
     
     try { 
+        // Changing to any mode naturally disables sleep (since sleep sets manual mode + active timer)
+        if(mode !== 'manual') {
+            await apiFetch(`/api/automations/${state.activeId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ timer: { active: false, executeAt: 0, action: false } }) });
+        }
         await apiFetch(`/api/automations/${state.activeId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode }) }); 
         toast('Mode updated', 'success');
         await fetchDB(true);
@@ -698,7 +725,25 @@ async function setTimer() {
         await fetchDB();
     } catch (e) { actionError(e, 'Could not set timer'); }
 }
-function activateSleepMode() { document.getElementById('timerMins').value = 180; document.getElementById('timerAction').value = 'false'; setTimer(); setMode('manual'); }
+
+function activateSleepMode() { 
+    document.getElementById('timerMins').value = 180; 
+    document.getElementById('timerAction').value = 'false'; 
+    
+    // Optimistic UI change to visually engage Sleep right away
+    document.querySelectorAll('.mode-btn').forEach((b) => {
+        b.classList.remove('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400', 'shadow-md', 'border-indigo-500', 'bg-indigo-500/10', 'text-indigo-600', 'dark:text-indigo-400');
+        b.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+    });
+    const sleepBtn = document.getElementById('mode-sleep');
+    if(sleepBtn) {
+        sleepBtn.classList.add('border-indigo-500', 'bg-indigo-500/10', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-md');
+        sleepBtn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+    }
+    
+    setTimer(); 
+    setMode('manual'); 
+}
 
 async function addSchedule() {
     const timeVal = document.getElementById('schedTime').value;
