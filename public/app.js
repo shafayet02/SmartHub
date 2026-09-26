@@ -174,18 +174,17 @@ function toggleTheme() {
 
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach((el) => el.classList.add('hidden'));
-    
     document.querySelectorAll('.tab-btn').forEach((el) => {
-        el.classList.remove('active-tab', 'text-white');
-        el.classList.add('text-gray-500', 'dark:text-gray-400', 'hover:bg-black/5', 'dark:hover:bg-white/5');
+        el.classList.remove('bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400');
+        el.classList.add('text-gray-500', 'dark:text-gray-400');
     });
     
     document.getElementById(tabId).classList.remove('hidden');
     
     const activeBtn = document.getElementById('btn-' + tabId);
-    activeBtn.classList.add('active-tab', 'text-white');
-    activeBtn.classList.remove('text-gray-500', 'dark:text-gray-400', 'hover:bg-black/5', 'dark:hover:bg-white/5');
-
+    activeBtn.classList.remove('text-gray-500', 'dark:text-gray-400');
+    activeBtn.classList.add('bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400');
+    
     if (tabId === 'tab-analytics') updateChart();
 }
 
@@ -229,8 +228,7 @@ async function fetchWeather() {
 
         if (data.current) {
             const temp = Math.round(data.current.temperature_2m);
-            const tempStr = `${state.lang === 'bn' ? temp.toLocaleString('bn-BD') : temp}°C`;
-            document.getElementById('weatherTemp').innerText = tempStr;
+            document.getElementById('weatherTemp').innerText = `${state.lang === 'bn' ? temp.toLocaleString('bn-BD') : temp}°C`;
             const code = data.current.weather_code;
             let desc = 'Partly Cloudy', icon = '⛅';
             if (code === 0) { desc = state.lang === 'bn' ? 'পরিষ্কার' : 'Clear Sky'; icon = '☀️'; }
@@ -420,11 +418,11 @@ async function masterToggle(isOn) {
 function updateActivityRings(todayKwh, todayCost) {
     const voltRaw = parseFloat(document.getElementById('val-volt').innerText) || 0;
     const voltPct = Math.min(1, Math.max(0, voltRaw / 260));
-    document.getElementById('ring-volt').style.strokeDashoffset = 226 - (226 * voltPct);
+    document.getElementById('ring-volt').style.strokeDashoffset = 251 - (251 * voltPct);
 
     const powerRaw = parseFloat(document.getElementById('val-power').innerText) || 0;
     const powerPct = Math.min(1, Math.max(0, powerRaw / 3000));
-    document.getElementById('ring-power').style.strokeDashoffset = 226 - (226 * powerPct);
+    document.getElementById('ring-power').style.strokeDashoffset = 251 - (251 * powerPct);
 
     const curr = state.db.settings.currency;
     const rate = state.db.settings.baseRateBDT * (state.db.currentRates[curr] || 1);
@@ -432,12 +430,12 @@ function updateActivityRings(todayKwh, todayCost) {
     
     const dailyBudgetKwh = (budgetCost / 30) / rate;
     const energyPct = Math.min(1, Math.max(0, todayKwh / (dailyBudgetKwh || 1)));
-    document.getElementById('ring-energy').style.strokeDashoffset = 226 - (226 * energyPct);
+    document.getElementById('ring-energy').style.strokeDashoffset = 251 - (251 * energyPct);
     document.getElementById('val-energy').innerText = (state.lang === 'bn' ? todayKwh.toLocaleString('bn-BD', { maximumFractionDigits: 2 }) : todayKwh.toFixed(2)) + ' kWh';
 
     const dailyBudgetCost = budgetCost / 30;
     const costPct = Math.min(1, Math.max(0, todayCost / (dailyBudgetCost || 1)));
-    document.getElementById('ring-cost').style.strokeDashoffset = 226 - (226 * costPct);
+    document.getElementById('ring-cost').style.strokeDashoffset = 251 - (251 * costPct);
     document.getElementById('val-cost').innerText = symbols[curr] + (state.lang === 'bn' ? todayCost.toLocaleString('bn-BD', { maximumFractionDigits: 0 }) : todayCost.toFixed(0));
 }
 
@@ -450,14 +448,15 @@ function renderDeviceUI() {
     const usage = state.db.usage[state.activeId];
     if (!auto || !usage) return;
 
+    // Refresh Mode UI
     document.querySelectorAll('.mode-btn').forEach((b) => {
-        b.classList.remove('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400');
-        b.classList.add('border-transparent');
+        b.classList.remove('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400', 'shadow-md');
+        b.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
     });
     const modeBtn = document.getElementById(`mode-${auto.mode}`);
     if (modeBtn) {
-        modeBtn.classList.add('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400');
-        modeBtn.classList.remove('border-transparent');
+        modeBtn.classList.add('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400', 'shadow-md');
+        modeBtn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
     }
 
     if (document.getElementById('standbyToggle').checked !== (auto.standbyKill || false)) document.getElementById('standbyToggle').checked = auto.standbyKill || false;
@@ -587,14 +586,14 @@ function renderActivityLog() {
     container.innerHTML = '';
     items.slice(0, 20).forEach((item) => {
         const row = document.createElement('div'); row.className = 'activity-row';
-        const icon = document.createElement('div'); icon.className = 'activity-icon bg-black/5 dark:bg-white/10 text-white';
+        const icon = document.createElement('div'); icon.className = 'activity-icon text-gray-700 dark:text-gray-200';
         icon.textContent = activityIcons[item.type] || activityIcons.default;
         const text = document.createElement('div'); text.className = 'flex-1';
-        const line1 = document.createElement('p'); line1.className = 'font-bold';
+        const line1 = document.createElement('p'); line1.className = 'font-bold text-sm';
         line1.textContent = item.deviceName || item.deviceId;
-        const line2 = document.createElement('p'); line2.className = 'apple-sub';
+        const line2 = document.createElement('p'); line2.className = 'apple-sub text-xs mt-0.5';
         line2.textContent = item.message;
-        const time = document.createElement('p'); time.className = 'apple-sub text-[0.7rem] mt-0.5';
+        const time = document.createElement('p'); time.className = 'apple-sub text-[0.65rem] font-bold tracking-wider mt-1 uppercase';
         time.textContent = new Date(item.ts).toLocaleString(state.lang === 'bn' ? 'bn-BD' : 'en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
         text.appendChild(line1); text.appendChild(line2); text.appendChild(time);
         row.appendChild(icon); row.appendChild(text);
@@ -641,13 +640,13 @@ async function setMode(mode) {
     if(!state.activeId) return;
     // Optimistic UI update
     document.querySelectorAll('.mode-btn').forEach((b) => {
-        b.classList.remove('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400');
-        b.classList.add('border-transparent');
+        b.classList.remove('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400', 'shadow-md');
+        b.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
     });
     const modeBtn = document.getElementById(`mode-${mode}`);
     if (modeBtn) {
-        modeBtn.classList.add('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400');
-        modeBtn.classList.remove('border-transparent');
+        modeBtn.classList.add('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400', 'shadow-md');
+        modeBtn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
     }
     
     try { 
@@ -747,6 +746,7 @@ async function togglePower() {
     btn.disabled = true;
     updatePowerUI(newState, true);
     
+    // Changing power manually defaults to manual mode
     setMode('manual');
 
     try {
@@ -759,26 +759,17 @@ async function togglePower() {
 function updatePowerUI(isOn, isOnline = true) {
     state.isPowerOn = isOn;
     const btn = document.getElementById('powerBtn'); const txt = document.getElementById('powerText'); const badge = document.getElementById('statusBadge');
-    
-    const baseTxtClasses = 'text-3xl sm:text-4xl font-black mt-2 tracking-widest transition-colors z-10 relative ';
-
     if (!isOnline) {
-        btn.className = 'power-btn bg-gray-600 cursor-not-allowed'; 
-        txt.innerText = t('OFFLINE'); 
-        txt.className = baseTxtClasses + 'text-gray-500';
-        badge.innerText = t('OFFLINE'); badge.className = 'mb-2 sm:mb-4 px-4 py-1.5 rounded-full bg-red-500/20 text-red-500 text-xs font-extrabold tracking-widest';
+        btn.className = 'power-btn bg-gray-600 cursor-not-allowed'; txt.innerText = t('OFFLINE'); txt.className = 'text-2xl sm:text-3xl font-black text-gray-500 tracking-widest mt-2 sm:mt-0';
+        badge.innerText = t('OFFLINE'); badge.className = 'px-4 py-1.5 rounded-full bg-red-500/20 text-red-500 text-[10px] sm:text-xs font-extrabold tracking-widest';
         return;
     }
     if (isOn) {
-        btn.className = 'power-btn power-on'; 
-        txt.innerText = t('ON'); 
-        txt.className = baseTxtClasses + 'text-green-500';
-        badge.innerText = t('ONLINE'); badge.className = 'mb-2 sm:mb-4 px-4 py-1.5 rounded-full bg-green-500/20 text-green-500 text-xs font-extrabold tracking-widest transition-colors';
+        btn.className = 'power-btn power-on'; txt.innerText = t('ON'); txt.className = 'text-2xl sm:text-3xl font-black text-green-500 tracking-widest transition-colors mt-2 sm:mt-0';
+        badge.innerText = t('ONLINE'); badge.className = 'px-4 py-1.5 rounded-full bg-green-500/20 text-green-500 text-[10px] sm:text-xs font-extrabold tracking-widest transition-colors';
     } else {
-        btn.className = 'power-btn power-off'; 
-        txt.innerText = t('OFF'); 
-        txt.className = baseTxtClasses + 'text-red-500';
-        badge.innerText = t('STANDBY'); badge.className = 'mb-2 sm:mb-4 px-4 py-1.5 rounded-full bg-gray-500/20 text-gray-500 text-xs font-extrabold tracking-widest transition-colors';
+        btn.className = 'power-btn power-off'; txt.innerText = t('OFF'); txt.className = 'text-2xl sm:text-3xl font-black text-red-500 tracking-widest transition-colors mt-2 sm:mt-0';
+        badge.innerText = t('STANDBY'); badge.className = 'px-4 py-1.5 rounded-full bg-gray-500/20 text-gray-500 text-[10px] sm:text-xs font-extrabold tracking-widest transition-colors';
         document.getElementById('val-power').innerText = state.lang === 'bn' ? '০.০ W' : '0.0 W';
     }
     
@@ -861,6 +852,7 @@ function updateChart() {
         }
     } else {
         let baseData = state.db.usage[state.activeId][tf] || [];
+        
         const hoursInPeriod = tf === 'hourly' ? 1 : tf === 'daily' ? 24 : tf === 'weekly' ? 168 : 720;
         
         if (dt === 'cost') { data = baseData.map((v) => v * rate); label = t('Cost'); color = '#af52de'; }
