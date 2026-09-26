@@ -27,7 +27,7 @@
         .ambient-light .orb-1 { width: 55vw; height: 55vw; background: rgba(52, 199, 89, 0.25); top: -10%; left: -10%; }
         .ambient-light .orb-2 { width: 65vw; height: 65vw; background: rgba(0, 122, 255, 0.2); bottom: -10%; right: -10%; animation-delay: -5s; }
 
-        .apple-card { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(40px) saturate(150%); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 28px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); transition: 0.3s; }
+        .apple-card { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(40px) saturate(150%); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 28px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); transition: 0.3s; }
         .apple-input { background: rgba(0,0,0,0.04); border: none; border-radius: 14px; color: #1c1c1e; transition: 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
         .apple-input:focus { background: rgba(0,0,0,0.08); outline: none; }
         .apple-sub { color: #8e8e93; }
@@ -38,7 +38,7 @@
         .dark .ambient-dark .bg-orb { mix-blend-mode: screen; }
         .dark .ambient-dark .orb-1 { width: 55vw; height: 55vw; background: rgba(10, 132, 255, 0.25); top: -10%; left: -10%; }
         .dark .ambient-dark .orb-2 { width: 65vw; height: 65vw; background: rgba(94, 92, 230, 0.2); bottom: -10%; right: -10%; animation-delay: -5s; }
-        .dark .apple-card { background: rgba(30, 30, 32, 0.55); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); }
+        .dark .apple-card { background: rgba(30, 30, 32, 0.65); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); }
         .dark .apple-input { background: rgba(255,255,255,0.08); color: #f2f2f7; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
         .dark .apple-input:focus { background: rgba(255,255,255,0.15); }
         .dark .apple-sub { color: #98989d; }
@@ -47,7 +47,7 @@
         .apple-btn:active { transform: scale(0.95); }
         .apple-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .power-btn { width: 120px; height: 120px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); margin: 0 auto; z-index: 10; position: relative; }
+        .power-btn { width: 110px; height: 110px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); margin: 0 auto; z-index: 10; position: relative; }
         @media (min-width: 640px) { .power-btn { width: 140px; height: 140px; } }
         .power-off { background: linear-gradient(145deg, #ff3b30, #dc3545); box-shadow: 0 10px 25px rgba(255, 59, 48, 0.4); color: white; border: none; }
         @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.6); } 70% { box-shadow: 0 0 0 20px rgba(52, 199, 89, 0); } 100% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); } }
@@ -63,6 +63,7 @@
         .toggle-checkbox:checked + .toggle-slider { background-color: #34c759; }
         .toggle-checkbox:checked + .toggle-slider:before { transform: translateX(22px); }
 
+        .mode-active { border: 2px solid #007aff !important; color: #007aff !important; font-weight: 700; background: rgba(0,122,255,0.1); }
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -72,8 +73,17 @@
         .spinner { width: 44px; height: 44px; border-radius: 50%; border: 4px solid rgba(120,120,128,0.25); border-top-color: #007aff; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .offline-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 95; text-align: center; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.05em; padding: 0.6rem; background: linear-gradient(135deg, #ff9500, #ffcc00); color: white; transform: translateY(-100%); transition: transform 0.35s ease; padding-top: calc(0.6rem + env(safe-area-inset-top, 0px)); }
-        .offline-banner.show { transform: translateY(0); }
+        /* Fixed Offline Banner */
+        .offline-banner { 
+            position: fixed; top: 0; left: 0; right: 0; z-index: 999; 
+            text-align: center; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.05em; padding: 0.6rem; 
+            background: linear-gradient(135deg, #ff9500, #ffcc00); color: white; 
+            opacity: 0; visibility: hidden; transform: translateY(-100%); 
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            padding-top: calc(0.6rem + env(safe-area-inset-top, 0px)); 
+            box-shadow: 0 4px 15px rgba(255,149,0,0.4); 
+        }
+        .offline-banner.show { opacity: 1; visibility: visible; transform: translateY(0); }
 
         .toast-container { position: fixed; bottom: max(5.5rem, calc(1.25rem + env(safe-area-inset-bottom))); left: 50%; transform: translateX(-50%); z-index: 110; display: flex; flex-direction: column-reverse; gap: 0.5rem; width: min(92vw, 380px); pointer-events: none; }
         .toast { pointer-events: auto; padding: 0.85rem 1.1rem; border-radius: 16px; font-size: 0.85rem; font-weight: 600; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.25); animation: toastIn 0.25s ease; display: flex; align-items: center; gap: 0.5rem; }
@@ -89,6 +99,8 @@
         .activity-icon { width: 34px; height: 34px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; background: linear-gradient(135deg, rgba(120,120,128,0.1), rgba(120,120,128,0.2)); }
         
         .ring-svg circle { transition: stroke-dashoffset 1s cubic-bezier(0.4, 0.0, 0.2, 1); }
+        
+        .active-tab { background: linear-gradient(135deg, #007aff, #0056b3) !important; color: white !important; box-shadow: 0 4px 10px rgba(0, 122, 255, 0.3); border: none !important; }
     </style>
 </head>
 <body class="p-4 sm:p-6 lg:p-10 pb-28 sm:pb-10">
@@ -145,41 +157,40 @@
             </div>
             
             <div class="flex w-full sm:w-auto items-center justify-between sm:justify-end gap-3 sm:gap-4">
-                <div class="flex items-center gap-2 text-right">
-                    <div class="hidden sm:block">
-                        <p class="font-bold text-sm" id="weatherTemp">--°C</p>
-                        <p class="apple-sub text-xs" id="weatherDesc">Loading...</p>
+                
+                <!-- Fixed Unified Weather Block -->
+                <div class="flex items-center gap-3 bg-black/5 dark:bg-white/5 px-4 py-2 rounded-2xl shadow-inner backdrop-blur-sm">
+                    <div class="text-right">
+                        <p class="font-extrabold text-base sm:text-lg text-blue-600 dark:text-blue-400" id="weatherTemp">--°C</p>
+                        <p class="apple-sub text-[11px] sm:text-xs font-semibold leading-none" id="weatherDesc">Loading...</p>
                     </div>
-                    <div class="text-2xl sm:text-3xl" id="weatherIcon">⛅</div>
-                    <div class="sm:hidden text-left leading-tight">
-                        <p class="font-bold text-sm" id="weatherTempMobile">--°C</p>
-                    </div>
+                    <div class="text-3xl sm:text-4xl drop-shadow-md" id="weatherIcon">⛅</div>
                 </div>
                 
-                <select id="deviceSelector" onchange="switchDevice()" aria-label="Select device" class="apple-input font-bold px-4 py-3 sm:py-2 w-full sm:w-auto cursor-pointer appearance-none text-sm"></select>
+                <select id="deviceSelector" onchange="switchDevice()" aria-label="Select device" class="apple-input font-bold px-4 py-3 sm:py-2 w-full sm:w-auto cursor-pointer appearance-none text-sm shadow-sm"></select>
                 
-                <button id="installBtn" onclick="triggerInstall()" class="hidden w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 items-center justify-center hover:bg-black/10 transition text-base shrink-0" title="Install App" aria-label="Install App">⬇️</button>
+                <button id="installBtn" onclick="triggerInstall()" class="hidden w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 items-center justify-center hover:bg-black/10 transition text-base shrink-0 shadow-sm" title="Install App" aria-label="Install App">⬇️</button>
                 
                 <div class="hidden sm:flex gap-2 shrink-0">
-                    <button onclick="toggleLang()" class="w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center hover:bg-black/10 transition font-extrabold text-sm text-blue-500" aria-label="Toggle language">EN</button>
-                    <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center hover:bg-black/10 transition" aria-label="Toggle theme">🌙</button>
+                    <button onclick="toggleLang()" class="w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center hover:bg-black/10 transition font-extrabold text-sm text-blue-500 shadow-sm" aria-label="Toggle language">EN</button>
+                    <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center hover:bg-black/10 transition shadow-sm" aria-label="Toggle theme">🌙</button>
                 </div>
             </div>
         </div>
 
         <!-- Sticky Bottom Navigation for Mobile / Top Nav for Desktop -->
-        <div class="fixed bottom-0 left-0 right-0 z-50 sm:relative sm:z-auto apple-card sm:bg-transparent sm:backdrop-blur-none sm:shadow-none sm:border-none border-x-0 border-b-0 rounded-none sm:rounded-2xl flex justify-around sm:justify-start gap-1 p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:p-0">
-            <button onclick="switchTab('tab-overview')" id="btn-tab-overview" class="tab-btn flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-4 rounded-xl font-bold text-[10px] sm:text-sm bg-black/10 dark:bg-white/10 transition hover:bg-black/10 dark:hover:bg-white/10">
-                <span class="text-xl sm:text-base">🏠</span> <span class="hidden sm:inline" data-i18n="Overview">Overview</span>
+        <div class="fixed bottom-0 left-0 right-0 z-50 sm:relative sm:z-auto apple-card sm:bg-transparent sm:backdrop-blur-none sm:shadow-none sm:border-none border-x-0 border-b-0 rounded-none sm:rounded-2xl flex justify-around sm:justify-start gap-2 p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:p-0 bg-white/80 dark:bg-black/80 backdrop-blur-xl sm:backdrop-blur-none">
+            <button onclick="switchTab('tab-overview')" id="btn-tab-overview" class="tab-btn active-tab flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 sm:py-3 px-4 rounded-xl font-bold text-[10px] sm:text-sm transition hover:bg-black/5 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400 border border-transparent">
+                <span class="text-xl sm:text-base mb-0.5 sm:mb-0">🏠</span> <span class="tracking-wide" data-i18n="Overview">Overview</span>
             </button>
-            <button onclick="switchTab('tab-analytics')" id="btn-tab-analytics" class="tab-btn flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-4 rounded-xl font-bold text-[10px] sm:text-sm transition hover:bg-black/5 dark:hover:bg-white/5">
-                <span class="text-xl sm:text-base">📊</span> <span class="hidden sm:inline" data-i18n="Analytics">Analytics</span>
+            <button onclick="switchTab('tab-analytics')" id="btn-tab-analytics" class="tab-btn flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 sm:py-3 px-4 rounded-xl font-bold text-[10px] sm:text-sm transition hover:bg-black/5 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400 border border-transparent">
+                <span class="text-xl sm:text-base mb-0.5 sm:mb-0">📊</span> <span class="tracking-wide" data-i18n="Analytics">Analytics</span>
             </button>
-            <button onclick="switchTab('tab-automation')" id="btn-tab-automation" class="tab-btn flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-4 rounded-xl font-bold text-[10px] sm:text-sm transition hover:bg-black/5 dark:hover:bg-white/5">
-                <span class="text-xl sm:text-base">⚡</span> <span class="hidden sm:inline" data-i18n="Automation">Automation</span>
+            <button onclick="switchTab('tab-automation')" id="btn-tab-automation" class="tab-btn flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 sm:py-3 px-4 rounded-xl font-bold text-[10px] sm:text-sm transition hover:bg-black/5 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400 border border-transparent">
+                <span class="text-xl sm:text-base mb-0.5 sm:mb-0">⚡</span> <span class="tracking-wide" data-i18n="Automation">Automation</span>
             </button>
-            <button onclick="switchTab('tab-settings')" id="btn-tab-settings" class="tab-btn flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-4 rounded-xl font-bold text-[10px] sm:text-sm transition hover:bg-black/5 dark:hover:bg-white/5">
-                <span class="text-xl sm:text-base">⚙️</span> <span class="hidden sm:inline" data-i18n="Settings">Settings</span>
+            <button onclick="switchTab('tab-settings')" id="btn-tab-settings" class="tab-btn flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 sm:py-3 px-4 rounded-xl font-bold text-[10px] sm:text-sm transition hover:bg-black/5 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400 border border-transparent">
+                <span class="text-xl sm:text-base mb-0.5 sm:mb-0">⚙️</span> <span class="tracking-wide" data-i18n="Settings">Settings</span>
             </button>
         </div>
 
@@ -190,18 +201,36 @@
             <div class="apple-card p-6 flex flex-col items-center justify-center relative overflow-hidden">
                 <div id="statusBadge" class="mb-4 sm:mb-6 px-4 py-1.5 rounded-full bg-gray-500/20 text-xs font-extrabold tracking-widest text-gray-500 transition-colors z-10" data-i18n="CONNECTING">CONNECTING</div>
                 
-                <button id="powerBtn" class="power-btn power-off" onclick="togglePower()" aria-label="Toggle power">
-                    <svg class="w-12 h-12 sm:w-14 sm:h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                </button>
+                <div class="relative w-52 h-52 sm:w-64 sm:h-64 flex justify-center items-center mb-2 sm:mb-6">
+                    <!-- SVG Rings -->
+                    <svg viewBox="0 0 200 200" class="absolute inset-0 w-full h-full transform -rotate-90 activity-rings pointer-events-none z-0">
+                        <circle cx="100" cy="100" r="90" fill="none" stroke="#32ade6" stroke-opacity="0.15" stroke-width="10"></circle>
+                        <circle cx="100" cy="100" r="90" fill="none" stroke="#32ade6" stroke-width="10" stroke-dasharray="565" stroke-dashoffset="565" id="ring-voltage" stroke-linecap="round"></circle>
+                        
+                        <circle cx="100" cy="100" r="76" fill="none" stroke="#ff9500" stroke-opacity="0.15" stroke-width="10"></circle>
+                        <circle cx="100" cy="100" r="76" fill="none" stroke="#ff9500" stroke-width="10" stroke-dasharray="477" stroke-dashoffset="477" id="ring-power" stroke-linecap="round"></circle>
+                        
+                        <circle cx="100" cy="100" r="62" fill="none" stroke="#34c759" stroke-opacity="0.15" stroke-width="10"></circle>
+                        <circle cx="100" cy="100" r="62" fill="none" stroke="#34c759" stroke-width="10" stroke-dasharray="389" stroke-dashoffset="389" id="ring-energy" stroke-linecap="round"></circle>
+                        
+                        <circle cx="100" cy="100" r="48" fill="none" stroke="#af52de" stroke-opacity="0.15" stroke-width="10"></circle>
+                        <circle cx="100" cy="100" r="48" fill="none" stroke="#af52de" stroke-width="10" stroke-dasharray="301" stroke-dashoffset="301" id="ring-cost" stroke-linecap="round"></circle>
+                    </svg>
+
+                    <!-- Inner Button -->
+                    <button id="powerBtn" class="power-btn power-off" onclick="togglePower()" aria-label="Toggle power">
+                        <svg class="w-12 h-12 sm:w-14 sm:h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </button>
+                </div>
                 
-                <p id="powerText" class="text-3xl sm:text-4xl font-black mt-4 sm:mt-6 tracking-widest text-red-500 transition-colors z-10" data-i18n="OFF">OFF</p>
+                <p id="powerText" class="text-3xl sm:text-4xl font-black mt-2 tracking-widest text-red-500 transition-colors z-10 relative" data-i18n="OFF">OFF</p>
                 <p id="timerText" class="text-sm mt-3 font-bold text-orange-500 hidden z-10"></p>
             </div>
 
             <!-- Activity Rings (2x2 Grid) -->
             <div class="grid grid-cols-2 gap-3 sm:gap-4">
                 <!-- Voltage Ring -->
-                <div class="apple-card p-4 flex flex-col items-center justify-center relative">
+                <div class="apple-card p-4 flex flex-col items-center justify-center relative shadow-sm">
                     <div class="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center ring-svg">
                         <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 80 80">
                             <circle cx="40" cy="40" r="36" fill="none" stroke="#32ade640" stroke-width="7"></circle>
@@ -214,7 +243,7 @@
                 </div>
                 
                 <!-- Power Ring -->
-                <div class="apple-card p-4 flex flex-col items-center justify-center relative">
+                <div class="apple-card p-4 flex flex-col items-center justify-center relative shadow-sm">
                     <div class="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center ring-svg">
                         <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 80 80">
                             <circle cx="40" cy="40" r="36" fill="none" stroke="#ff950040" stroke-width="7"></circle>
@@ -227,7 +256,7 @@
                 </div>
                 
                 <!-- Energy Ring -->
-                <div class="apple-card p-4 flex flex-col items-center justify-center relative">
+                <div class="apple-card p-4 flex flex-col items-center justify-center relative shadow-sm">
                     <div class="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center ring-svg">
                         <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 80 80">
                             <circle cx="40" cy="40" r="36" fill="none" stroke="#34c75940" stroke-width="7"></circle>
@@ -240,7 +269,7 @@
                 </div>
                 
                 <!-- Cost Ring -->
-                <div class="apple-card p-4 flex flex-col items-center justify-center relative">
+                <div class="apple-card p-4 flex flex-col items-center justify-center relative shadow-sm">
                     <div class="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center ring-svg">
                         <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 80 80">
                             <circle cx="40" cy="40" r="36" fill="none" stroke="#af52de40" stroke-width="7"></circle>
@@ -254,15 +283,15 @@
             </div>
 
             <div class="flex gap-3 sm:gap-4">
-                <button onclick="masterToggle(true)" class="flex-1 apple-card bg-gradient-to-br from-green-500/10 to-green-600/10 text-green-600 font-bold py-4 rounded-2xl transition hover:bg-green-500/20 shadow-sm flex items-center justify-center gap-2">
+                <button onclick="masterToggle(true)" class="flex-1 apple-card bg-gradient-to-br from-green-500/10 to-green-600/10 text-green-600 font-bold py-4 rounded-2xl transition hover:bg-green-500/20 shadow-sm flex items-center justify-center gap-2 border border-green-500/20">
                     <span class="text-lg">⚡</span> <span data-i18n="Master ON">Master ON</span>
                 </button>
-                <button onclick="masterToggle(false)" class="flex-1 apple-card bg-gradient-to-br from-red-500/10 to-red-600/10 text-red-600 font-bold py-4 rounded-2xl transition hover:bg-red-500/20 shadow-sm flex items-center justify-center gap-2">
+                <button onclick="masterToggle(false)" class="flex-1 apple-card bg-gradient-to-br from-red-500/10 to-red-600/10 text-red-600 font-bold py-4 rounded-2xl transition hover:bg-red-500/20 shadow-sm flex items-center justify-center gap-2 border border-red-500/20">
                     <span class="text-lg">🛑</span> <span data-i18n="Master OFF">Master OFF</span>
                 </button>
             </div>
 
-            <div class="apple-card p-5 sm:p-6">
+            <div class="apple-card p-5 sm:p-6 shadow-sm">
                 <h2 class="text-lg font-extrabold mb-4" data-i18n="All Devices">All Devices</h2>
                 <div id="deviceGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
             </div>
@@ -324,21 +353,21 @@
             <div class="apple-card p-5 sm:p-8">
                 <h2 class="text-lg sm:text-xl font-extrabold mb-4 sm:mb-5" data-i18n="Operating Mode">Operating Mode</h2>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-                    <button id="mode-manual" onclick="setMode('manual')" class="mode-btn flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl border-2 transition hover:bg-black/5 dark:hover:bg-white/5 bg-transparent">
+                    <button id="mode-manual" onclick="setMode('manual')" class="mode-btn flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl border-2 transition hover:bg-black/5 dark:hover:bg-white/5 bg-transparent text-gray-500 dark:text-gray-400">
                         <span class="text-2xl sm:text-3xl mb-1 sm:mb-2">🖐️</span>
-                        <span class="text-[11px] sm:text-sm font-bold" data-i18n="Manual">Manual</span>
+                        <span class="text-[11px] sm:text-sm font-bold tracking-wide" data-i18n="Manual">Manual</span>
                     </button>
-                    <button id="mode-day" onclick="setMode('day')" class="mode-btn flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl border-2 transition hover:bg-black/5 dark:hover:bg-white/5 bg-transparent">
+                    <button id="mode-day" onclick="setMode('day')" class="mode-btn flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl border-2 transition hover:bg-black/5 dark:hover:bg-white/5 bg-transparent text-gray-500 dark:text-gray-400">
                         <span class="text-2xl sm:text-3xl mb-1 sm:mb-2">☀️</span>
-                        <span class="text-[11px] sm:text-sm font-bold" data-i18n="Day">Day</span>
+                        <span class="text-[11px] sm:text-sm font-bold tracking-wide" data-i18n="Day">Day</span>
                     </button>
-                    <button id="mode-night" onclick="setMode('night')" class="mode-btn flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl border-2 transition hover:bg-black/5 dark:hover:bg-white/5 bg-transparent">
+                    <button id="mode-night" onclick="setMode('night')" class="mode-btn flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl border-2 transition hover:bg-black/5 dark:hover:bg-white/5 bg-transparent text-gray-500 dark:text-gray-400">
                         <span class="text-2xl sm:text-3xl mb-1 sm:mb-2">🌙</span>
-                        <span class="text-[11px] sm:text-sm font-bold" data-i18n="Night">Night</span>
+                        <span class="text-[11px] sm:text-sm font-bold tracking-wide" data-i18n="Night">Night</span>
                     </button>
-                    <button onclick="activateSleepMode()" class="flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl border-2 border-transparent transition hover:bg-black/5 dark:hover:bg-white/5 bg-transparent text-indigo-500">
+                    <button onclick="activateSleepMode()" class="flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl border-2 border-transparent transition hover:bg-indigo-500/10 bg-transparent text-indigo-500 dark:text-indigo-400">
                         <span class="text-2xl sm:text-3xl mb-1 sm:mb-2">💤</span>
-                        <span class="text-[11px] sm:text-sm font-bold" data-i18n="Sleep">Sleep (3h)</span>
+                        <span class="text-[11px] sm:text-sm font-bold tracking-wide" data-i18n="Sleep">Sleep (3h)</span>
                     </button>
                 </div>
 
@@ -468,11 +497,11 @@
                     </div>
                 </div>
                 <div class="flex gap-3">
-                    <button onclick="promptBudget()" class="flex-1 apple-input text-xs font-bold py-3 rounded-2xl hover:bg-black/5 transition flex items-center justify-center gap-2">
-                        <span>🎯</span> <span data-i18n="Set Budget">Set Budget</span>
+                    <button onclick="promptBudget()" class="flex-1 apple-input text-xs font-bold py-3 rounded-2xl hover:bg-black/5 transition flex items-center justify-center gap-2 border border-transparent">
+                        <span class="text-base">🎯</span> <span data-i18n="Set Budget">Set Budget</span>
                     </button>
-                    <button onclick="exportData()" class="flex-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold py-3 rounded-2xl hover:bg-blue-500/20 transition flex items-center justify-center gap-2">
-                        <span>📥</span> <span data-i18n="Export CSV">Export CSV</span>
+                    <button onclick="exportData()" class="flex-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold py-3 rounded-2xl hover:bg-blue-500/20 transition flex items-center justify-center gap-2 border border-blue-500/20">
+                        <span class="text-base">📥</span> <span data-i18n="Export CSV">Export CSV</span>
                     </button>
                 </div>
             </div>
@@ -481,23 +510,23 @@
                 <h2 class="text-lg sm:text-xl font-extrabold mb-5" data-i18n="System Management">System Management</h2>
                 <div class="flex flex-col sm:flex-row gap-3 mb-4">
                     <button onclick="addNewDevice()" class="apple-btn py-3 px-4 flex-1 text-sm flex items-center justify-center gap-2">
-                        <span>➕</span> <span data-i18n="Add Device">Add Device</span>
+                        <span class="text-base">➕</span> <span data-i18n="Add Device">Add Device</span>
                     </button>
                     <div class="flex gap-3 flex-1">
-                        <button onclick="renameDevice()" class="bg-black/5 dark:bg-white/10 font-bold flex-1 py-3 px-2 rounded-2xl text-sm transition hover:bg-black/10 flex items-center justify-center gap-2">
-                            <span>✏️</span> <span data-i18n="Rename">Rename</span>
+                        <button onclick="renameDevice()" class="bg-black/5 dark:bg-white/10 font-bold flex-1 py-3 px-2 rounded-2xl text-sm transition hover:bg-black/10 flex items-center justify-center gap-2 border border-transparent">
+                            <span class="text-base">✏️</span> <span data-i18n="Rename">Rename</span>
                         </button>
-                        <button onclick="removeDevice()" class="bg-red-500/15 text-red-600 font-bold flex-1 py-3 px-2 rounded-2xl text-sm transition hover:bg-red-500/25 flex items-center justify-center gap-2">
-                            <span>🗑️</span> <span data-i18n="Remove Device" class="hidden sm:inline">Remove</span>
+                        <button onclick="removeDevice()" class="bg-red-500/15 text-red-600 dark:text-red-400 font-bold flex-1 py-3 px-2 rounded-2xl text-sm transition hover:bg-red-500/25 flex items-center justify-center gap-2 border border-red-500/20">
+                            <span class="text-base">🗑️</span> <span data-i18n="Remove Device" class="hidden sm:inline">Remove</span>
                         </button>
                     </div>
                 </div>
                 <div class="flex gap-3">
-                    <button onclick="powerCycle()" class="flex-1 bg-gradient-to-br from-orange-400/10 to-orange-600/10 border border-orange-500/20 text-orange-500 font-bold py-3 rounded-2xl text-sm hover:bg-orange-500/20 transition flex items-center justify-center gap-2">
-                        <span>🔌</span> <span data-i18n="Reboot">Reboot</span>
+                    <button onclick="powerCycle()" class="flex-1 bg-gradient-to-br from-orange-400/10 to-orange-600/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 font-bold py-3 rounded-2xl text-sm hover:bg-orange-500/20 transition flex items-center justify-center gap-2">
+                        <span class="text-lg">🔌</span> <span data-i18n="Reboot">Reboot</span>
                     </button>
-                    <button onclick="clearData()" class="flex-1 bg-gradient-to-br from-red-500/10 to-red-700/10 border border-red-500/20 text-red-500 text-xs font-bold py-3 rounded-2xl transition hover:bg-red-500/20 flex items-center justify-center gap-2">
-                        <span>🧹</span> <span data-i18n="Clear History DB">Clear History</span>
+                    <button onclick="clearData()" class="flex-1 bg-gradient-to-br from-red-500/10 to-red-700/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs font-bold py-3 rounded-2xl transition hover:bg-red-500/20 flex items-center justify-center gap-2">
+                        <span class="text-lg">🧹</span> <span data-i18n="Clear History DB">Clear History</span>
                     </button>
                 </div>
             </div>
