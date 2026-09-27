@@ -8,13 +8,11 @@
     <meta name="theme-color" content="#f1f5f9" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#030712" media="(prefers-color-scheme: dark)">
     <link rel="manifest" href="/manifest.json">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23007aff'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E">
     
     <!-- Fonts & Tailwind -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
@@ -23,7 +21,7 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                        sans: ['"Plus Jakarta Sans"', '-apple-system', 'sans-serif'],
                         mono: ['"JetBrains Mono"', 'monospace'],
                     },
                     colors: {
@@ -45,243 +43,158 @@
         * { -webkit-tap-highlight-color: transparent; }
         
         body { 
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             min-height: 100vh; 
             overflow-x: hidden; 
             transition: background-color 0.4s ease, color 0.4s ease;
             padding-top: env(safe-area-inset-top, 0px);
             padding-bottom: env(safe-area-inset-bottom, 0px);
-            background-color: #f8fafc;
+            background-color: #f1f5f9;
             color: #0f172a;
         }
 
         .dark body { 
-            background-color: #030712; 
+            background-color: #020617; 
             color: #f8fafc; 
         }
 
         /* Ambient Glass Orbs */
         .ambient-bg { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
-        .bg-orb { position: absolute; border-radius: 50%; filter: blur(140px); animation: floatOrb 22s infinite ease-in-out alternate; }
+        .bg-orb { position: absolute; border-radius: 50%; filter: blur(120px); animation: floatOrb 20s infinite ease-in-out alternate; }
         @keyframes floatOrb { 
             0% { transform: translate(0, 0) scale(1); } 
-            50% { transform: translate(60px, 80px) scale(1.15); } 
-            100% { transform: translate(-40px, 40px) scale(0.95); } 
+            50% { transform: translate(40px, 60px) scale(1.1); } 
+            100% { transform: translate(-30px, 30px) scale(0.95); } 
         }
+        .ambient-light .orb-1 { width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(14,165,233,0.15), transparent 70%); top: -10%; left: -10%; }
+        .ambient-light .orb-2 { width: 55vw; height: 55vw; background: radial-gradient(circle, rgba(139,92,246,0.12), transparent 70%); bottom: -10%; right: -10%; animation-delay: -5s; }
+        .dark .ambient-dark .orb-1 { width: 55vw; height: 55vw; background: radial-gradient(circle, rgba(14,165,233,0.15), transparent 70%); top: -15%; left: -15%; }
+        .dark .ambient-dark .orb-2 { width: 65vw; height: 65vw; background: radial-gradient(circle, rgba(139,92,246,0.15), transparent 70%); bottom: -15%; right: -15%; animation-delay: -5s; }
 
-        .ambient-light .orb-1 { width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(14,165,233,0.18), transparent 70%); top: -10%; left: -10%; }
-        .ambient-light .orb-2 { width: 55vw; height: 55vw; background: radial-gradient(circle, rgba(139,92,246,0.15), transparent 70%); bottom: -10%; right: -10%; animation-delay: -7s; }
-        .ambient-light .orb-3 { width: 40vw; height: 40vw; background: radial-gradient(circle, rgba(16,185,129,0.14), transparent 70%); top: 40%; left: 30%; animation-delay: -14s; }
-
-        .dark .ambient-dark .orb-1 { width: 55vw; height: 55vw; background: radial-gradient(circle, rgba(14,165,233,0.12), transparent 70%); top: -15%; left: -15%; }
-        .dark .ambient-dark .orb-2 { width: 65vw; height: 65vw; background: radial-gradient(circle, rgba(139,92,246,0.12), transparent 70%); bottom: -15%; right: -15%; animation-delay: -6s; }
-        .dark .ambient-dark .orb-3 { width: 45vw; height: 45vw; background: radial-gradient(circle, rgba(16,185,129,0.10), transparent 70%); top: 35%; left: 25%; animation-delay: -12s; }
-
-        /* Glassmorphism Card System */
+        /* Core Glass Panels */
         .glass-panel { 
-            background: rgba(255, 255, 255, 0.72); 
-            backdrop-filter: blur(28px) saturate(190%); 
-            -webkit-backdrop-filter: blur(28px) saturate(190%);
-            border: 1px solid rgba(255, 255, 255, 0.7); 
-            box-shadow: 0 12px 35px -8px rgba(15, 23, 42, 0.06), 0 4px 12px -2px rgba(15, 23, 42, 0.03); 
+            background: rgba(255, 255, 255, 0.7); 
+            backdrop-filter: blur(24px) saturate(180%); 
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.8); 
+            box-shadow: 0 10px 30px -8px rgba(15, 23, 42, 0.05); 
             border-radius: 28px;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .dark .glass-panel { 
-            background: rgba(15, 23, 42, 0.65); 
-            backdrop-filter: blur(32px) saturate(200%); 
-            -webkit-backdrop-filter: blur(32px) saturate(200%);
-            border: 1px solid rgba(255, 255, 255, 0.08); 
-            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+            background: rgba(15, 23, 42, 0.6); 
+            backdrop-filter: blur(24px) saturate(180%); 
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.06); 
+            box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.5);
         }
 
-        .glass-card-subtle {
-            background: rgba(255, 255, 255, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(16px);
-            border-radius: 22px;
-        }
-        .dark .glass-card-subtle {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(16px);
-        }
-
-        /* Glass Input */
         .glass-input {
             background: rgba(0, 0, 0, 0.03);
             border: 1px solid rgba(0, 0, 0, 0.06);
             border-radius: 16px;
-            color: #0f172a;
+            color: inherit;
             transition: all 0.2s ease;
         }
         .glass-input:focus {
             background: rgba(255, 255, 255, 0.9);
             border-color: #0ea5e9;
-            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
             outline: none;
         }
         .dark .glass-input {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            color: #f8fafc;
         }
         .dark .glass-input:focus {
             background: rgba(255, 255, 255, 0.08);
             border-color: #38bdf8;
-            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.2);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
         }
 
-        /* High-End Tactile Power Core */
+        /* Power Button Animation & Styles */
         .power-btn-container {
             position: relative;
-            width: 170px;
-            height: 170px;
             display: flex;
             align-items: center;
             justify-content: center;
+            width: 120px; height: 120px;
         }
-        @media (min-width: 640px) {
-            .power-btn-container { width: 190px; height: 190px; }
-        }
+        @media (min-width: 640px) { .power-btn-container { width: 150px; height: 150px; } }
 
         .power-btn { 
-            width: 135px; 
-            height: 135px; 
+            width: 100%; height: 100%; 
             border-radius: 50%; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
+            display: flex; justify-content: center; align-items: center; 
             cursor: pointer; 
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); 
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease, background 0.4s ease; 
             z-index: 10; 
-            position: relative;
-            outline: none;
+            border: 4px solid rgba(255,255,255,0.2);
         }
-        @media (min-width: 640px) {
-            .power-btn { width: 150px; height: 150px; }
-        }
-
         .power-off { 
             background: linear-gradient(135deg, #f43f5e, #e11d48); 
-            box-shadow: 0 16px 36px -8px rgba(244, 63, 94, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.35); 
+            box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.4); 
             color: white; 
-            border: 4px solid rgba(255, 255, 255, 0.25);
         }
-        
         .power-on { 
             background: linear-gradient(135deg, #10b981, #059669); 
-            box-shadow: 0 16px 38px -6px rgba(16, 185, 129, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.4); 
+            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4); 
             color: white; 
-            border: 4px solid rgba(255, 255, 255, 0.3);
         }
+        .power-btn:hover { transform: scale(1.05); }
+        .power-btn:active { transform: scale(0.95); }
 
-        .power-btn:hover { transform: scale(1.03); }
-        .power-btn:active { transform: scale(0.94); }
-        .power-btn:disabled { cursor: not-allowed; opacity: 0.6; transform: none; box-shadow: none; }
-
-        /* Pulsing Aura Rings */
         .power-aura {
-            position: absolute;
-            inset: 0;
-            border-radius: 50%;
-            pointer-events: none;
-            transition: all 0.5s ease;
+            position: absolute; inset: -15%; border-radius: 50%; pointer-events: none; transition: all 0.5s ease;
         }
-        .power-aura-active {
-            animation: pulseAura 2.6s cubic-bezier(0.24, 0, 0.38, 1) infinite;
-        }
+        .power-aura-active { animation: pulseAura 2s cubic-bezier(0.24, 0, 0.38, 1) infinite; }
         @keyframes pulseAura {
-            0% { transform: scale(0.9); opacity: 0.8; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
-            70% { transform: scale(1.18); opacity: 0; box-shadow: 0 0 0 24px rgba(16, 185, 129, 0); }
-            100% { transform: scale(1.22); opacity: 0; }
+            0% { transform: scale(0.8); opacity: 0.6; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            100% { transform: scale(1.2); opacity: 0; box-shadow: 0 0 0 30px rgba(16, 185, 129, 0); }
         }
 
         /* Toggle switches */
         .toggle-wrapper { position: relative; width: 48px; height: 28px; display: inline-block; flex-shrink: 0; }
         .toggle-checkbox { opacity: 0; width: 0; height: 0; position: absolute; }
-        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s cubic-bezier(0.4, 0.0, 0.2, 1); border-radius: 34px; }
+        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s ease; border-radius: 34px; }
         .dark .toggle-slider { background-color: #334155; }
-        .toggle-slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px; background-color: white; transition: .3s cubic-bezier(0.4, 0.0, 0.2, 1); border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+        .toggle-slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px; background-color: white; transition: .3s ease; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .toggle-checkbox:checked + .toggle-slider { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
         .toggle-checkbox:checked + .toggle-slider:before { transform: translateX(20px); }
 
-        /* Radial Rings Animation */
-        .radial-ring circle { 
-            transition: stroke-dashoffset 1s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.4s ease; 
-        }
+        .radial-ring circle { transition: stroke-dashoffset 1s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.4s ease; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Skeleton & Overlay */
-        .skeleton-overlay { position: fixed; inset: 0; z-index: 90; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; background: inherit; }
-        .spinner { width: 44px; height: 44px; border-radius: 50%; border: 3px solid rgba(14, 165, 233, 0.15); border-top-color: #0ea5e9; animation: spin 0.8s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* Offline Banner */
+        /* Offline Banner & Toast */
         .offline-banner { 
             position: fixed; top: 0; left: 0; right: 0; z-index: 95; 
             text-align: center; font-weight: 700; font-size: 0.85rem; padding: 0.75rem; 
             background: linear-gradient(135deg, #f43f5e, #fb923c); color: white; 
             transform: translateY(-100%); opacity: 0; visibility: hidden;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
-            padding-top: calc(0.75rem + env(safe-area-inset-top, 0px)); 
-            box-shadow: 0 10px 25px -5px rgba(244, 63, 94, 0.4);
+            transition: all 0.4s ease; padding-top: calc(0.75rem + env(safe-area-inset-top, 0px)); 
         }
         .offline-banner.show { transform: translateY(0); opacity: 1; visibility: visible; }
-
-        /* Toast Container */
-        .toast-container { 
-            position: fixed; 
-            bottom: max(5.5rem, calc(1.5rem + env(safe-area-inset-bottom))); 
-            left: 50%; 
-            transform: translateX(-50%); 
-            z-index: 110; 
-            display: flex; 
-            flex-direction: column-reverse; 
-            gap: 0.5rem; 
-            width: min(92vw, 380px); 
-            pointer-events: none; 
-        }
-        .toast { 
-            pointer-events: auto; 
-            padding: 0.85rem 1.25rem; 
-            border-radius: 20px; 
-            font-size: 0.875rem; 
-            font-weight: 600; 
-            color: white; 
-            box-shadow: 0 16px 30px -6px rgba(0,0,0,0.3); 
-            animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
-            display: flex; 
-            align-items: center; 
-            gap: 0.6rem; 
-            backdrop-filter: blur(12px);
-        }
+        
+        .toast-container { position: fixed; bottom: max(5.5rem, calc(1.5rem + env(safe-area-inset-bottom))); left: 50%; transform: translateX(-50%); z-index: 110; display: flex; flex-direction: column-reverse; gap: 0.5rem; width: min(92vw, 380px); pointer-events: none; }
+        .toast { pointer-events: auto; padding: 0.85rem 1.25rem; border-radius: 20px; font-size: 0.875rem; font-weight: 600; color: white; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); animation: toastIn 0.3s ease; display: flex; align-items: center; gap: 0.6rem; backdrop-filter: blur(12px); }
         @keyframes toastIn { from { opacity: 0; transform: translateY(12px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .toast-success { background: rgba(16, 185, 129, 0.95); border: 1px solid rgba(255, 255, 255, 0.2); } 
-        .toast-error { background: rgba(244, 63, 94, 0.95); border: 1px solid rgba(255, 255, 255, 0.2); } 
-        .toast-info { background: rgba(14, 165, 233, 0.95); border: 1px solid rgba(255, 255, 255, 0.2); }
-
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .toast-success { background: rgba(16, 185, 129, 0.95); } 
+        .toast-error { background: rgba(244, 63, 94, 0.95); } 
+        .toast-info { background: rgba(14, 165, 233, 0.95); }
     </style>
 </head>
-<body class="p-3.5 sm:p-6 lg:p-10 pb-28 sm:pb-12 antialiased">
+<body class="p-4 sm:p-6 lg:p-10 pb-28 sm:pb-12 antialiased">
     <!-- Fluid Canvas Mesh Ambient Backing -->
-    <div class="ambient-bg ambient-light dark:hidden">
-        <div class="bg-orb orb-1"></div>
-        <div class="bg-orb orb-2"></div>
-        <div class="bg-orb orb-3"></div>
-    </div>
-    <div class="ambient-bg ambient-dark hidden dark:block">
-        <div class="bg-orb orb-1"></div>
-        <div class="bg-orb orb-2"></div>
-        <div class="bg-orb orb-3"></div>
-    </div>
+    <div class="ambient-bg ambient-light dark:hidden"><div class="bg-orb orb-1"></div><div class="bg-orb orb-2"></div></div>
+    <div class="ambient-bg ambient-dark hidden dark:block"><div class="bg-orb orb-1"></div><div class="bg-orb orb-2"></div></div>
 
     <!-- Security PIN Modal -->
-    <div id="pinOverlay" class="fixed inset-0 z-[100] bg-slate-950/85 backdrop-blur-2xl hidden flex-col items-center justify-center text-white px-6">
-        <div class="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center text-2xl mb-4 border border-white/10 shadow-2xl">🔒</div>
-        <h2 class="text-xl sm:text-2xl font-black mb-2 tracking-tight text-white">Hub Security Lock</h2>
-        <p class="text-xs sm:text-sm text-slate-400 font-medium mb-8">Enter your 4-digit master PIN code</p>
+    <div id="pinOverlay" class="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-2xl hidden flex-col items-center justify-center text-white px-6">
+        <div class="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center mb-4 shadow-xl border border-white/20">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+        </div>
+        <h2 class="text-xl sm:text-2xl font-black mb-2 tracking-tight">Hub Locked</h2>
+        <p class="text-sm text-slate-400 font-medium mb-8">Enter your master PIN code</p>
         
         <div class="flex gap-4 mb-10" id="pinDots">
             <div class="w-3.5 h-3.5 rounded-full border-2 border-white/40 bg-transparent transition-all duration-300"></div>
@@ -290,19 +203,19 @@
             <div class="w-3.5 h-3.5 rounded-full border-2 border-white/40 bg-transparent transition-all duration-300"></div>
         </div>
 
-        <div class="grid grid-cols-3 gap-3 sm:gap-5 text-xl font-bold max-w-xs w-full">
-            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-90 transition border border-white/5" onclick="enterPinDigit('1')">1</button>
-            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-90 transition border border-white/5" onclick="enterPinDigit('2')">2</button>
-            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-90 transition border border-white/5" onclick="enterPinDigit('3')">3</button>
-            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-90 transition border border-white/5" onclick="enterPinDigit('4')">4</button>
-            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-90 transition border border-white/5" onclick="enterPinDigit('5')">5</button>
-            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-90 transition border border-white/5" onclick="enterPinDigit('6')">6</button>
-            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-90 transition border border-white/5" onclick="enterPinDigit('7')">7</button>
-            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-90 transition border border-white/5" onclick="enterPinDigit('8')">8</button>
-            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-90 transition border border-white/5" onclick="enterPinDigit('9')">9</button>
+        <div class="grid grid-cols-3 gap-4 sm:gap-6 text-xl font-bold max-w-xs w-full">
+            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-95 transition border border-white/5" onclick="enterPinDigit('1')">1</button>
+            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-95 transition border border-white/5" onclick="enterPinDigit('2')">2</button>
+            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-95 transition border border-white/5" onclick="enterPinDigit('3')">3</button>
+            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-95 transition border border-white/5" onclick="enterPinDigit('4')">4</button>
+            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-95 transition border border-white/5" onclick="enterPinDigit('5')">5</button>
+            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-95 transition border border-white/5" onclick="enterPinDigit('6')">6</button>
+            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-95 transition border border-white/5" onclick="enterPinDigit('7')">7</button>
+            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-95 transition border border-white/5" onclick="enterPinDigit('8')">8</button>
+            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-95 transition border border-white/5" onclick="enterPinDigit('9')">9</button>
             <div></div>
-            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-90 transition border border-white/5" onclick="enterPinDigit('0')">0</button>
-            <button class="h-16 rounded-2xl bg-transparent hover:bg-rose-500/20 active:scale-90 transition flex justify-center items-center text-rose-400" onclick="clearPin()">
+            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-95 transition border border-white/5" onclick="enterPinDigit('0')">0</button>
+            <button class="h-16 rounded-2xl bg-transparent hover:bg-rose-500/20 active:scale-95 transition flex justify-center items-center text-rose-400" onclick="clearPin()">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z"></path></svg>
             </button>
         </div>
@@ -314,196 +227,196 @@
     </div>
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- App Boot Skeleton -->
-    <div id="bootSkeleton" class="skeleton-overlay">
-        <div class="spinner"></div>
-        <p class="font-bold text-sm text-slate-500 dark:text-slate-400 tracking-wide" data-i18n="Connecting to your hub...">Connecting to your hub...</p>
-    </div>
-
-    <div class="max-w-4xl mx-auto space-y-4 sm:space-y-6 relative z-10">
-        <!-- Top Glass App Bar -->
-        <header class="glass-panel p-4 sm:p-6 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
+    <div class="max-w-4xl mx-auto space-y-5 sm:space-y-6 relative z-10">
+        <!-- Top App Bar -->
+        <header class="glass-panel p-5 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight font-mono" id="clockTime">00:00</h1>
-                    <p class="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 mt-0.5 tracking-wide" id="clockDate">Loading Date...</p>
+                    <h1 class="text-3xl font-extrabold tracking-tight font-mono" id="clockTime">00:00</h1>
+                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1 tracking-wide uppercase" id="clockDate">Loading Date...</p>
                 </div>
-                <!-- Mobile Language & Dark Mode -->
+                <!-- Mobile Language & Theme -->
                 <div class="flex items-center gap-2 md:hidden">
-                    <label class="relative flex items-center cursor-pointer bg-slate-900/5 dark:bg-white/10 rounded-full p-1 h-9 w-16 transition shadow-inner">
+                    <label class="relative flex items-center cursor-pointer bg-slate-200 dark:bg-slate-800 rounded-full p-1 h-9 w-16 transition shadow-inner">
                         <input type="checkbox" class="sr-only peer lang-toggle-cb" onchange="toggleLang()">
-                        <span class="absolute w-[calc(50%-4px)] h-[calc(100%-8px)] bg-white dark:bg-slate-800 rounded-full shadow-md transition-all duration-300 peer-checked:translate-x-[calc(100%+4px)]"></span>
-                        <span class="absolute left-0 w-1/2 flex justify-center text-[10px] font-black z-10 peer-checked:text-slate-400 text-slate-900 dark:text-white transition-colors pointer-events-none select-none">EN</span>
-                        <span class="absolute right-0 w-1/2 flex justify-center text-[10px] font-black z-10 peer-checked:text-slate-900 dark:peer-checked:text-white text-slate-400 transition-colors pointer-events-none select-none">BN</span>
+                        <span class="absolute w-[calc(50%-4px)] h-[calc(100%-8px)] bg-white dark:bg-slate-600 rounded-full shadow-sm transition-all duration-300 peer-checked:translate-x-[calc(100%+4px)]"></span>
+                        <span class="absolute left-0 w-1/2 flex justify-center text-[10px] font-black z-10 peer-checked:text-slate-400 text-slate-800 dark:text-white transition-colors pointer-events-none select-none">EN</span>
+                        <span class="absolute right-0 w-1/2 flex justify-center text-[10px] font-black z-10 peer-checked:text-slate-800 dark:peer-checked:text-white text-slate-400 transition-colors pointer-events-none select-none">BN</span>
                     </label>
-                    <button onclick="toggleTheme()" class="w-9 h-9 rounded-full bg-slate-900/5 dark:bg-white/10 flex items-center justify-center hover:bg-slate-900/10 dark:hover:bg-white/15 transition text-sm" aria-label="Toggle theme">🌙</button>
+                    <button onclick="toggleTheme()" class="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-300 dark:hover:bg-slate-700 transition text-sm">🌙</button>
                 </div>
             </div>
 
-            <!-- Telemetry Bar & Controls -->
-            <div class="flex flex-wrap items-center justify-between md:justify-end gap-2.5 sm:gap-4">
+            <div class="flex flex-wrap items-center justify-between md:justify-end gap-3">
                 <!-- Weather Chip -->
-                <div class="flex items-center gap-3 bg-gradient-to-r from-sky-500/10 via-blue-500/10 to-indigo-500/10 dark:from-sky-500/15 dark:to-indigo-500/15 border border-sky-500/20 px-3.5 py-2 rounded-2xl shrink-0">
-                    <div class="text-right leading-tight">
+                <div class="flex items-center gap-3 bg-sky-50 dark:bg-sky-500/10 border border-sky-200 dark:border-sky-500/20 px-4 py-2.5 rounded-2xl shrink-0">
+                    <div class="text-right">
                         <p class="font-extrabold text-sm sm:text-base text-sky-600 dark:text-sky-400 font-mono" id="weatherTemp">--°C</p>
-                        <p class="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" id="weatherDesc">Loading...</p>
+                        <p class="text-[9px] font-bold text-sky-600/70 dark:text-sky-400/70 uppercase tracking-widest mt-0.5" id="weatherDesc">Loading...</p>
                     </div>
-                    <div class="text-2xl sm:text-3xl select-none" id="weatherIcon">⛅</div>
+                    <div class="text-2xl select-none drop-shadow-sm" id="weatherIcon">⛅</div>
                 </div>
 
-                <!-- Device Dropdown Selector -->
+                <!-- Device Selector -->
                 <div class="relative flex-1 md:flex-none">
-                    <select id="deviceSelector" onchange="switchDevice()" aria-label="Select device" class="glass-input font-bold px-4 py-2.5 w-full md:w-auto cursor-pointer appearance-none text-xs sm:text-sm pr-9"></select>
-                    <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">▼</div>
+                    <select id="deviceSelector" onchange="switchDevice()" class="glass-input font-bold px-4 py-3 w-full md:w-48 cursor-pointer appearance-none text-sm pr-10 shadow-sm"></select>
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
                 </div>
 
-                <button id="installBtn" onclick="triggerInstall()" class="hidden w-10 h-10 rounded-2xl bg-sky-500/10 text-sky-500 border border-sky-500/20 items-center justify-center hover:bg-sky-500/20 transition shrink-0" title="Install App">⬇️</button>
-
-                <!-- Desktop Language Toggle & Dark Mode -->
-                <div class="hidden md:flex items-center gap-2 shrink-0">
-                    <label class="relative flex items-center cursor-pointer bg-slate-900/5 dark:bg-white/10 rounded-full p-1 h-9 w-20 transition shadow-inner">
+                <!-- Desktop Quick Actions -->
+                <div class="hidden md:flex items-center gap-2">
+                    <label class="relative flex items-center cursor-pointer bg-slate-200 dark:bg-slate-800 rounded-full p-1 h-10 w-20 transition shadow-inner">
                         <input type="checkbox" class="sr-only peer lang-toggle-cb" onchange="toggleLang()">
-                        <span class="absolute w-[calc(50%-4px)] h-[calc(100%-8px)] bg-white dark:bg-slate-800 rounded-full shadow-md transition-all duration-300 peer-checked:translate-x-full"></span>
-                        <span class="absolute left-0 w-1/2 flex justify-center text-[10px] font-black z-10 peer-checked:text-slate-400 text-slate-900 dark:text-white transition-colors pointer-events-none select-none">EN</span>
-                        <span class="absolute right-0 w-1/2 flex justify-center text-[10px] font-black z-10 peer-checked:text-slate-900 dark:peer-checked:text-white text-slate-400 transition-colors pointer-events-none select-none">BN</span>
+                        <span class="absolute w-[calc(50%-4px)] h-[calc(100%-8px)] bg-white dark:bg-slate-600 rounded-full shadow-sm transition-all duration-300 peer-checked:translate-x-full"></span>
+                        <span class="absolute left-0 w-1/2 flex justify-center text-[11px] font-black z-10 peer-checked:text-slate-400 text-slate-800 dark:text-white transition-colors pointer-events-none select-none">EN</span>
+                        <span class="absolute right-0 w-1/2 flex justify-center text-[11px] font-black z-10 peer-checked:text-slate-800 dark:peer-checked:text-white text-slate-400 transition-colors pointer-events-none select-none">BN</span>
                     </label>
-                    <button onclick="toggleTheme()" class="w-9 h-9 rounded-full bg-slate-900/5 dark:bg-white/10 flex items-center justify-center hover:bg-slate-900/10 dark:hover:bg-white/15 transition text-sm" aria-label="Toggle theme">🌙</button>
+                    <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-300 dark:hover:bg-slate-700 transition">🌙</button>
+                    <button id="installBtn" onclick="triggerInstall()" class="hidden w-10 h-10 rounded-full bg-sky-100 text-sky-600 dark:bg-sky-500/20 dark:text-sky-400 items-center justify-center hover:bg-sky-200 transition" title="Install App">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    </button>
                 </div>
             </div>
         </header>
 
-        <!-- Segmented Floating Dock Navigation -->
-        <nav class="fixed bottom-3 left-3 right-3 sm:static z-50 p-1 sm:p-0">
-            <div class="glass-panel mx-auto max-w-md sm:max-w-none p-1.5 flex justify-between gap-1 shadow-2xl sm:shadow-sm border border-white/60 dark:border-white/10">
-                <button onclick="switchTab('tab-overview')" id="btn-tab-overview" class="tab-btn flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-3 sm:px-6 rounded-2xl font-bold text-[11px] sm:text-sm transition-all duration-300">
-                    <span class="text-lg sm:text-base">🏠</span> <span data-i18n="Overview">Overview</span>
+        <!-- Segmented Floating Navigation Bar -->
+        <nav class="fixed bottom-4 left-4 right-4 sm:static z-50 p-0">
+            <div class="glass-panel mx-auto max-w-full sm:max-w-none p-1.5 flex justify-between gap-1 shadow-2xl sm:shadow-sm bg-slate-200/60 dark:bg-slate-800/60">
+                <button onclick="switchTab('tab-overview')" id="btn-tab-overview" class="tab-btn flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 sm:px-6 rounded-2xl font-bold text-[11px] sm:text-sm transition-all duration-300">
+                    <svg class="w-5 h-5 sm:w-4 sm:h-4 mb-0.5 sm:mb-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    <span data-i18n="Overview">Overview</span>
                 </button>
-                <button onclick="switchTab('tab-analytics')" id="btn-tab-analytics" class="tab-btn flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-3 sm:px-6 rounded-2xl font-bold text-[11px] sm:text-sm transition-all duration-300">
-                    <span class="text-lg sm:text-base">📊</span> <span data-i18n="Analytics">Analytics</span>
+                <button onclick="switchTab('tab-analytics')" id="btn-tab-analytics" class="tab-btn flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 sm:px-6 rounded-2xl font-bold text-[11px] sm:text-sm transition-all duration-300">
+                    <svg class="w-5 h-5 sm:w-4 sm:h-4 mb-0.5 sm:mb-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    <span data-i18n="Analytics">Analytics</span>
                 </button>
-                <button onclick="switchTab('tab-automation')" id="btn-tab-automation" class="tab-btn flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-3 sm:px-6 rounded-2xl font-bold text-[11px] sm:text-sm transition-all duration-300">
-                    <span class="text-lg sm:text-base">⚡</span> <span data-i18n="Automation">Automation</span>
+                <button onclick="switchTab('tab-automation')" id="btn-tab-automation" class="tab-btn flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 sm:px-6 rounded-2xl font-bold text-[11px] sm:text-sm transition-all duration-300">
+                    <svg class="w-5 h-5 sm:w-4 sm:h-4 mb-0.5 sm:mb-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <span data-i18n="Automation">Automation</span>
                 </button>
-                <button onclick="switchTab('tab-settings')" id="btn-tab-settings" class="tab-btn flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-3 sm:px-6 rounded-2xl font-bold text-[11px] sm:text-sm transition-all duration-300">
-                    <span class="text-lg sm:text-base">⚙️</span> <span data-i18n="Settings">Settings</span>
+                <button onclick="switchTab('tab-settings')" id="btn-tab-settings" class="tab-btn flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 sm:px-6 rounded-2xl font-bold text-[11px] sm:text-sm transition-all duration-300">
+                    <svg class="w-5 h-5 sm:w-4 sm:h-4 mb-0.5 sm:mb-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <span data-i18n="Settings">Settings</span>
                 </button>
             </div>
         </nav>
 
         <!-- TAB: OVERVIEW -->
         <main id="tab-overview" class="tab-content space-y-4 sm:space-y-6">
-            <!-- Dedicated Tactile Power Deck -->
-            <section class="glass-panel p-6 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+            
+            <!-- Power Control Deck -->
+            <section class="glass-panel p-6 sm:p-10 flex flex-col md:flex-row items-center justify-between relative overflow-hidden gap-8">
                 <div class="flex flex-col items-center md:items-start text-center md:text-left z-10">
-                    <div id="statusBadge" class="px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-extrabold tracking-widest uppercase transition-all duration-300" data-i18n="CONNECTING">CONNECTING</div>
-                    <p id="powerText" class="text-4xl sm:text-5xl font-black mt-3 tracking-tight font-mono transition-colors duration-300" data-i18n="OFF">OFF</p>
-                    <p id="timerText" class="text-xs sm:text-sm mt-2 font-bold text-amber-500 font-mono hidden"></p>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="w-2 h-2 rounded-full bg-slate-400" id="statusDot"></span>
+                        <span id="statusBadge" class="text-[10px] sm:text-xs font-black tracking-widest uppercase text-slate-500" data-i18n="CONNECTING">CONNECTING</span>
+                    </div>
+                    <p id="powerText" class="text-5xl sm:text-6xl font-black tracking-tight font-mono text-slate-800 dark:text-slate-200 transition-colors" data-i18n="OFF">OFF</p>
+                    <p id="timerText" class="text-xs sm:text-sm mt-3 font-bold text-amber-500 bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/20 font-mono hidden"></p>
                 </div>
 
-                <!-- Tactical Button with Animated Halo Core -->
                 <div class="power-btn-container">
                     <div id="powerAura" class="power-aura"></div>
                     <button id="powerBtn" class="power-btn power-off" onclick="togglePower()" aria-label="Toggle device power">
-                        <svg class="w-14 h-14 sm:w-16 sm:h-16 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-12 h-12 sm:w-16 sm:h-16 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
                     </button>
                 </div>
             </section>
 
-            <!-- 4-Pod Live Activity Dial Matrix -->
+            <!-- Metrics Matrix -->
             <section class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-                <!-- Voltage Pod -->
-                <div class="glass-panel p-4 sm:p-5 flex flex-col items-center justify-center relative overflow-hidden group hover:border-sky-500/30">
-                    <div class="relative w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center radial-ring">
+                <!-- Voltage -->
+                <div class="glass-panel relative overflow-hidden bg-gradient-to-br from-sky-400 to-blue-600 text-white p-5 rounded-[28px] flex flex-col items-center shadow-lg shadow-blue-500/20 border-0">
+                    <div class="relative w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] flex items-center justify-center radial-ring mb-2">
                         <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" class="text-sky-500/15" stroke-width="8"></circle>
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="#0ea5e9" stroke-width="8" stroke-dasharray="251" stroke-dashoffset="251" id="ring-volt" stroke-linecap="round"></circle>
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="6"></circle>
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#ffffff" stroke-width="6" stroke-dasharray="251" stroke-dashoffset="251" id="ring-volt" stroke-linecap="round"></circle>
                         </svg>
-                        <div class="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center text-lg font-bold shadow-inner">⚡</div>
+                        <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-md border border-white/30">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        </div>
                     </div>
-                    <p class="mt-3.5 font-black text-lg sm:text-xl font-mono text-sky-500" id="val-volt">-- V</p>
-                    <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase mt-0.5" data-i18n="VOLTAGE">VOLTAGE</p>
+                    <p class="font-black text-xl sm:text-2xl font-mono tracking-tight text-white" id="val-volt">-- V</p>
+                    <p class="text-[9px] sm:text-[10px] font-bold tracking-widest uppercase opacity-80 mt-1" data-i18n="VOLTAGE">VOLTAGE</p>
+                </div>
+                
+                <!-- Wattage -->
+                <div class="glass-panel relative overflow-hidden bg-gradient-to-br from-orange-400 to-rose-500 text-white p-5 rounded-[28px] flex flex-col items-center shadow-lg shadow-orange-500/20 border-0">
+                    <div class="relative w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] flex items-center justify-center radial-ring mb-2">
+                        <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="6"></circle>
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#ffffff" stroke-width="6" stroke-dasharray="251" stroke-dashoffset="251" id="ring-power" stroke-linecap="round"></circle>
+                        </svg>
+                        <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-md border border-white/30">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"></path></svg>
+                        </div>
+                    </div>
+                    <p class="font-black text-xl sm:text-2xl font-mono tracking-tight text-white" id="val-power">-- W</p>
+                    <p class="text-[9px] sm:text-[10px] font-bold tracking-widest uppercase opacity-80 mt-1" data-i18n="WATTAGE">WATTAGE</p>
                 </div>
 
-                <!-- Wattage Pod -->
-                <div class="glass-panel p-4 sm:p-5 flex flex-col items-center justify-center relative overflow-hidden group hover:border-orange-500/30">
-                    <div class="relative w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center radial-ring">
+                <!-- Energy -->
+                <div class="glass-panel relative overflow-hidden bg-gradient-to-br from-emerald-400 to-teal-600 text-white p-5 rounded-[28px] flex flex-col items-center shadow-lg shadow-emerald-500/20 border-0">
+                    <div class="relative w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] flex items-center justify-center radial-ring mb-2">
                         <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" class="text-orange-500/15" stroke-width="8"></circle>
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="#f97316" stroke-width="8" stroke-dasharray="251" stroke-dashoffset="251" id="ring-power" stroke-linecap="round"></circle>
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="6"></circle>
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#ffffff" stroke-width="6" stroke-dasharray="251" stroke-dashoffset="251" id="ring-energy" stroke-linecap="round"></circle>
                         </svg>
-                        <div class="w-9 h-9 rounded-xl bg-orange-500/10 text-orange-500 flex items-center justify-center text-lg font-bold shadow-inner">🔌</div>
+                        <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-md border border-white/30">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h16v16H4V4zM4 9h16M9 4v16"></path></svg>
+                        </div>
                     </div>
-                    <p class="mt-3.5 font-black text-lg sm:text-xl font-mono text-orange-500" id="val-power">-- W</p>
-                    <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase mt-0.5" data-i18n="WATTAGE">WATTAGE</p>
+                    <p class="font-black text-xl sm:text-2xl font-mono tracking-tight text-white" id="val-energy">--</p>
+                    <p class="text-[9px] sm:text-[10px] font-bold tracking-widest uppercase opacity-80 mt-1" data-i18n="Energy">ENERGY kWh</p>
                 </div>
 
-                <!-- Energy Pod -->
-                <div class="glass-panel p-4 sm:p-5 flex flex-col items-center justify-center relative overflow-hidden group hover:border-emerald-500/30">
-                    <div class="relative w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center radial-ring">
+                <!-- Cost -->
+                <div class="glass-panel relative overflow-hidden bg-gradient-to-br from-indigo-400 to-purple-600 text-white p-5 rounded-[28px] flex flex-col items-center shadow-lg shadow-purple-500/20 border-0">
+                    <div class="relative w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] flex items-center justify-center radial-ring mb-2">
                         <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" class="text-emerald-500/15" stroke-width="8"></circle>
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="#10b981" stroke-width="8" stroke-dasharray="251" stroke-dashoffset="251" id="ring-energy" stroke-linecap="round"></circle>
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="6"></circle>
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#ffffff" stroke-width="6" stroke-dasharray="251" stroke-dashoffset="251" id="ring-cost" stroke-linecap="round"></circle>
                         </svg>
-                        <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-lg font-bold shadow-inner">🔋</div>
+                        <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-md border border-white/30">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
                     </div>
-                    <p class="mt-3.5 font-black text-lg sm:text-xl font-mono text-emerald-500" id="val-energy">-- kWh</p>
-                    <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase mt-0.5" data-i18n="Energy">ENERGY</p>
-                </div>
-
-                <!-- Cost Pod -->
-                <div class="glass-panel p-4 sm:p-5 flex flex-col items-center justify-center relative overflow-hidden group hover:border-purple-500/30">
-                    <div class="relative w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center radial-ring">
-                        <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" class="text-purple-500/15" stroke-width="8"></circle>
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="#8b5cf6" stroke-width="8" stroke-dasharray="251" stroke-dashoffset="251" id="ring-cost" stroke-linecap="round"></circle>
-                        </svg>
-                        <div class="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center text-lg font-bold shadow-inner">💰</div>
-                    </div>
-                    <p class="mt-3.5 font-black text-lg sm:text-xl font-mono text-purple-500" id="val-cost">--</p>
-                    <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase mt-0.5" data-i18n="Cost">TODAY COST</p>
+                    <p class="font-black text-xl sm:text-2xl font-mono tracking-tight text-white" id="val-cost">--</p>
+                    <p class="text-[9px] sm:text-[10px] font-bold tracking-widest uppercase opacity-80 mt-1" data-i18n="Cost">TODAY COST</p>
                 </div>
             </section>
 
-            <!-- Master Control Grid -->
-            <section class="flex gap-3 sm:gap-4">
-                <button onclick="masterToggle(true)" class="flex-1 glass-panel py-3.5 sm:py-4 px-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-extrabold text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 hover:bg-emerald-500/20 active:scale-[0.98] transition">
-                    <span class="text-base sm:text-lg">⚡</span> <span data-i18n="Master ON">Master ON</span>
-                </button>
-                <button onclick="masterToggle(false)" class="flex-1 glass-panel py-3.5 sm:py-4 px-4 bg-gradient-to-r from-rose-500/10 to-pink-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 font-extrabold text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 hover:bg-rose-500/20 active:scale-[0.98] transition">
-                    <span class="text-base sm:text-lg">🛑</span> <span data-i18n="Master OFF">Master OFF</span>
-                </button>
-            </section>
-
-            <!-- Device Fleet Overview -->
+            <!-- All Devices Overview -->
             <section class="glass-panel p-5 sm:p-7">
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center justify-between mb-5 border-b border-slate-200 dark:border-slate-700/50 pb-3">
                     <h2 class="text-sm sm:text-base font-extrabold tracking-tight flex items-center gap-2">
-                        <span>📱</span> <span data-i18n="All Devices">Device Fleet</span>
+                        <svg class="w-5 h-5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                        <span data-i18n="All Devices">Device Fleet</span>
                     </h2>
-                    <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold">Tap to focus</span>
+                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">Tap to focus</span>
                 </div>
-                <div id="deviceGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3"></div>
+                <div id="deviceGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
             </section>
         </main>
 
         <!-- TAB: ANALYTICS -->
         <main id="tab-analytics" class="tab-content hidden space-y-4 sm:space-y-6">
             <section class="glass-panel p-5 sm:p-8">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-slate-500/10 pb-5 gap-4">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-slate-200 dark:border-slate-700/50 pb-5 gap-4">
                     <div>
-                        <h2 class="text-xl sm:text-2xl font-black tracking-tight" data-i18n="Insights">Telemetry & Insights</h2>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">Explore consumption trends and cost projections</p>
+                        <h2 class="text-xl sm:text-2xl font-black tracking-tight" data-i18n="Insights">Telemetry Insights</h2>
                     </div>
-
                     <div class="flex flex-wrap gap-2 w-full md:w-auto">
                         <select id="chartTimeframe" class="glass-input px-3 py-2 cursor-pointer text-xs sm:text-sm font-bold flex-1 md:flex-none" onchange="updateChart()">
-                            <option value="realtime" data-i18n="Live">Live Realtime</option>
+                            <option value="realtime" data-i18n="Live">Live Stream</option>
                             <option value="hourly" data-i18n="Today (Hourly)">Today (Hourly)</option>
-                            <option value="daily" data-i18n="7 Days">7 Days</option>
-                            <option value="weekly" data-i18n="4 Weeks">4 Weeks</option>
-                            <option value="monthly" data-i18n="6 Months">6 Months</option>
+                            <option value="daily" data-i18n="7 Days">Past 7 Days</option>
+                            <option value="weekly" data-i18n="4 Weeks">Past 4 Weeks</option>
+                            <option value="monthly" data-i18n="6 Months">Past 6 Months</option>
                         </select>
                         <select id="chartDataType" class="glass-input px-3 py-2 cursor-pointer text-xs sm:text-sm font-bold flex-1 md:flex-none" onchange="updateChart()">
                             <option value="energy" id="opt-energy" data-i18n="Energy">Energy (kWh)</option>
@@ -512,103 +425,98 @@
                             <option value="voltage" id="opt-voltage" data-i18n="Voltage (V)">Voltage (V)</option>
                         </select>
                         <select id="chartStyle" class="glass-input px-3 py-2 cursor-pointer text-xs sm:text-sm font-bold flex-1 md:flex-none" onchange="updateChart()">
-                            <option value="bar" data-i18n="Bar">Bar Chart</option>
+                            <option value="bar" data-i18n="Bar">Bar Graph</option>
                             <option value="line" data-i18n="Line">Line Wave</option>
                         </select>
                     </div>
                 </div>
 
-                <!-- KPI Metric Strip -->
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-6">
-                    <div class="glass-card-subtle p-4 sm:p-5">
-                        <p class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase" data-i18n="TODAY vs YESTERDAY">Today vs Yesterday</p>
-                        <div class="flex flex-wrap items-baseline gap-2 mt-2">
+                    <div class="bg-slate-50 dark:bg-slate-800/50 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-white/5">
+                        <p class="text-[10px] font-black text-slate-400 tracking-widest uppercase" data-i18n="TODAY vs YESTERDAY">Today vs Yesterday</p>
+                        <div class="flex items-baseline gap-2 mt-2">
                             <p class="text-2xl sm:text-3xl font-black font-mono text-emerald-500" id="todayUsage">--</p>
                             <p class="text-xs sm:text-sm font-bold" id="usageDiff">--</p>
                         </div>
                     </div>
-                    <div class="glass-card-subtle p-4 sm:p-5">
-                        <p class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase" data-i18n="MONTHLY FORECAST">Monthly Forecast</p>
+                    <div class="bg-slate-50 dark:bg-slate-800/50 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-white/5">
+                        <p class="text-[10px] font-black text-slate-400 tracking-widest uppercase" data-i18n="MONTHLY FORECAST">Monthly Forecast</p>
                         <p class="text-2xl sm:text-3xl font-black font-mono text-purple-500 mt-2" id="monthForecast">--</p>
                     </div>
-                    <div class="glass-card-subtle p-4 sm:p-5 col-span-2 md:col-span-1">
-                        <p class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase" data-i18n="PEAK HOUR TODAY">Peak Hour Today</p>
+                    <div class="bg-slate-50 dark:bg-slate-800/50 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-white/5 col-span-2 md:col-span-1">
+                        <p class="text-[10px] font-black text-slate-400 tracking-widest uppercase" data-i18n="PEAK HOUR TODAY">Peak Hour Today</p>
                         <p class="text-2xl sm:text-3xl font-black font-mono text-orange-500 mt-2" id="peakHour">--</p>
                     </div>
                 </div>
 
-                <!-- Chart Box -->
-                <div class="w-full relative" style="height: 270px;">
+                <div class="w-full relative" style="height: 280px;">
                     <canvas id="usageChart"></canvas>
                 </div>
             </section>
 
-            <!-- Budget Progress Card -->
             <section class="glass-panel p-5 sm:p-8">
                 <div class="flex justify-between items-center text-xs font-bold mb-3">
-                    <span class="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider" data-i18n="BUDGET PROGRESS:">Monthly Budget: <span id="budgetDisplay" class="text-slate-900 dark:text-white font-mono ml-1 font-black"></span></span>
+                    <span class="text-slate-500 font-bold uppercase tracking-wider" data-i18n="BUDGET PROGRESS:">Monthly Budget: <span id="budgetDisplay" class="text-slate-900 dark:text-white font-mono ml-1 font-black"></span></span>
                     <span id="budgetPercent" class="text-sky-500 font-mono font-black text-sm">0%</span>
                 </div>
-                <div class="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-3 overflow-hidden p-0.5 border border-slate-300/40 dark:border-white/5">
-                    <div id="budgetBar" class="bg-gradient-to-r from-sky-500 to-blue-600 h-full rounded-full transition-all duration-1000 shadow-md" style="width: 0%"></div>
+                <div class="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-3.5 overflow-hidden p-0.5 border border-slate-300/40 dark:border-white/5 shadow-inner">
+                    <div id="budgetBar" class="bg-gradient-to-r from-sky-400 to-blue-600 h-full rounded-full transition-all duration-1000 shadow-md" style="width: 0%"></div>
                 </div>
             </section>
         </main>
 
         <!-- TAB: AUTOMATION -->
         <main id="tab-automation" class="tab-content hidden space-y-4 sm:space-y-6">
-            <!-- Operating Mode Selector -->
             <section class="glass-panel p-5 sm:p-8">
-                <div class="mb-5">
+                <div class="mb-5 border-b border-slate-200 dark:border-slate-700/50 pb-4">
                     <h2 class="text-lg sm:text-xl font-black tracking-tight" data-i18n="Operating Mode">Intelligent Profiles</h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Activate automated running schedules and eco-profiles</p>
+                    <p class="text-xs text-slate-500 font-semibold mt-1">Activate automated running schedules and eco-profiles</p>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3.5 mb-6">
-                    <button id="mode-manual" onclick="setMode('manual')" class="mode-btn flex flex-col items-center justify-center p-3.5 sm:p-5 rounded-2xl border-2 transition-all duration-300">
-                        <span class="text-2xl sm:text-3xl mb-1.5">🖐️</span>
-                        <span class="text-xs sm:text-sm font-bold" data-i18n="Manual">Manual</span>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
+                    <button id="mode-manual" onclick="setMode('manual')" class="mode-btn flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-300 bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300">
+                        <span class="text-2xl sm:text-3xl mb-2 drop-shadow-sm">🖐️</span>
+                        <span class="text-xs sm:text-sm font-extrabold uppercase tracking-wider" data-i18n="Manual">Manual</span>
                     </button>
-                    <button id="mode-day" onclick="setMode('day')" class="mode-btn flex flex-col items-center justify-center p-3.5 sm:p-5 rounded-2xl border-2 transition-all duration-300">
-                        <span class="text-2xl sm:text-3xl mb-1.5">☀️</span>
-                        <span class="text-xs sm:text-sm font-bold" data-i18n="Day">Day Mode</span>
+                    <button id="mode-day" onclick="setMode('day')" class="mode-btn flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-300 bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300">
+                        <span class="text-2xl sm:text-3xl mb-2 drop-shadow-sm">☀️</span>
+                        <span class="text-xs sm:text-sm font-extrabold uppercase tracking-wider" data-i18n="Day">Day</span>
                     </button>
-                    <button id="mode-night" onclick="setMode('night')" class="mode-btn flex flex-col items-center justify-center p-3.5 sm:p-5 rounded-2xl border-2 transition-all duration-300">
-                        <span class="text-2xl sm:text-3xl mb-1.5">🌙</span>
-                        <span class="text-xs sm:text-sm font-bold" data-i18n="Night">Night Mode</span>
+                    <button id="mode-night" onclick="setMode('night')" class="mode-btn flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-300 bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300">
+                        <span class="text-2xl sm:text-3xl mb-2 drop-shadow-sm">🌙</span>
+                        <span class="text-xs sm:text-sm font-extrabold uppercase tracking-wider" data-i18n="Night">Night</span>
                     </button>
-                    <button id="mode-sleep" onclick="activateSleepMode()" class="mode-btn flex flex-col items-center justify-center p-3.5 sm:p-5 rounded-2xl border-2 transition-all duration-300">
-                        <span class="text-2xl sm:text-3xl mb-1.5">💤</span>
-                        <span class="text-xs sm:text-sm font-bold" data-i18n="Sleep">Sleep (3h)</span>
+                    <button id="mode-sleep" onclick="activateSleepMode()" class="mode-btn flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-300 bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300">
+                        <span class="text-2xl sm:text-3xl mb-2 drop-shadow-sm">💤</span>
+                        <span class="text-xs sm:text-sm font-extrabold uppercase tracking-wider" data-i18n="Sleep">Sleep (3h)</span>
                     </button>
                 </div>
 
-                <!-- Configurable Window Times -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 glass-card-subtle p-4 rounded-2xl">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-800/50 p-5 rounded-3xl border border-slate-200 dark:border-white/5">
                     <div>
-                        <label class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 tracking-wider uppercase block mb-2">Day Mode Schedule (Start / End)</label>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Day Schedule</label>
                         <div class="flex gap-2">
-                            <input type="time" id="dayStart" onchange="saveDayNightTimes()" class="glass-input px-3 py-2 w-full text-xs font-bold font-mono">
-                            <input type="time" id="dayEnd" onchange="saveDayNightTimes()" class="glass-input px-3 py-2 w-full text-xs font-bold font-mono">
+                            <input type="time" id="dayStart" onchange="saveDayNightTimes()" class="glass-input px-3 py-2.5 w-full text-sm font-bold font-mono text-center">
+                            <span class="text-slate-400 self-center">-</span>
+                            <input type="time" id="dayEnd" onchange="saveDayNightTimes()" class="glass-input px-3 py-2.5 w-full text-sm font-bold font-mono text-center">
                         </div>
                     </div>
                     <div>
-                        <label class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 tracking-wider uppercase block mb-2">Night Mode Schedule (Start / End)</label>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Night Schedule</label>
                         <div class="flex gap-2">
-                            <input type="time" id="nightStart" onchange="saveDayNightTimes()" class="glass-input px-3 py-2 w-full text-xs font-bold font-mono">
-                            <input type="time" id="nightEnd" onchange="saveDayNightTimes()" class="glass-input px-3 py-2 w-full text-xs font-bold font-mono">
+                            <input type="time" id="nightStart" onchange="saveDayNightTimes()" class="glass-input px-3 py-2.5 w-full text-sm font-bold font-mono text-center">
+                            <span class="text-slate-400 self-center">-</span>
+                            <input type="time" id="nightEnd" onchange="saveDayNightTimes()" class="glass-input px-3 py-2.5 w-full text-sm font-bold font-mono text-center">
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Safety Guard Strips -->
-            <section class="glass-panel p-5 sm:p-8 space-y-3.5 sm:space-y-4">
-                <!-- Power Outage Recovery -->
-                <div class="flex justify-between items-center bg-gradient-to-r from-sky-500/10 via-transparent to-transparent p-4 rounded-2xl border border-sky-500/20">
+            <section class="glass-panel p-5 sm:p-8 space-y-3 sm:space-y-4">
+                <div class="flex justify-between items-center bg-gradient-to-r from-sky-500/10 via-sky-500/5 to-transparent p-4 sm:p-5 rounded-[24px] border border-sky-500/20">
                     <div>
-                        <p class="font-extrabold text-sm text-sky-600 dark:text-sky-400" data-i18n="Power Outage Recovery">Power Outage State Recovery</p>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" data-i18n="Restore state when power returns">Restore state when power returns</p>
+                        <p class="font-extrabold text-sm text-sky-600 dark:text-sky-400 tracking-tight" data-i18n="Power Outage Recovery">Power Outage Recovery</p>
+                        <p class="text-xs text-slate-500 mt-1" data-i18n="Restore state when power returns">Restore state when power returns</p>
                     </div>
                     <label class="toggle-wrapper">
                         <input type="checkbox" id="outageToggle" onchange="toggleAutomation('powerOutageRecovery')" class="toggle-checkbox"/>
@@ -616,11 +524,10 @@
                     </label>
                 </div>
 
-                <!-- Standby Kill -->
-                <div class="flex justify-between items-center glass-card-subtle p-4 rounded-2xl">
+                <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/5 p-4 sm:p-5 rounded-[24px]">
                     <div>
-                        <p class="font-bold text-sm" data-i18n="Standby Auto-Kill">Standby Auto-Kill</p>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" data-i18n="Stops power if <5W for 10m">Stops power if &lt;5W for 10m</p>
+                        <p class="font-bold text-sm tracking-tight" data-i18n="Standby Auto-Kill">Standby Auto-Kill</p>
+                        <p class="text-xs text-slate-500 mt-1" data-i18n="Stops power if <5W for 10m">Stops power if &lt;5W for 10m</p>
                     </div>
                     <label class="toggle-wrapper">
                         <input type="checkbox" id="standbyToggle" onchange="toggleAutomation('standbyKill')" class="toggle-checkbox"/>
@@ -628,139 +535,135 @@
                     </label>
                 </div>
 
-                <!-- Voltage Guard -->
-                <div class="glass-card-subtle p-4 rounded-2xl">
+                <div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/5 p-4 sm:p-5 rounded-[24px]">
                     <div class="flex justify-between items-center">
                         <div>
-                            <p class="font-bold text-sm" data-i18n="Voltage Guard">Voltage Guard</p>
-                            <p class="text-xs text-rose-500 font-medium mt-0.5" data-i18n="Auto-kill on dangerous voltage">Auto-kill on dangerous voltage</p>
+                            <p class="font-bold text-sm tracking-tight" data-i18n="Voltage Guard">Voltage Guard</p>
+                            <p class="text-xs text-rose-500 font-semibold mt-1" data-i18n="Auto-kill on dangerous voltage">Auto-kill on dangerous voltage</p>
                         </div>
                         <label class="toggle-wrapper">
                             <input type="checkbox" id="voltageToggle" onchange="toggleAutomation('voltageProtect')" class="toggle-checkbox"/>
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
-                    <div class="grid grid-cols-2 gap-3 mt-4 pt-3.5 border-t border-slate-500/10">
+                    <div class="grid grid-cols-2 gap-4 mt-5 pt-4 border-t border-slate-200 dark:border-slate-700/50">
                         <div>
-                            <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1" data-i18n="MIN (V)">MIN (V)</label>
-                            <input type="number" id="vMinInput" onchange="saveVoltageLimits()" class="glass-input px-3 py-2 w-full text-xs font-mono font-bold">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2" data-i18n="MIN (V)">Minimum (V)</label>
+                            <input type="number" id="vMinInput" onchange="saveVoltageLimits()" class="glass-input px-3 py-2 w-full text-sm font-mono font-bold">
                         </div>
                         <div>
-                            <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1" data-i18n="MAX (V)">MAX (V)</label>
-                            <input type="number" id="vMaxInput" onchange="saveVoltageLimits()" class="glass-input px-3 py-2 w-full text-xs font-mono font-bold">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2" data-i18n="MAX (V)">Maximum (V)</label>
+                            <input type="number" id="vMaxInput" onchange="saveVoltageLimits()" class="glass-input px-3 py-2 w-full text-sm font-mono font-bold">
                         </div>
                     </div>
                 </div>
 
-                <!-- Budget Lock -->
-                <div class="flex justify-between items-center glass-card-subtle p-4 rounded-2xl">
+                <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/5 p-4 sm:p-5 rounded-[24px] mb-6">
                     <div>
-                        <p class="font-bold text-sm" data-i18n="Strict Budget Lock">Strict Budget Lock</p>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" data-i18n="Auto-kill if budget hits 100%">Auto-kill if budget hits 100%</p>
+                        <p class="font-bold text-sm tracking-tight" data-i18n="Strict Budget Lock">Strict Budget Lock</p>
+                        <p class="text-xs text-slate-500 mt-1" data-i18n="Auto-kill if budget hits 100%">Auto-kill if budget hits 100%</p>
                     </div>
                     <label class="toggle-wrapper">
                         <input type="checkbox" id="budgetToggle" onchange="toggleAutomation('budgetKill')" class="toggle-checkbox"/>
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
-
-                <!-- Quick Timer & Chrono Schedules -->
-                <div class="pt-2">
-                    <p class="text-xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2.5">Countdown Timer</p>
-                    <div class="flex gap-2">
-                        <input type="number" id="timerMins" placeholder="Mins" min="1" class="glass-input px-4 py-2.5 w-24 text-xs font-mono font-bold">
-                        <select id="timerAction" class="glass-input px-3 py-2.5 flex-1 text-xs font-bold">
-                            <option value="true" data-i18n="ON">Turn ON</option>
-                            <option value="false" data-i18n="OFF">Turn OFF</option>
-                        </select>
-                        <button onclick="setTimer()" data-i18n="Timer" class="apple-btn px-5 py-2.5 text-xs font-bold">Set</button>
+            </section>
+            
+            <section class="glass-panel p-5 sm:p-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <p class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-200 dark:border-slate-700 pb-2">Quick Timer</p>
+                        <div class="flex gap-2">
+                            <input type="number" id="timerMins" placeholder="Mins" min="1" class="glass-input px-4 py-3 w-24 text-sm font-mono font-bold">
+                            <select id="timerAction" class="glass-input px-3 py-3 flex-1 text-sm font-bold">
+                                <option value="true" data-i18n="ON">Turn ON</option>
+                                <option value="false" data-i18n="OFF">Turn OFF</option>
+                            </select>
+                            <button onclick="setTimer()" data-i18n="Timer" class="bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-5 py-3 text-sm font-bold transition">Set</button>
+                        </div>
                     </div>
-                </div>
 
-                <div>
-                    <p class="text-xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2.5">Scheduled Events</p>
-                    <div class="flex gap-2 mb-3">
-                        <input type="time" id="schedTime" class="glass-input px-3 py-2.5 flex-1 text-xs font-mono font-bold">
-                        <select id="schedAction" class="glass-input px-3 py-2.5 text-xs font-bold">
-                            <option value="true" data-i18n="ON">Turn ON</option>
-                            <option value="false" data-i18n="OFF">Turn OFF</option>
-                        </select>
-                        <button onclick="addSchedule()" class="apple-btn px-5 py-2.5 text-xs font-bold">+</button>
+                    <div>
+                        <p class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-200 dark:border-slate-700 pb-2">Schedule Events</p>
+                        <div class="flex gap-2 mb-4">
+                            <input type="time" id="schedTime" class="glass-input px-3 py-3 flex-1 text-sm font-mono font-bold">
+                            <select id="schedAction" class="glass-input px-3 py-3 text-sm font-bold">
+                                <option value="true" data-i18n="ON">Turn ON</option>
+                                <option value="false" data-i18n="OFF">Turn OFF</option>
+                            </select>
+                            <button onclick="addSchedule()" class="bg-slate-800 dark:bg-white dark:text-black hover:scale-95 text-white rounded-xl px-5 py-3 text-sm font-bold transition">+</button>
+                        </div>
+                        <div id="scheduleList" class="space-y-2 max-h-36 overflow-y-auto no-scrollbar"></div>
                     </div>
-                    <div id="scheduleList" class="space-y-2 max-h-36 overflow-y-auto no-scrollbar"></div>
                 </div>
             </section>
 
-            <!-- Activity Audit Feed -->
             <section class="glass-panel p-5 sm:p-8">
-                <h2 class="text-base sm:text-lg font-black tracking-tight mb-3" data-i18n="Recent Activity">Activity Telemetry Log</h2>
-                <div id="activityLog" class="max-h-64 overflow-y-auto pr-1 divide-y divide-slate-500/10">
-                    <p class="text-xs text-slate-500 dark:text-slate-400" data-i18n="No recent activity yet.">No recent activity yet.</p>
+                <h2 class="text-base sm:text-lg font-black tracking-tight mb-4" data-i18n="Recent Activity">Activity Telemetry Log</h2>
+                <div id="activityLog" class="max-h-64 overflow-y-auto pr-1 divide-y divide-slate-200 dark:divide-slate-800">
+                    <p class="text-xs text-slate-500" data-i18n="No recent activity yet.">No recent activity yet.</p>
                 </div>
             </section>
         </main>
 
         <!-- TAB: SETTINGS -->
         <main id="tab-settings" class="tab-content hidden space-y-4 sm:space-y-6">
-            <!-- Tariff & General Settings -->
             <section class="glass-panel p-5 sm:p-8">
-                <h2 class="text-lg sm:text-xl font-black tracking-tight mb-5" data-i18n="Tariff & Preferences">Tariff & Preferences</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+                <h2 class="text-lg sm:text-xl font-black tracking-tight mb-6" data-i18n="Tariff & Preferences">Tariff & Preferences</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
                     <div>
-                        <label class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2" data-i18n="RATE">Tariff Base Rate</label>
-                        <input type="number" id="rateInput" step="0.5" min="0" onchange="saveSettings()" class="glass-input px-4 py-3 w-full text-xs font-mono font-bold">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2" data-i18n="RATE">Tariff Base Rate</label>
+                        <input type="number" id="rateInput" step="0.5" min="0" onchange="saveSettings()" class="glass-input px-4 py-3.5 w-full text-sm font-mono font-bold">
                     </div>
                     <div>
-                        <label class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2" data-i18n="CURRENCY">Hub Currency</label>
-                        <select id="currencySelect" onchange="saveSettings()" class="glass-input px-4 py-3 w-full text-xs font-bold">
-                            <option value="BDT">BDT (৳)</option>
-                            <option value="USD">USD ($)</option>
-                            <option value="EUR">EUR (€)</option>
-                            <option value="CNY">CNY (¥)</option>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2" data-i18n="CURRENCY">Hub Currency</label>
+                        <select id="currencySelect" onchange="saveSettings()" class="glass-input px-4 py-3.5 w-full text-sm font-bold">
+                            <option value="BDT">BDT (৳)</option><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option><option value="CNY">CNY (¥)</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="mb-6">
-                    <label class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2" data-i18n="WEATHER LOCATION">Weather Geocoding Location</label>
+                <div class="mb-8">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2" data-i18n="WEATHER LOCATION">Weather Geocoding Location</label>
                     <div class="flex gap-2">
-                        <input type="text" id="locInput" class="glass-input px-4 py-3 w-full text-xs font-semibold">
-                        <button onclick="saveLocation()" data-i18n="Save" class="apple-btn px-5 text-xs font-bold">Save</button>
+                        <input type="text" id="locInput" class="glass-input px-4 py-3.5 w-full text-sm font-semibold">
+                        <button onclick="saveLocation()" data-i18n="Save" class="bg-blue-500 hover:bg-blue-600 text-white font-bold px-6 rounded-xl transition text-sm">Save</button>
                     </div>
                 </div>
 
                 <div class="flex gap-3">
-                    <button onclick="promptBudget()" class="flex-1 glass-card-subtle py-3 px-3 font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-slate-500/10 active:scale-[0.98] transition">
+                    <button onclick="promptBudget()" class="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 py-3.5 px-3 font-bold text-xs rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
                         <span>🎯</span> <span data-i18n="Set Budget">Set Budget</span>
                     </button>
-                    <button onclick="exportData()" class="flex-1 bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400 py-3 px-3 font-bold text-xs rounded-2xl flex items-center justify-center gap-1.5 hover:bg-sky-500/20 active:scale-[0.98] transition">
+                    <button onclick="exportData()" class="flex-1 bg-sky-50 dark:bg-sky-500/10 border border-sky-200 dark:border-sky-500/20 text-sky-600 dark:text-sky-400 py-3.5 px-3 font-bold text-xs rounded-2xl flex items-center justify-center gap-2 hover:bg-sky-100 dark:hover:bg-sky-500/20 transition">
                         <span>📥</span> <span data-i18n="Export CSV">Export CSV</span>
                     </button>
                 </div>
             </section>
 
-            <!-- Device Hardware & State Controls -->
             <section class="glass-panel p-5 sm:p-8">
-                <h2 class="text-lg sm:text-xl font-black tracking-tight mb-5" data-i18n="System Management">System Management</h2>
-                <div class="flex flex-col sm:flex-row gap-3 mb-4">
-                    <button onclick="addNewDevice()" class="apple-btn py-3 px-4 flex-1 text-xs font-bold flex items-center justify-center gap-2">
-                        <span>➕</span> <span data-i18n="Add Device">Add Device</span>
+                <h2 class="text-lg sm:text-xl font-black tracking-tight mb-6" data-i18n="System Management">System Management</h2>
+                <div class="flex flex-col sm:flex-row gap-3 mb-3">
+                    <button onclick="addNewDevice()" class="bg-slate-800 dark:bg-white text-white dark:text-black py-3.5 px-4 rounded-2xl flex-1 text-sm font-bold flex items-center justify-center gap-2 transition hover:scale-[0.98]">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                        <span data-i18n="Add Device">Add Device</span>
                     </button>
                     <div class="flex gap-3 flex-1">
-                        <button onclick="renameDevice()" class="glass-card-subtle font-bold flex-1 py-3 px-2 text-xs flex items-center justify-center gap-2 hover:bg-slate-500/10 transition">
+                        <button onclick="renameDevice()" class="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold flex-1 py-3.5 px-2 rounded-2xl text-xs flex items-center justify-center gap-2 hover:bg-slate-200 transition">
                             <span>✏️</span> <span data-i18n="Rename">Rename</span>
                         </button>
-                        <button onclick="removeDevice()" class="bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 font-bold flex-1 py-3 px-2 rounded-2xl text-xs flex items-center justify-center gap-2 hover:bg-rose-500/20 transition">
+                        <button onclick="removeDevice()" class="bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-600 dark:text-rose-400 font-bold flex-1 py-3.5 px-2 rounded-2xl text-xs flex items-center justify-center gap-2 hover:bg-rose-100 transition">
                             <span>🗑️</span> <span data-i18n="Remove Device">Remove</span>
                         </button>
                     </div>
                 </div>
 
                 <div class="flex gap-3">
-                    <button onclick="powerCycle()" class="flex-1 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-bold py-3 rounded-2xl text-xs flex items-center justify-center gap-2 hover:bg-amber-500/20 transition">
+                    <button onclick="powerCycle()" class="flex-1 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-600 dark:text-amber-400 font-bold py-3.5 rounded-2xl text-xs flex items-center justify-center gap-2 hover:bg-amber-100 transition">
                         <span>🔌</span> <span data-i18n="Reboot">Power Cycle</span>
                     </button>
-                    <button onclick="clearData()" class="flex-1 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 font-bold py-3 rounded-2xl text-xs flex items-center justify-center gap-2 hover:bg-rose-500/20 transition">
+                    <button onclick="clearData()" class="flex-1 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-600 dark:text-rose-400 font-bold py-3.5 rounded-2xl text-xs flex items-center justify-center gap-2 hover:bg-rose-100 transition">
                         <span>🧹</span> <span data-i18n="Clear History DB">Clear History</span>
                     </button>
                 </div>
