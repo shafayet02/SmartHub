@@ -1,5 +1,5 @@
 // =============================================================================
-// Smart Hub Front-End Application Logic (Bento UI Revamp)
+// Smart Hub Front-End Application Logic (V4.4 Revamp)
 // =============================================================================
 const symbols = { BDT: '৳', USD: '$', EUR: '€', CNY: '¥' };
 let state = {
@@ -8,14 +8,13 @@ let state = {
     builtDeviceIds: null,
     consecutiveFailures: 0, bootLoaded: false, deferredInstallPrompt: null,
     allStatuses: {}, lastSampleAtByDevice: {}, timerExpiryRefreshAt: 0,
-    pinInput: '', isAuthenticated: false
+    pinInput: ''
 };
 
 // ---------------------------------------------------------------------------
 // Security PIN Authentication Logic
 // ---------------------------------------------------------------------------
 function showPinScreen() {
-    state.isAuthenticated = false;
     const overlay = document.getElementById('pinOverlay');
     overlay.classList.remove('hidden');
     overlay.classList.add('flex');
@@ -32,12 +31,7 @@ function enterPinDigit(digit) {
             const overlay = document.getElementById('pinOverlay');
             overlay.classList.add('hidden');
             overlay.classList.remove('flex');
-            // Re-attempt boot sequence
-            fetchDB(true).then(() => {
-                state.isAuthenticated = true;
-                fetchStatus();
-                fetchAllStatuses();
-            }).catch(() => showPinScreen());
+            fetchDB(true).then(() => fetchStatus()).catch(() => showPinScreen());
         }
     }
 }
@@ -53,9 +47,8 @@ function updatePinUI() {
         if (i < state.pinInput.length) {
             dots[i].classList.add('bg-white', 'scale-110');
             dots[i].classList.remove('bg-transparent', 'border-white/40');
-            dots[i].classList.add('border-white');
         } else {
-            dots[i].classList.remove('bg-white', 'scale-110', 'border-white');
+            dots[i].classList.remove('bg-white', 'scale-110');
             dots[i].classList.add('bg-transparent', 'border-white/40');
         }
     }
@@ -68,15 +61,10 @@ function toast(message, type = 'info') {
     const container = document.getElementById('toastContainer');
     const el = document.createElement('div');
     el.className = `toast toast-${type}`;
-    
-    // SVG icons for toasts
-    const iconStr = type === 'success' 
-        ? `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`
-        : type === 'error'
-        ? `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`
-        : `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
-        
-    el.innerHTML = `<span class="shrink-0 opacity-80">${iconStr}</span><span class="flex-1">${message}</span>`;
+    const icon = type === 'success' ? '<svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' : 
+                 type === 'error' ? '<svg class="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>' : 
+                 '<svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+    el.innerHTML = `${icon} <span>${message}</span>`;
     container.appendChild(el);
     setTimeout(() => { 
         el.style.opacity = '0'; 
@@ -90,11 +78,13 @@ function actionError(error, fallback = 'Something went wrong') {
 }
 
 // ---------------------------------------------------------------------------
-// Network Request Engine
+// Network Request Engine with Automatic PIN Injection
 // ---------------------------------------------------------------------------
 async function apiFetch(url, options = {}) {
     const pin = localStorage.getItem('hub_pin') || '';
     const headers = { ...(options.headers || {}), 'x-pin': pin };
+    const hideToast = options.hideToast;
+    if (options.hideToast !== undefined) delete options.hideToast;
 
     const { timeoutMs = 12000, ...fetchOptions } = options;
     const controller = new AbortController();
@@ -102,20 +92,25 @@ async function apiFetch(url, options = {}) {
     try {
         const res = await fetch(url, { ...fetchOptions, headers, signal: controller.signal });
         if (res.status === 401) {
-            state.isAuthenticated = false;
             showPinScreen();
             throw new Error('Unauthorized');
         }
         if (!res.ok) {
             let message = `Request failed (${res.status})`;
-            try { const payload = await res.clone().json(); if (payload?.error) message = payload.error; } 
-            catch (e) { try { const text = await res.clone().text(); if (text) message = text.slice(0, 180); } catch (_) {} }
-            throw new Error(message);
+            try {
+                const payload = await res.clone().json();
+                if (payload?.error) message = payload.error;
+            } catch (e) {}
+            if (!hideToast) throw new Error(message);
+            return null; // Return null safely if background fetch fails
         }
         return res;
     } catch (error) {
-        if (error?.name === 'AbortError') throw new Error('Request timed out');
-        throw error;
+        if (!hideToast) {
+            if (error?.name === 'AbortError') throw new Error('Request timed out');
+            throw error;
+        }
+        return null;
     } finally {
         clearTimeout(timeout);
     }
@@ -128,26 +123,25 @@ const dict = {
     bn: {
         'Overview': 'ওভারভিউ', 'Analytics': 'অ্যানালিটিক্স', 'Automation': 'অটোমেশন', 'Settings': 'সেটিংস',
         'CONNECTING': 'সংযোগ হচ্ছে', 'ONLINE': 'অনলাইন', 'OFFLINE': 'অফলাইন', 'STANDBY': 'স্ট্যান্ডবাই',
-        'ON': 'চালু', 'OFF': 'বন্ধ', 'VOLTAGE': 'ভোল্টেজ', 'WATTAGE': 'পাওয়ার',
-        'Master ON': 'মাস্টার চালু', 'Master OFF': 'মাস্টার বন্ধ', 'Device Fleet': 'ডিভাইস বহর',
-        'Telemetry Insights': 'টেলিমেট্রি বিশ্লেষণ', 'TODAY vs YESTERDAY': 'আজ বনাম গতকাল', 'MONTHLY FORECAST': 'মাসিক পূর্বাভাস',
-        'PEAK HOUR TODAY': 'আজকের পিক ঘণ্টা', 'Monthly Budget:': 'মাসিক বাজেট:',
-        'Live Stream': 'লাইভ স্ট্রিম', 'Today (Hourly)': 'আজ (ঘণ্টা)',
-        'Past 7 Days': 'বিগত ৭ দিন', 'Past 4 Weeks': 'বিগত ৪ সপ্তাহ', 'Past 6 Months': 'বিগত ৬ মাস',
-        'Energy (kWh)': 'এনার্জি (kWh)', 'Cost Tariff': 'খরচ ট্যারিফ', 'Power (W)': 'পাওয়ার (W)', 'Voltage (V)': 'ভোল্টেজ (V)', 
-        'Bar Graph': 'বার গ্রাফ', 'Line Wave': 'লাইন ওয়েভ',
-        'Intelligent Profiles': 'ইন্টেলিজেন্ট প্রোফাইল', 'Manual': 'ম্যানুয়াল', 'Day Mode': 'দিন মোড', 'Night Mode': 'রাত মোড', 'Sleep (3h)': 'স্লিপ (৩ ঘঃ)',
+        'ON': 'চালু', 'OFF': 'বন্ধ', 'VOLTAGE': 'ভোল্টেজ', 'WATTAGE': 'ওয়াটেজ',
+        'Master ON': 'মাস্টার চালু', 'Master OFF': 'মাস্টার বন্ধ', 'All Devices': 'ডিভাইস সমূহ',
+        'Insights': 'বিশ্লেষণ', 'TODAY vs YESTERDAY': 'আজ বনাম গতকাল', 'MONTHLY FORECAST': 'মাসিক পূর্বাভাস',
+        'PEAK HOUR TODAY': 'আজকের পিক ঘণ্টা',
+        'BUDGET PROGRESS:': 'মাসিক বাজেট:', 'Live': 'লাইভ রিয়েলটাইম', 'Today (Hourly)': 'আজ (ঘণ্টা)',
+        '7 Days': '৭ দিন', '4 Weeks': '৪ সপ্তাহ', '6 Months': '৬ মাস',
+        'Energy': 'এনার্জি', 'Cost': 'খরচ', 'Power (W)': 'পাওয়ার (W)', 'Voltage (V)': 'ভোল্টেজ (V)', 'Bar': 'বার চার্ট', 'Line': 'লাইন চার্ট',
+        'Operating Mode': 'অপারেটিং মোড', 'Manual': 'ম্যানুয়াল', 'Day': 'দিন মোড', 'Night': 'রাত মোড', 'Sleep': 'স্লিপ (৩ ঘণ্টা)',
         'Standby Auto-Kill': 'অটো-কিল', 'Stops power if <5W for 10m': '<৫ ওয়াট হলে ১০ মিনিটে বন্ধ', 'Timer': 'টাইমার',
         'Voltage Guard': 'ভোল্টেজ গার্ড', 'Auto-kill on dangerous voltage': 'বিপজ্জনক ভোল্টেজে অটো-কিল',
-        'Minimum (V)': 'সর্বনিম্ন (V)', 'Maximum (V)': 'সর্বোচ্চ (V)',
+        'MIN (V)': 'সর্বনিম্ন (V)', 'MAX (V)': 'সর্বোচ্চ (V)',
         'Strict Budget Lock': 'কঠোর বাজেট লক', 'Auto-kill if budget hits 100%': 'বাজেট ১০০% ছুঁলে বন্ধ',
         'Power Outage Recovery': 'বিদ্যুৎ বিভ্রাট রিকভারি', 'Restore state when power returns': 'বিদ্যুৎ ফিরলে পূর্বের অবস্থায় ফিরিয়ে দিন',
-        'Tariff & Preferences': 'ট্যারিফ এবং সেটিংস', 'Tariff Base Rate': 'বেস রেট', 'Hub Currency': 'মুদ্রা', 'Weather Geocoding Location': 'আবহাওয়ার অবস্থান',
-        'Save': 'সংরক্ষণ', 'Set Budget': 'বাজেট সেট', 'Export CSV': 'ডাউনলোড CSV',
-        'System Management': 'সিস্টেম ম্যানেজমেন্ট', 'Add Device': 'ডিভাইস যোগ', 'Remove': 'মুছুন', 'Rename': 'রিনেম',
-        'Power Cycle': 'রিবুট', 'Clear History': 'হিস্ট্রি মুছুন',
-        'Activity Telemetry Log': 'অ্যাক্টিভিটি লগ', 'No recent activity yet.': 'কোনো কার্যকলাপ নেই।',
-        'Connection lost — retrying...': 'সংযোগ বিচ্ছিন্ন — পুনরায় চেষ্টা করা হচ্ছে...',
+        'Tariff & Preferences': 'ট্যারিফ এবং সেটিংস', 'RATE': 'রেট', 'CURRENCY': 'মুদ্রা', 'WEATHER LOCATION': 'আবহাওয়ার অবস্থান',
+        'Save': 'সংরক্ষণ', 'Set Budget': 'বাজেট সেট করুন', 'Export CSV': 'ডাউনলোড CSV',
+        'System Management': 'সিস্টেম ম্যানেজমেন্ট', 'Add Device': 'ডিভাইস যোগ করুন', 'Remove Device': 'ডিভাইস মুছুন', 'Rename': 'নাম পরিবর্তন',
+        'Reboot': 'পাওয়ার সাইকেল', 'Clear History DB': 'হিস্ট্রি মুছুন',
+        'Recent Activity': 'লগ সমূহ', 'No recent activity yet.': 'কোনো কার্যকলাপ নেই।',
+        'Connection lost - retrying...': 'সংযোগ বিচ্ছিন্ন — পুনরায় চেষ্টা করা হচ্ছে...',
         'Connecting to your hub...': 'আপনার হাবের সাথে সংযোগ হচ্ছে...',
     },
 };
@@ -161,7 +155,9 @@ function applyTranslations() {
         else el.innerText = text;
     });
     
-    document.querySelectorAll('.lang-toggle-cb').forEach(cb => { cb.checked = (state.lang === 'bn'); });
+    document.querySelectorAll('.lang-toggle-cb').forEach(cb => {
+        cb.checked = (state.lang === 'bn');
+    });
 
     const badgeText = document.getElementById('statusBadge').innerText;
     updatePowerUI(state.isPowerOn, badgeText !== 'OFFLINE' && badgeText !== 'অফলাইন');
@@ -173,7 +169,7 @@ async function toggleLang() {
     state.lang = state.lang === 'en' ? 'bn' : 'en';
     applyTranslations();
     if (state.db) {
-        try { await apiFetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ language: state.lang }) }); }
+        try { await apiFetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ language: state.lang }), hideToast: true }); }
         catch (e) {}
     }
 }
@@ -191,32 +187,30 @@ function toggleTheme() {
 }
 
 // ---------------------------------------------------------------------------
-// Solid Navigation Tab Switcher
+// Precise Navigation Tab Switcher (No Ghost Classes)
 // ---------------------------------------------------------------------------
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach((el) => el.classList.add('hidden'));
     
-    // Reset buttons to sleek text style
     document.querySelectorAll('.tab-btn').forEach((el) => {
-        el.className = "tab-btn flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-3 sm:px-6 rounded-[20px] font-bold text-[11px] sm:text-sm transition-all duration-300 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white";
+        el.className = "tab-btn flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 sm:px-6 rounded-[20px] font-bold text-[11px] sm:text-sm transition-all duration-300 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white";
     });
     
     document.getElementById(tabId).classList.remove('hidden');
     
-    // Active pill styling (solid elevated card)
     const activeBtn = document.getElementById('btn-' + tabId);
-    activeBtn.className = "tab-btn flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-3 sm:px-6 rounded-[20px] font-bold text-[11px] sm:text-sm transition-all duration-300 bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 shadow-sm border border-slate-200/50 dark:border-white/10";
+    activeBtn.className = "tab-btn flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 sm:px-6 rounded-[20px] font-bold text-[11px] sm:text-sm transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm border border-slate-200 dark:border-white/10";
     
     if (tabId === 'tab-analytics') updateChart();
 }
 
 // ---------------------------------------------------------------------------
-// Real-Time Clock
+// Real-Time Clock & Chrono Ticker
 // ---------------------------------------------------------------------------
 setInterval(() => {
     const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
     document.getElementById('clockTime').innerText = now.toLocaleTimeString(state.lang === 'bn' ? 'bn-BD' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-    document.getElementById('clockDate').innerText = now.toLocaleDateString(state.lang === 'bn' ? 'bn-BD' : 'en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+    document.getElementById('clockDate').innerText = now.toLocaleDateString(state.lang === 'bn' ? 'bn-BD' : 'en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 
     if (!state.db || !state.activeId) return;
     const auto = state.db.automations[state.activeId];
@@ -225,10 +219,10 @@ setInterval(() => {
         if (rem === 0) {
             if (Date.now() - state.timerExpiryRefreshAt > 5000) {
                 state.timerExpiryRefreshAt = Date.now();
-                if(state.isAuthenticated) fetchDB(true).catch(() => {});
+                fetchDB(true).catch(() => {});
             }
         } else {
-            document.getElementById('timerText').innerText = `⏱ ${auto.timer.action ? t('ON') : t('OFF')} in ${Math.floor(rem / 60)}m ${rem % 60}s`;
+            document.getElementById('timerText').innerText = `⏳ ${auto.timer.action ? t('ON') : t('OFF')} in ${Math.floor(rem / 60)}m ${rem % 60}s`;
             document.getElementById('timerText').classList.remove('hidden');
         }
     } else {
@@ -237,16 +231,20 @@ setInterval(() => {
 }, 1000);
 
 // ---------------------------------------------------------------------------
-// Weather Widget
+// Open-Meteo Weather Dispatcher (Robust string parsing fallback)
 // ---------------------------------------------------------------------------
 async function fetchWeather() {
     try {
         const rawLoc = state.db?.settings?.weatherLocation || 'Dhaka';
-        const loc = rawLoc.split(',')[0].trim(); // Take primary city name
+        const loc = rawLoc.split(',')[0].trim();
+        if(!loc) return;
         
         const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(loc)}&count=1&language=en&format=json`);
         const geoData = await geoRes.json();
-        if (!geoData.results || geoData.results.length === 0) return;
+        if (!geoData.results || geoData.results.length === 0) {
+            document.getElementById('weatherDesc').innerText = 'Loc N/A';
+            return;
+        }
 
         const { latitude, longitude, name } = geoData.results[0];
         const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code`);
@@ -267,8 +265,7 @@ async function fetchWeather() {
             document.getElementById('weatherIcon').innerText = icon;
         }
     } catch (e) {
-        // Soft fail without breaking UI
-        console.warn('Weather fetch failed', e);
+        document.getElementById('weatherDesc').innerText = 'Weather N/A';
     }
 }
 
@@ -289,9 +286,10 @@ function markFetchFailure() {
 // ---------------------------------------------------------------------------
 async function fetchDB(silent = false) {
     try {
-        const res = await apiFetch('/api/data');
+        const res = await apiFetch('/api/data', { hideToast: silent });
+        if(!res) { markFetchFailure(); return; } // Handled via silent background
+
         state.db = await res.json();
-        state.isAuthenticated = true; // Mark as auth'd once data passes
         markFetchSuccess();
         state.lang = state.db.settings.language || 'en';
         applyTranslations();
@@ -326,9 +324,8 @@ async function fetchDB(silent = false) {
     } catch (e) {
         if (e.message !== 'Unauthorized') {
             markFetchFailure();
-            if (!silent) toast(state.lang === 'bn' ? 'সার্ভারের সাথে সংযোগ ব্যর্থ' : 'Could not reach the server', 'error');
+            if (!silent) actionError(e, state.lang === 'bn' ? 'সার্ভারের সাথে সংযোগ ব্যর্থ' : 'Could not reach the server');
         }
-        throw e;
     }
 }
 
@@ -374,7 +371,7 @@ async function exportData() {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `device_${state.activeId}_data.csv`;
+        link.download = `device_${state.activeId}_today.csv`;
         document.body.appendChild(link);
         link.click();
         link.remove();
@@ -485,21 +482,21 @@ function renderDeviceUI() {
 
     // Reset all mode buttons 
     document.querySelectorAll('.mode-btn').forEach((b) => {
-        b.className = "mode-btn flex flex-col items-center justify-center p-4 rounded-2xl transition-all duration-300 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm";
+        b.className = "mode-btn flex flex-col items-center justify-center p-4 sm:p-5 rounded-[24px] border-2 transition-all duration-300 bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-white/20";
     });
 
     let isSleepActive = false;
     if (auto.timer && auto.timer.active && auto.timer.action === false) {
         const sleepBtn = document.getElementById('mode-sleep');
         if (sleepBtn) {
-            sleepBtn.className = "mode-btn flex flex-col items-center justify-center p-4 rounded-2xl transition-all duration-300 bg-indigo-500 text-white shadow-lg shadow-indigo-500/30 border-transparent scale-[1.02]";
+            sleepBtn.className = "mode-btn flex flex-col items-center justify-center p-4 sm:p-5 rounded-[24px] border-2 transition-all duration-300 bg-indigo-500 text-white border-transparent shadow-lg shadow-indigo-500/30 scale-[1.02]";
             isSleepActive = true;
         }
     }
 
     const modeBtn = document.getElementById(`mode-${auto.mode}`);
     if (modeBtn && !(auto.mode === 'manual' && isSleepActive)) {
-        modeBtn.className = "mode-btn flex flex-col items-center justify-center p-4 rounded-2xl transition-all duration-300 bg-sky-500 text-white shadow-lg shadow-sky-500/30 border-transparent scale-[1.02]";
+        modeBtn.className = "mode-btn flex flex-col items-center justify-center p-4 sm:p-5 rounded-[24px] border-2 transition-all duration-300 bg-gradient-to-br from-sky-400 to-blue-600 text-white border-transparent shadow-lg shadow-blue-500/30 scale-[1.02]";
     }
 
     if (document.getElementById('standbyToggle').checked !== (auto.standbyKill || false)) document.getElementById('standbyToggle').checked = auto.standbyKill || false;
@@ -526,7 +523,7 @@ function renderDeviceUI() {
     if (yesterdayKwh > 0) {
         const percent = ((todayKwh - yesterdayKwh) / yesterdayKwh) * 100;
         const pStr = state.lang === 'bn' ? percent.toLocaleString('bn-BD', { maximumFractionDigits: 0 }) : percent.toFixed(0);
-        diffEl.innerText = percent > 0 ? `↑ ${pStr}%` : `↓ ${Math.abs(percent).toFixed(0)}%`;
+        diffEl.innerText = percent > 0 ? `+${pStr}%` : `${pStr}%`;
         diffEl.className = percent > 0 ? 'text-xs sm:text-sm font-bold font-mono text-rose-500' : 'text-xs sm:text-sm font-bold font-mono text-emerald-500';
     } else { diffEl.innerText = ''; }
 
@@ -547,6 +544,7 @@ function renderDeviceUI() {
     const pct = budget > 0 ? Math.min(100, Math.max(0, ((mKwh * rate) / budget) * 100)) : 0;
     document.getElementById('budgetPercent').innerText = `${state.lang === 'bn' ? pct.toLocaleString('bn-BD', { maximumFractionDigits: 1 }) : pct.toFixed(1)}%`;
     document.getElementById('budgetBar').style.width = `${pct}%`;
+    document.getElementById('budgetBar').className = pct > 90 ? 'bg-gradient-to-r from-rose-500 to-red-600 h-full rounded-full transition-all duration-1000 shadow-md' : 'bg-gradient-to-r from-sky-400 to-blue-600 h-full rounded-full transition-all duration-1000 shadow-md';
 
     updateActivityRings(todayKwh, todayKwh * rate);
 
@@ -554,7 +552,7 @@ function renderDeviceUI() {
     list.innerHTML = '';
     (auto.schedules || []).forEach((s) => {
         const row = document.createElement('div');
-        row.className = 'flex justify-between items-center bg-white dark:bg-slate-800 p-3 rounded-2xl text-xs mb-2 border border-slate-200/50 dark:border-white/5 shadow-sm';
+        row.className = 'flex justify-between items-center bg-slate-100 dark:bg-slate-800 p-3 rounded-2xl text-xs mb-2';
         const label = document.createElement('span'); 
         label.className = 'font-mono font-bold flex items-center text-slate-800 dark:text-slate-200';
         label.textContent = s.time + ' ';
@@ -563,8 +561,8 @@ function renderDeviceUI() {
         badge.textContent = s.action ? t('ON') : t('OFF');
         label.appendChild(badge);
         const delBtn = document.createElement('button');
-        delBtn.className = 'text-slate-400 hover:text-rose-500 font-bold transition px-2 py-1 bg-slate-50 dark:bg-slate-700/50 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-500/10'; 
-        delBtn.textContent = '✕';
+        delBtn.className = 'text-slate-400 hover:text-rose-500 font-bold transition px-2 py-1'; 
+        delBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
         delBtn.onclick = () => removeSchedule(s.id);
         row.appendChild(label); 
         row.appendChild(delBtn);
@@ -579,9 +577,9 @@ function renderDeviceUI() {
 // Multi-Device Grid Synchronizer
 // ---------------------------------------------------------------------------
 async function fetchAllStatuses() {
-    if(!state.isAuthenticated) return;
     try {
-        const res = await apiFetch('/api/status');
+        const res = await apiFetch('/api/status', { hideToast: true });
+        if(!res) return;
         const data = await res.json();
         if (data.success) state.allStatuses = data.result;
         renderDeviceGrid();
@@ -598,10 +596,10 @@ function renderDeviceGrid() {
         const isCurrent = d.id === state.activeId;
         
         const card = document.createElement('button');
-        card.className = `p-4 sm:p-5 rounded-3xl flex flex-col gap-2 text-left transition-all duration-300 border ${
+        card.className = `p-3.5 sm:p-5 rounded-[20px] flex flex-col gap-1.5 text-left transition-all duration-300 border ${
             isCurrent 
-                ? 'bg-sky-50 dark:bg-sky-500/10 border-sky-300 dark:border-sky-500/30 shadow-md scale-[1.02]' 
-                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm'
+                ? 'bg-sky-50 dark:bg-sky-500/10 border-sky-300 dark:border-sky-500/30 shadow-sm' 
+                : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
         }`;
         card.onclick = () => { 
             state.activeId = d.id; 
@@ -613,17 +611,17 @@ function renderDeviceGrid() {
         topRow.className = 'flex items-center justify-between gap-2 w-full';
         
         const dot = document.createElement('span');
-        dot.className = `w-2.5 h-2.5 rounded-full ${!online ? 'bg-slate-300 dark:bg-slate-600' : isOn ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-400'}`;
+        dot.className = `w-2 h-2 rounded-full ${!online ? 'bg-slate-300 dark:bg-slate-600' : isOn ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-400'}`;
         
         const name = document.createElement('span'); 
-        name.className = `font-bold text-sm sm:text-base truncate flex-1 ${isCurrent ? 'text-sky-700 dark:text-sky-400' : 'text-slate-800 dark:text-slate-200'}`; 
+        name.className = `font-bold text-xs sm:text-sm truncate flex-1 ${isCurrent ? 'text-sky-700 dark:text-sky-400' : 'text-slate-800 dark:text-slate-200'}`; 
         name.textContent = d.name;
         
         topRow.appendChild(name);
         topRow.appendChild(dot);
 
         const bottomRow = document.createElement('div'); 
-        bottomRow.className = 'text-[11px] font-bold font-mono tracking-wider uppercase text-slate-500 dark:text-slate-400';
+        bottomRow.className = 'text-[10px] font-bold font-mono tracking-wider uppercase text-slate-500 dark:text-slate-400';
         bottomRow.textContent = !online ? t('OFFLINE') : `${(status.power || 0).toFixed(1)} W`;
 
         card.appendChild(topRow); 
@@ -635,17 +633,21 @@ function renderDeviceGrid() {
 // ---------------------------------------------------------------------------
 // Telemetry Audit Logger
 // ---------------------------------------------------------------------------
-function getIconForActivity(type) {
-    const baseClass = "w-9 h-9 rounded-[12px] flex items-center justify-center shrink-0 border ";
-    switch(type) {
-        case 'voltage_guard': return `<div class="${baseClass} bg-sky-50 dark:bg-sky-500/10 text-sky-500 border-sky-100 dark:border-sky-500/20"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg></div>`;
-        case 'budget_kill': return `<div class="${baseClass} bg-purple-50 dark:bg-purple-500/10 text-purple-500 border-purple-100 dark:border-purple-500/20"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>`;
-        case 'standby_kill': 
-        case 'timer': return `<div class="${baseClass} bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 border-indigo-100 dark:border-indigo-500/20"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>`;
-        case 'manual_toggle': return `<div class="${baseClass} bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 border-emerald-100 dark:border-emerald-500/20"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg></div>`;
-        default: return `<div class="${baseClass} bg-slate-50 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg></div>`;
-    }
-}
+const activityIcons = {
+    voltage_guard: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>',
+    budget_kill: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>',
+    standby_kill: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>',
+    timer: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>',
+    device_added: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>',
+    device_removed: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>',
+    device_renamed: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>',
+    manual_toggle: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"></path>',
+    schedule: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>',
+    mode: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>',
+    history_cleared: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>',
+    power_cycle: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>',
+    default: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>',
+};
 
 function renderActivityLog() {
     const container = document.getElementById('activityLog');
@@ -660,8 +662,9 @@ function renderActivityLog() {
         const row = document.createElement('div'); 
         row.className = 'flex items-center gap-3 py-3 text-xs';
         
-        const iconWrapper = document.createElement('div');
-        iconWrapper.innerHTML = getIconForActivity(item.type);
+        const icon = document.createElement('div'); 
+        icon.className = 'w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-sm shrink-0 border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400';
+        icon.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">${activityIcons[item.type] || activityIcons.default}</svg>`;
         
         const content = document.createElement('div'); 
         content.className = 'flex-1 min-w-0';
@@ -675,12 +678,12 @@ function renderActivityLog() {
         line2.textContent = item.message;
         
         const time = document.createElement('span'); 
-        time.className = 'text-[9px] font-mono text-slate-400 dark:text-slate-500 shrink-0 font-bold uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md';
+        time.className = 'text-[9px] font-mono text-slate-400 dark:text-slate-500 shrink-0 font-bold uppercase tracking-widest';
         time.textContent = new Date(item.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         
         content.appendChild(line1); 
         content.appendChild(line2);
-        row.appendChild(iconWrapper); 
+        row.appendChild(icon); 
         row.appendChild(content);
         row.appendChild(time);
         container.appendChild(row);
@@ -729,7 +732,7 @@ async function setMode(mode) {
             await apiFetch(`/api/automations/${state.activeId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ timer: { active: false, executeAt: 0, action: false } }) });
         }
         await apiFetch(`/api/automations/${state.activeId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode }) }); 
-        toast('Profile activated', 'success');
+        toast('Profile updated', 'success');
         await fetchDB(true);
     } catch (e) { actionError(e, 'Could not change mode'); fetchDB(true); }
 }
@@ -800,9 +803,10 @@ async function removeSchedule(id) {
 // Telemetry Status Poller
 // ---------------------------------------------------------------------------
 async function fetchStatus() {
-    if (!state.activeId || !state.isAuthenticated) return;
+    if (!state.activeId) return;
     try {
-        const res = await apiFetch(`/api/status/${state.activeId}`);
+        const res = await apiFetch(`/api/status/${state.activeId}`, { hideToast: true });
+        if(!res) return;
         const data = await res.json();
         markFetchSuccess();
         if (data.success && data.result) {
@@ -862,7 +866,7 @@ function updatePowerUI(isOn, isOnline = true) {
         txt.innerText = t('OFFLINE'); 
         txt.className = 'text-4xl sm:text-5xl font-black mt-3 tracking-tight font-mono text-slate-400 dark:text-slate-600';
         badge.innerText = t('OFFLINE'); 
-        dot.className = 'w-2 h-2 rounded-full bg-slate-400';
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-slate-400';
         aura.className = 'power-aura';
         return;
     }
@@ -871,14 +875,14 @@ function updatePowerUI(isOn, isOnline = true) {
         txt.innerText = t('ON'); 
         txt.className = 'text-4xl sm:text-5xl font-black mt-3 tracking-tight font-mono text-emerald-500';
         badge.innerText = t('ONLINE'); 
-        dot.className = 'w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]';
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]';
         aura.className = 'power-aura power-aura-active';
     } else {
         btn.className = 'power-btn power-off'; 
         txt.innerText = t('OFF'); 
         txt.className = 'text-4xl sm:text-5xl font-black mt-3 tracking-tight font-mono text-rose-500';
         badge.innerText = t('STANDBY'); 
-        dot.className = 'w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]';
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500';
         document.getElementById('val-power').innerText = state.lang === 'bn' ? '০.০ W' : '0.0 W';
         aura.className = 'power-aura';
     }
@@ -913,6 +917,24 @@ function getDynamicLabels(type) {
     return labels;
 }
 
+function handleMetricOptions() {
+    const tf = document.getElementById('chartTimeframe').value;
+    const selector = document.getElementById('chartDataType');
+    const energy = document.getElementById('opt-energy');
+    const cost = document.getElementById('opt-cost');
+    const power = document.getElementById('opt-power');
+    const voltage = document.getElementById('opt-voltage');
+
+    const realtime = tf === 'realtime';
+    energy.disabled = realtime;
+    cost.disabled = realtime;
+    power.disabled = !realtime;
+    voltage.disabled = !realtime;
+
+    if (realtime && (selector.value === 'energy' || selector.value === 'cost')) selector.value = 'power';
+    if (!realtime && (selector.value === 'power' || selector.value === 'voltage')) selector.value = 'energy';
+}
+
 function updateChart() {
     if (typeof Chart === 'undefined') return; 
     if (!state.activeId || !state.db.usage[state.activeId] || document.getElementById('tab-analytics').classList.contains('hidden')) return;
@@ -929,21 +951,20 @@ function updateChart() {
     let labels = [], data = [], label = '', color = '';
 
     if (tf === 'realtime') {
-        document.getElementById('opt-energy').disabled = true;
-        document.getElementById('opt-cost').disabled = true;
-        document.getElementById('opt-power').disabled = false;
-        document.getElementById('opt-voltage').disabled = false;
-        if (dt === 'energy' || dt === 'cost') document.getElementById('chartDataType').value = 'power';
-        
         labels = state.liveLabels;
         if (dt === 'voltage') { data = state.liveVoltage; label = t('Voltage (V)'); color = '#0ea5e9'; }
-        else { data = state.livePower; label = t('Power (W)'); color = '#f97316'; }
+        else if (dt === 'power') { data = state.livePower; label = t('Power (W)'); color = '#f97316'; }
+        else if (dt === 'energy') { 
+            let acc = 0; 
+            data = state.livePower.map(p => { acc += (p/1000)*(3/3600); return acc; }); 
+            label = t('Energy (kWh)'); color = '#10b981';
+        }
+        else if (dt === 'cost') {
+            let acc = 0; 
+            data = state.livePower.map(p => { acc += (p/1000)*(3/3600)*rate; return acc; });
+            label = t('Cost'); color = '#8b5cf6';
+        }
     } else {
-        document.getElementById('opt-energy').disabled = false;
-        document.getElementById('opt-cost').disabled = false;
-        document.getElementById('opt-power').disabled = false;
-        document.getElementById('opt-voltage').disabled = false;
-
         let baseData = state.db.usage[state.activeId][tf] || [];
         const hoursInPeriod = tf === 'hourly' ? 1 : tf === 'daily' ? 24 : tf === 'weekly' ? 168 : 720;
         
@@ -967,7 +988,6 @@ function updateChart() {
 
     if (state.chart) state.chart.destroy();
     
-    // Create gradient fill for chart lines
     let gradientFill = `${color}20`;
     try {
         const grad = ctx.createLinearGradient(0, 0, 0, 240);
@@ -1000,7 +1020,7 @@ function updateChart() {
             plugins: { 
                 legend: { display: false }, 
                 tooltip: { 
-                    backgroundColor: isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)', 
+                    backgroundColor: isDark ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.95)', 
                     titleColor: isDark ? '#f8fafc' : '#0f172a', 
                     bodyColor: isDark ? '#f8fafc' : '#0f172a', 
                     padding: 12, 
@@ -1055,25 +1075,16 @@ if ('serviceWorker' in navigator) {
 // ---------------------------------------------------------------------------
 async function boot() {
     try {
-        switchTab('tab-overview'); 
+        switchTab('tab-overview'); // Enforce pristine active state on startup
         await fetchDB();
-        // Polling starts automatically after fetchDB succeeds (isAuthenticated = true)
+        fetchStatus();
+        fetchWeather();
+        fetchAllStatuses();
     } catch (e) {}
 }
 
 boot();
-
-// Global safe background polling
-setInterval(() => {
-    if(state.isAuthenticated) fetchStatus();
-}, 3000);
-
-setInterval(() => {
-    if(state.isAuthenticated) fetchDB(true).catch(() => {});
-}, 30 * 1000);
-
+setInterval(() => fetchStatus(), 3000);
+setInterval(() => fetchDB(true).catch(() => {}), 30 * 1000);
 setInterval(() => fetchWeather(), 30 * 60000);
-
-setInterval(() => {
-    if(state.isAuthenticated) fetchAllStatuses();
-}, 8000);
+setInterval(() => fetchAllStatuses(), 8000);
