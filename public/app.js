@@ -1,5 +1,5 @@
 // =============================================================================
-// Smart Hub Front-End Application Logic (V4.3 Revamp)
+// Smart Hub Front-End Application Logic (V4.3.1 - Weather & UI Patch)
 // =============================================================================
 const symbols = { BDT: '৳', USD: '$', EUR: '€', CNY: '¥' };
 let state = {
@@ -196,7 +196,7 @@ function switchTab(tabId) {
     
     document.getElementById(tabId).classList.remove('hidden');
     
-    // Active floating pill styling (Matching image_de83e3.png)
+    // Active floating pill styling 
     const activeBtn = document.getElementById('btn-' + tabId);
     activeBtn.className = "tab-btn flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 sm:px-6 rounded-2xl font-bold text-[11px] sm:text-sm transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm border border-slate-200 dark:border-white/10";
     
@@ -234,7 +234,10 @@ setInterval(() => {
 // ---------------------------------------------------------------------------
 async function fetchWeather() {
     try {
-        const loc = state.db?.settings?.weatherLocation || 'Dhaka';
+        const rawLoc = state.db?.settings?.weatherLocation || 'Dhaka';
+        // Strip trailing details like country or state abbreviations if provided with commas
+        const loc = rawLoc.split(',')[0].trim();
+        
         const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(loc)}&count=1&language=en&format=json`);
         const geoData = await geoRes.json();
         if (!geoData.results || geoData.results.length === 0) return;
@@ -999,7 +1002,7 @@ function updateChart() {
             plugins: { 
                 legend: { display: false }, 
                 tooltip: { 
-                    backgroundColor: isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)', 
+                    backgroundColor: isDark ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.95)', 
                     titleColor: isDark ? '#f8fafc' : '#0f172a', 
                     bodyColor: isDark ? '#f8fafc' : '#0f172a', 
                     padding: 12, 
