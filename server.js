@@ -17,7 +17,6 @@ const REQUIRED_ENV = ['MONGODB_URI', 'TUYA_CLIENT_ID', 'TUYA_SECRET'];
 const missingEnv = REQUIRED_ENV.filter((key) => !process.env[key]);
 if (missingEnv.length) {
     console.error(`[FATAL] Missing required environment variable(s): ${missingEnv.join(', ')}`);
-    console.error('Copy .env.example to .env and fill in the required values.');
     process.exit(1);
 }
 
@@ -28,10 +27,7 @@ const BASE_URL = process.env.TUYA_BASE_URL || 'https://openapi-sg.iotbing.com';
 const PORT = Number(process.env.PORT) || 5000;
 const HUB_TIMEZONE = process.env.HUB_TIMEZONE || 'Asia/Dhaka';
 const HUB_PIN = process.env.HUB_PIN || '1234';
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
 
 function envNumber(name, fallback, min, max) {
     const raw = Number(process.env[name]);
@@ -50,7 +46,7 @@ const log = (...args) => console.log(`[${new Date().toISOString()}]`, ...args);
 const logError = (...args) => console.error(`[${new Date().toISOString()}]`, ...args);
 
 // -----------------------------------------------------------------------------
-// Express Setup & Security
+// Express / Security Middleware
 // -----------------------------------------------------------------------------
 const app = express();
 app.disable('x-powered-by');
@@ -96,7 +92,7 @@ app.use(express.static(path.join(__dirname, 'public'), {
 
 const apiLimiter = rateLimit({
     windowMs: 60 * 1000,
-    limit: 250,
+    limit: 180,
     standardHeaders: true,
     legacyHeaders: false,
     message: { success: false, error: 'Too many requests, please slow down.' },
@@ -116,7 +112,7 @@ app.use('/api/', (req, res, next) => {
 });
 
 // -----------------------------------------------------------------------------
-// State & Defaults
+// In-Memory State + Defaults
 // -----------------------------------------------------------------------------
 let accessToken = '';
 let tokenExpireTime = 0;
@@ -134,12 +130,7 @@ const ALLOWED_CURRENCIES = ['BDT', 'USD', 'EUR', 'CNY'];
 const TIME_RE = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 
 function defaultUsage() {
-    return {
-        hourly: Array(24).fill(0),
-        daily: Array(7).fill(0),
-        weekly: Array(4).fill(0),
-        monthly: Array(6).fill(0),
-    };
+    return { hourly: Array(24).fill(0), daily: Array(7).fill(0), weekly: Array(4).fill(0), monthly: Array(6).fill(0) };
 }
 
 function defaultAutomation() {
@@ -147,33 +138,18 @@ function defaultAutomation() {
         schedules: [],
         timer: { active: false, executeAt: 0, action: false },
         mode: 'manual',
-        dayStart: '08:00',
-        dayEnd: '18:00',
-        nightStart: '22:00',
-        nightEnd: '06:00',
+        dayStart: '08:00', dayEnd: '18:00',
+        nightStart: '22:00', nightEnd: '06:00',
         powerOutageRecovery: true,
-        standbyKill: false,
-        standbyTimer: 0,
-        voltageProtect: false,
-        voltageMin: 170,
-        voltageMax: 260,
+        standbyKill: false, standbyTimer: 0,
+        voltageProtect: false, voltageMin: 170, voltageMax: 260,
         budgetKill: false,
     };
 }
 
 function defaultDeviceCache() {
     const now = Date.now();
-    return {
-        isPowerOn: false,
-        intendedState: false, 
-        wasOffline: false,
-        power: 0,
-        voltage: 0,
-        online: false,
-        lastCalcTime: now,
-        sampledAt: 0,
-        updatedAt: now,
-    };
+    return { isPowerOn: false, intendedState: false, wasOffline: false, power: 0, voltage: 0, online: false, lastCalcTime: now, sampledAt: 0, updatedAt: now };
 }
 
 function normalizeNumberArray(value, length) {
@@ -184,21 +160,13 @@ function normalizeNumberArray(value, length) {
 
 function normalizeUsage(value) {
     const v = value || {};
-    return {
-        hourly: normalizeNumberArray(v.hourly, 24),
-        daily: normalizeNumberArray(v.daily, 7),
-        weekly: normalizeNumberArray(v.weekly, 4),
-        monthly: normalizeNumberArray(v.monthly, 6),
-    };
+    return { hourly: normalizeNumberArray(v.hourly, 24), daily: normalizeNumberArray(v.daily, 7), weekly: normalizeNumberArray(v.weekly, 4), monthly: normalizeNumberArray(v.monthly, 6) };
 }
 
 function normalizeAutomation(value) {
     const merged = { ...defaultAutomation(), ...(value || {}) };
     merged.schedules = Array.isArray(merged.schedules) ? merged.schedules.slice(0, MAX_SCHEDULES_PER_DEVICE) : [];
-    merged.timer = {
-        ...defaultAutomation().timer,
-        ...(merged.timer && typeof merged.timer === 'object' ? merged.timer : {}),
-    };
+    merged.timer = { ...defaultAutomation().timer, ...(merged.timer && typeof merged.timer === 'object' ? merged.timer : {}) };
     merged.mode = ['manual', 'day', 'night'].includes(merged.mode) ? merged.mode : 'manual';
     merged.dayStart = TIME_RE.test(merged.dayStart) ? merged.dayStart : '08:00';
     merged.dayEnd = TIME_RE.test(merged.dayEnd) ? merged.dayEnd : '18:00';
@@ -206,10 +174,7 @@ function normalizeAutomation(value) {
     merged.nightEnd = TIME_RE.test(merged.nightEnd) ? merged.nightEnd : '06:00';
     merged.voltageMin = Number.isFinite(Number(merged.voltageMin)) ? Number(merged.voltageMin) : 170;
     merged.voltageMax = Number.isFinite(Number(merged.voltageMax)) ? Number(merged.voltageMax) : 260;
-    if (merged.voltageMin >= merged.voltageMax) {
-        merged.voltageMin = 170;
-        merged.voltageMax = 260;
-    }
+    if (merged.voltageMin >= merged.voltageMax) { merged.voltageMin = 170; merged.voltageMax = 260; }
     merged.standbyTimer = Number.isFinite(Number(merged.standbyTimer)) ? Math.max(0, Number(merged.standbyTimer)) : 0;
     merged.powerOutageRecovery = merged.powerOutageRecovery !== false;
     merged.standbyKill = !!merged.standbyKill;
@@ -222,13 +187,7 @@ function logActivity(deviceId, type, message, deviceNameOverride) {
     if (!db) return;
     if (!Array.isArray(db.activityLog)) db.activityLog = [];
     const device = db.devices.find((d) => d.id === deviceId);
-    db.activityLog.unshift({
-        ts: Date.now(),
-        deviceId,
-        deviceName: deviceNameOverride || (device ? device.name : deviceId),
-        type,
-        message,
-    });
+    db.activityLog.unshift({ ts: Date.now(), deviceId, deviceName: deviceNameOverride || (device ? device.name : deviceId), type, message });
     if (db.activityLog.length > MAX_ACTIVITY_LOG) db.activityLog.length = MAX_ACTIVITY_LOG;
 }
 
@@ -239,7 +198,7 @@ function timeToMins(t) {
 }
 
 // -----------------------------------------------------------------------------
-// Calendar & DB Persistence
+// Calendar Helpers
 // -----------------------------------------------------------------------------
 function hubNow() { return new Date(new Date().toLocaleString('en-US', { timeZone: HUB_TIMEZONE })); }
 function pad2(n) { return String(n).padStart(2, '0'); }
@@ -267,10 +226,7 @@ function monthsBetween(a, b) {
 }
 function shiftZeros(arr, steps, length) {
     const count = Math.min(Math.max(0, steps), length);
-    for (let i = 0; i < count; i++) {
-        arr.shift();
-        arr.push(0);
-    }
+    for (let i = 0; i < count; i++) { arr.shift(); arr.push(0); }
 }
 
 function ensureRotationKeys() {
@@ -326,6 +282,9 @@ function checkTimeRotation() {
     return mutated;
 }
 
+// -----------------------------------------------------------------------------
+// MongoDB Persistence
+// -----------------------------------------------------------------------------
 let stateDirty = false;
 let saveTimer = null;
 let saveQueue = Promise.resolve();
@@ -339,10 +298,7 @@ function markStateDirty(delayMs = 200) {
     if (!dbCollection || !db) return;
     stateDirty = true;
     if (saveTimer) return;
-    saveTimer = setTimeout(() => {
-        saveTimer = null;
-        flushState().catch(() => {});
-    }, Math.max(0, delayMs));
+    saveTimer = setTimeout(() => { saveTimer = null; flushState().catch(() => {}); }, Math.max(0, delayMs));
 }
 
 async function flushState() {
@@ -408,6 +364,9 @@ async function initDB() {
     log('MongoDB connected & state loaded');
 }
 
+// -----------------------------------------------------------------------------
+// Input Helpers
+// -----------------------------------------------------------------------------
 const isNonEmptyString = (v, maxLen = 100) => typeof v === 'string' && v.trim().length > 0 && v.length <= maxLen;
 const isValidDeviceId = (v) => typeof v === 'string' && /^[a-zA-Z0-9_-]{5,64}$/.test(v);
 function sanitizeName(name) { return String(name || '').trim().slice(0, 60).replace(/[<>]/g, ''); }
@@ -415,6 +374,9 @@ function deviceExists(id) { return !!(db && db.devices.find((d) => d.id === id) 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
+// -----------------------------------------------------------------------------
+// Exchange Rates
+// -----------------------------------------------------------------------------
 async function updateExchangeRates() {
     try {
         const res = await axios.get('https://api.exchangerate-api.com/v4/latest/BDT', { timeout: 8000 });
@@ -424,14 +386,20 @@ async function updateExchangeRates() {
 const exchangeRateTimer = setInterval(updateExchangeRates, 12 * 60 * 60 * 1000);
 
 // -----------------------------------------------------------------------------
-// Tuya Comm Engine
+// API Routes
 // -----------------------------------------------------------------------------
 app.get('/api/ping', (req, res) => { res.setHeader('Cache-Control', 'no-store'); res.status(200).send('OK'); });
+
 app.get('/api/health', asyncHandler(async (req, res) => {
     let mongoHealthy = false;
-    try { if (mongoClient) { await mongoClient.db('admin').command({ ping: 1 }); mongoHealthy = true; } } catch (error) { mongoHealthy = false; }
+    try { if (mongoClient) { await mongoClient.db('admin').command({ ping: 1 }); mongoHealthy = true; } } catch (error) {}
+    const healthy = !!db && mongoHealthy;
     res.setHeader('Cache-Control', 'no-store');
-    res.status((!!db && mongoHealthy) ? 200 : 503).json({ success: (!!db && mongoHealthy) });
+    res.status(healthy ? 200 : 503).json({
+        success: healthy, dbLoaded: !!db, mongoConnected: mongoHealthy,
+        tuyaTokenActive: !!(accessToken && Date.now() < tokenExpireTime),
+        devices: db?.devices?.length || 0, uptimeSeconds: Math.round(process.uptime()),
+    });
 }));
 
 function generateSignature(method, endpoint, body = '', token = '') {
@@ -453,11 +421,12 @@ async function getToken(forceRefresh = false) {
         if (res.data?.success && res.data?.result?.access_token) {
             accessToken = res.data.result.access_token;
             const expiresIn = Math.max(60, Number(res.data.result.expire_time) || 3600);
-            tokenExpireTime = Date.now() + Math.max(30, expiresIn - Math.min(200, Math.max(30, Math.floor(expiresIn * 0.1)))) * 1000;
+            tokenExpireTime = Date.now() + Math.max(30, expiresIn - Math.min(200, Math.floor(expiresIn * 0.1))) * 1000;
             return accessToken;
         }
         invalidateTuyaToken();
-    } catch (error) { invalidateTuyaToken(); }
+        logError('Tuya token request failed:', res.data);
+    } catch (error) { invalidateTuyaToken(); logError('Tuya token request error:', error.message); }
     return '';
 }
 
@@ -469,45 +438,34 @@ async function sendToggleCommand(deviceId, state, allowRetry = true) {
     const { t, sign } = generateSignature('POST', endpoint, body, token);
     try {
         const res = await axios.post(`${BASE_URL}${endpoint}`, body, {
-            headers: { client_id: CLIENT_ID, access_token: token, sign, t, sign_method: 'HMAC-SHA256', 'Content-Type': 'application/json' },
-            timeout: 8000,
+            headers: { client_id: CLIENT_ID, access_token: token, sign, t, sign_method: 'HMAC-SHA256', 'Content-Type': 'application/json' }, timeout: 8000
         });
         if (res.data?.success) {
-            if (deviceCache[deviceId]) {
-                deviceCache[deviceId].isPowerOn = state;
-                deviceCache[deviceId].intendedState = state;
-                deviceCache[deviceId].updatedAt = Date.now();
-            }
+            if (deviceCache[deviceId]) { deviceCache[deviceId].isPowerOn = state; deviceCache[deviceId].intendedState = state; deviceCache[deviceId].updatedAt = Date.now(); }
             return true;
         }
-        if (allowRetry && isTuyaAuthError(res.data)) {
-            invalidateTuyaToken(); await getToken(true); return sendToggleCommand(deviceId, state, false);
-        }
+        if (allowRetry && isTuyaAuthError(res.data)) { invalidateTuyaToken(); await getToken(true); return sendToggleCommand(deviceId, state, false); }
+        logError(`Tuya toggle failed for ${deviceId}:`, res.data);
         return false;
-    } catch (error) { return false; }
+    } catch (error) { logError(`Tuya toggle request error for ${deviceId}:`, error.message); return false; }
 }
 
 const deviceCommandQueues = new Map();
 function toggleDevice(deviceId, state) {
     const previous = deviceCommandQueues.get(deviceId) || Promise.resolve();
-    const command = previous.catch(() => {}).then(() => sendToggleCommand(deviceId, state));
-    const tracked = command.finally(() => { if (deviceCommandQueues.get(deviceId) === tracked) deviceCommandQueues.delete(deviceId); });
+    let tracked = previous.catch(() => {}).then(() => sendToggleCommand(deviceId, state)).finally(() => {
+        if (deviceCommandQueues.get(deviceId) === tracked) deviceCommandQueues.delete(deviceId);
+    });
     deviceCommandQueues.set(deviceId, tracked);
     return tracked;
 }
 
 function markDeviceOffline(deviceId, data) {
     const cache = deviceCache[deviceId];
-    if (cache) {
-        cache.online = false; cache.wasOffline = true;
-        cache.updatedAt = Date.now(); cache.lastCalcTime = Date.now();
-    }
+    if (cache) { cache.online = false; cache.wasOffline = true; cache.updatedAt = Date.now(); cache.lastCalcTime = Date.now(); }
     if (isTuyaAuthError(data)) invalidateTuyaToken();
 }
 
-// -----------------------------------------------------------------------------
-// API Routes
-// -----------------------------------------------------------------------------
 app.get('/api/data', (req, res) => res.json({ ...db, currentRates: exchangeRates, serverConfig: { timeZone: HUB_TIMEZONE, tuyaPollIntervalMs: TUYA_POLL_INTERVAL_MS } }));
 app.get('/api/status', (req, res) => res.json({ success: true, result: deviceCache }));
 app.get('/api/status/:id', (req, res) => deviceCache[req.params.id] ? res.json({ success: true, result: deviceCache[req.params.id] }) : res.status(404).json({ success: false, error: 'Device not found' }));
@@ -524,30 +482,34 @@ app.get('/api/export/:id', (req, res) => {
 
 app.post('/api/devices', (req, res) => {
     const { id, name } = req.body || {};
-    if (!isValidDeviceId(id)) return res.status(400).json({ success: false, error: 'Invalid device id' });
+    if (!isValidDeviceId(id)) return res.status(400).json({ success: false, error: 'Invalid device id format' });
     if (!isNonEmptyString(name, 60)) return res.status(400).json({ success: false, error: 'Invalid device name' });
-    if (db.devices.length >= MAX_DEVICES) return res.status(400).json({ success: false, error: 'Max devices reached' });
-    if (db.devices.find((d) => d.id === id)) return res.status(409).json({ success: false, error: 'Device exists' });
+    if (db.devices.length >= MAX_DEVICES) return res.status(400).json({ success: false, error: `Maximum of ${MAX_DEVICES} devices reached` });
+    if (db.devices.find((d) => d.id === id)) return res.status(409).json({ success: false, error: 'Device already exists' });
+
     const cleanName = sanitizeName(name);
     db.devices.push({ id, name: cleanName });
     db.usage[id] = defaultUsage(); db.automations[id] = defaultAutomation(); deviceCache[id] = defaultDeviceCache();
-    logActivity(id, 'device_added', `${cleanName} was added`); markStateDirty();
+    logActivity(id, 'device_added', `${cleanName} was added`);
+    markStateDirty();
     return res.json({ success: true });
 });
 
 app.patch('/api/devices/:id', (req, res) => {
-    if (!deviceExists(req.params.id)) return res.status(404).json({ success: false, error: 'Not found' });
+    if (!deviceExists(req.params.id)) return res.status(404).json({ success: false, error: 'Device not found' });
     const { name } = req.body || {};
-    if (!isNonEmptyString(name, 60)) return res.status(400).json({ success: false, error: 'Invalid name' });
+    if (!isNonEmptyString(name, 60)) return res.status(400).json({ success: false, error: 'Invalid device name' });
     const device = db.devices.find((d) => d.id === req.params.id);
-    const previousName = device.name; device.name = sanitizeName(name);
-    logActivity(device.id, 'device_renamed', `${previousName} renamed to ${device.name}`); markStateDirty();
+    const previousName = device.name;
+    device.name = sanitizeName(name);
+    logActivity(device.id, 'device_renamed', `${previousName} renamed to ${device.name}`);
+    markStateDirty();
     return res.json({ success: true, device });
 });
 
 app.delete('/api/devices/:id', (req, res) => {
     const device = db.devices.find((d) => d.id === req.params.id);
-    if (!device) return res.status(404).json({ success: false, error: 'Not found' });
+    if (!device) return res.status(404).json({ success: false, error: 'Device not found' });
     logActivity(device.id, 'device_removed', `${device.name} was removed`, device.name);
     db.devices = db.devices.filter((d) => d.id !== req.params.id);
     delete db.usage[req.params.id]; delete db.automations[req.params.id]; delete deviceCache[req.params.id];
@@ -556,29 +518,33 @@ app.delete('/api/devices/:id', (req, res) => {
 });
 
 app.post('/api/toggle/:id', asyncHandler(async (req, res) => {
-    if (!deviceExists(req.params.id)) return res.status(404).json({ success: false, error: 'Not found' });
-    if (typeof req.body?.state !== 'boolean') return res.status(400).json({ success: false, error: 'Invalid state' });
+    if (!deviceExists(req.params.id)) return res.status(404).json({ success: false, error: 'Device not found' });
+    if (typeof req.body?.state !== 'boolean') return res.status(400).json({ success: false, error: 'state must be boolean' });
     const success = await toggleDevice(req.params.id, req.body.state);
-    if (!success) return res.status(502).json({ success: false, error: 'Command failed' });
+    if (!success) return res.status(502).json({ success: false, error: 'Device command failed' });
+
     db.automations[req.params.id].mode = 'manual'; db.automations[req.params.id].standbyTimer = 0;
-    logActivity(req.params.id, 'manual_toggle', `Turned ${req.body.state ? 'ON' : 'OFF'} manually`); markStateDirty();
+    logActivity(req.params.id, 'manual_toggle', `Turned ${req.body.state ? 'ON' : 'OFF'} manually`);
+    markStateDirty();
     return res.json({ success: true });
 }));
 
 app.post('/api/cycle/:id', asyncHandler(async (req, res) => {
-    if (!deviceExists(req.params.id)) return res.status(404).json({ success: false, error: 'Not found' });
+    if (!deviceExists(req.params.id)) return res.status(404).json({ success: false, error: 'Device not found' });
     const offSuccess = await toggleDevice(req.params.id, false);
-    if (!offSuccess) return res.status(502).json({ success: false, error: 'Turn off failed' });
+    if (!offSuccess) return res.status(502).json({ success: false, error: 'Could not turn device off' });
     await sleep(3500);
     const onSuccess = await toggleDevice(req.params.id, true);
-    if (!onSuccess) return res.status(502).json({ success: false, error: 'Turn on failed' });
+    if (!onSuccess) return res.status(502).json({ success: false, error: 'Device turned off, but could not turn it back on' });
+
     db.automations[req.params.id].mode = 'manual'; db.automations[req.params.id].standbyTimer = 0;
-    logActivity(req.params.id, 'power_cycle', 'Power cycled'); markStateDirty();
+    logActivity(req.params.id, 'power_cycle', 'Power cycled');
+    markStateDirty();
     return res.json({ success: true });
 }));
 
 app.post('/api/toggle-all', asyncHandler(async (req, res) => {
-    if (typeof req.body?.state !== 'boolean') return res.status(400).json({ success: false, error: 'Invalid state' });
+    if (typeof req.body?.state !== 'boolean') return res.status(400).json({ success: false, error: 'state must be boolean' });
     const results = [];
     for (const device of db.devices) {
         const success = await toggleDevice(device.id, req.body.state);
@@ -601,57 +567,96 @@ app.post('/api/settings', (req, res) => {
         if (!Number.isFinite(rate) || rate < 0 || rate > 10000) return res.status(400).json({ success: false, error: 'Invalid rate' });
         patch.baseRateBDT = rate;
     }
-    if (body.currency !== undefined && ALLOWED_CURRENCIES.includes(body.currency)) patch.currency = body.currency;
+    if (body.currency !== undefined) {
+        if (!ALLOWED_CURRENCIES.includes(body.currency)) return res.status(400).json({ success: false, error: 'Invalid currency' });
+        patch.currency = body.currency;
+    }
     if (body.monthlyBudget !== undefined) {
         const budget = Number(body.monthlyBudget);
-        if (Number.isFinite(budget) && budget > 0) patch.monthlyBudget = budget;
+        if (!Number.isFinite(budget) || budget <= 0 || budget > 1_000_000) return res.status(400).json({ success: false, error: 'Monthly budget must be greater than 0' });
+        patch.monthlyBudget = budget;
     }
-    if (body.weatherLocation !== undefined && isNonEmptyString(body.weatherLocation, 100)) patch.weatherLocation = sanitizeName(body.weatherLocation);
-    if (body.language !== undefined && ['en', 'bn'].includes(body.language)) patch.language = body.language;
-    db.settings = { ...db.settings, ...patch }; markStateDirty();
+    if (body.weatherLocation !== undefined) {
+        if (!isNonEmptyString(body.weatherLocation, 100)) return res.status(400).json({ success: false, error: 'Invalid location' });
+        patch.weatherLocation = sanitizeName(body.weatherLocation);
+    }
+    if (body.language !== undefined) {
+        if (!['en', 'bn'].includes(body.language)) return res.status(400).json({ success: false, error: 'Invalid language' });
+        patch.language = body.language;
+    }
+
+    db.settings = { ...db.settings, ...patch };
+    markStateDirty();
     return res.json({ success: true, settings: db.settings });
 });
 
 app.post('/api/automations/:id', (req, res) => {
-    if (!deviceExists(req.params.id)) return res.status(404).json({ success: false, error: 'Not found' });
+    if (!deviceExists(req.params.id)) return res.status(404).json({ success: false, error: 'Device not found' });
     const auto = db.automations[req.params.id]; const body = req.body || {}; const patch = {};
-    if (body.mode !== undefined && ['manual', 'day', 'night'].includes(body.mode)) patch.mode = body.mode;
+
+    if (body.mode !== undefined) {
+        if (!['manual', 'day', 'night'].includes(body.mode)) return res.status(400).json({ success: false, error: 'Invalid mode' });
+        patch.mode = body.mode;
+    }
     if (body.dayStart !== undefined && TIME_RE.test(body.dayStart)) patch.dayStart = body.dayStart;
     if (body.dayEnd !== undefined && TIME_RE.test(body.dayEnd)) patch.dayEnd = body.dayEnd;
     if (body.nightStart !== undefined && TIME_RE.test(body.nightStart)) patch.nightStart = body.nightStart;
     if (body.nightEnd !== undefined && TIME_RE.test(body.nightEnd)) patch.nightEnd = body.nightEnd;
+    
     if (body.powerOutageRecovery !== undefined) patch.powerOutageRecovery = !!body.powerOutageRecovery;
     if (body.standbyKill !== undefined) patch.standbyKill = !!body.standbyKill;
     if (body.voltageProtect !== undefined) patch.voltageProtect = !!body.voltageProtect;
     if (body.budgetKill !== undefined) patch.budgetKill = !!body.budgetKill;
-    if (body.voltageMin !== undefined) patch.voltageMin = Number.isFinite(Number(body.voltageMin)) ? Number(body.voltageMin) : auto.voltageMin;
-    if (body.voltageMax !== undefined) patch.voltageMax = Number.isFinite(Number(body.voltageMax)) ? Number(body.voltageMax) : auto.voltageMax;
-    if ((patch.voltageMin ?? auto.voltageMin) >= (patch.voltageMax ?? auto.voltageMax)) return res.status(400).json({ success: false, error: 'Min >= Max' });
-    if (body.timer !== undefined) {
-        if (!body.timer || typeof body.timer.active !== 'boolean' || typeof body.timer.executeAt !== 'number' || typeof body.timer.action !== 'boolean') return res.status(400).json({ success: false, error: 'Invalid timer' });
-        patch.timer = { active: body.timer.active, executeAt: body.timer.executeAt, action: body.timer.action };
+
+    if (body.voltageMin !== undefined) {
+        const value = Number(body.voltageMin);
+        if (!Number.isFinite(value) || value < 0 || value > 500) return res.status(400).json({ success: false, error: 'Invalid voltageMin' });
+        patch.voltageMin = value;
     }
+    if (body.voltageMax !== undefined) {
+        const value = Number(body.voltageMax);
+        if (!Number.isFinite(value) || value < 0 || value > 500) return res.status(400).json({ success: false, error: 'Invalid voltageMax' });
+        patch.voltageMax = value;
+    }
+    const nextMin = patch.voltageMin ?? auto.voltageMin;
+    const nextMax = patch.voltageMax ?? auto.voltageMax;
+    if (nextMin >= nextMax) return res.status(400).json({ success: false, error: 'voltageMin must be lower than voltageMax' });
+
+    if (body.timer !== undefined) {
+        const timer = body.timer;
+        if (!timer || typeof timer !== 'object' || typeof timer.active !== 'boolean' || typeof timer.executeAt !== 'number' || typeof timer.action !== 'boolean') {
+            return res.status(400).json({ success: false, error: 'Invalid timer payload' });
+        }
+        if (timer.active && (!Number.isFinite(timer.executeAt) || timer.executeAt <= Date.now() || timer.executeAt > Date.now() + 31 * 24 * 60 * 60 * 1000)) {
+            return res.status(400).json({ success: false, error: 'Timer must be within the next 31 days' });
+        }
+        patch.timer = { active: timer.active, executeAt: timer.executeAt, action: timer.action };
+    }
+
     if (body.schedules !== undefined) {
-        if (!Array.isArray(body.schedules) || body.schedules.length > MAX_SCHEDULES_PER_DEVICE) return res.status(400).json({ success: false, error: 'Invalid schedules' });
-        const valid = body.schedules.every((s) => (s && ['string', 'number'].includes(typeof s.id) && TIME_RE.test(String(s.time || '')) && typeof s.action === 'boolean'));
-        if (!valid) return res.status(400).json({ success: false, error: 'Invalid entry' });
+        if (!Array.isArray(body.schedules) || body.schedules.length > MAX_SCHEDULES_PER_DEVICE) return res.status(400).json({ success: false, error: 'Invalid schedules payload' });
+        const valid = body.schedules.every((s) => (s && ['string', 'number'].includes(typeof s.id) && TIME_RE.test(String(s.time || '')) && typeof s.action === 'boolean' && (s.enabled === undefined || typeof s.enabled === 'boolean')));
+        if (!valid) return res.status(400).json({ success: false, error: 'Invalid schedule entry' });
         patch.schedules = body.schedules.map((s) => ({ id: s.id, time: s.time, action: !!s.action, enabled: s.enabled !== false }));
     }
-    Object.assign(auto, patch); markStateDirty();
+
+    Object.assign(auto, patch);
+    markStateDirty();
     return res.json({ success: true, automation: auto });
 });
 
 app.delete('/api/usage/:id', (req, res) => {
-    if (!deviceExists(req.params.id)) return res.status(404).json({ success: false, error: 'Not found' });
+    if (!deviceExists(req.params.id)) return res.status(404).json({ success: false, error: 'Device not found' });
     db.usage[req.params.id] = defaultUsage();
-    logActivity(req.params.id, 'history_cleared', 'Usage history was cleared'); markStateDirty();
+    logActivity(req.params.id, 'history_cleared', 'Usage history was cleared');
+    markStateDirty();
     return res.json({ success: true });
 });
 
 app.get('/api/activity', (req, res) => res.json({ success: true, result: db.activityLog || [] }));
 
 // -----------------------------------------------------------------------------
-// Time-based automation ticker
+// Time-Based Automation Ticker (Runs every 5 seconds)
 // -----------------------------------------------------------------------------
 let automationTickerRunning = false;
 let scheduleExecutionDate = '';
@@ -663,8 +668,12 @@ async function runTimeAutomations() {
     automationTickerRunning = true;
     try {
         if (checkTimeRotation()) markStateDirty();
-        const now = hubNow(); const today = dateKey(now); const nowMs = Date.now();
-        const nowMins = now.getHours() * 60 + now.getMinutes(); const nowClockMs = now.getTime();
+
+        const now = hubNow();
+        const today = dateKey(now);
+        const nowMs = Date.now();
+        const nowMins = now.getHours() * 60 + now.getMinutes();
+        const nowClockMs = now.getTime();
         const maxScheduleCatchupMs = 15 * 60 * 1000;
         const previousClockMs = lastAutomationClockMs || (nowClockMs - AUTOMATION_TICK_MS * 2);
         const scheduleWindowStart = Math.max(previousClockMs, nowClockMs - maxScheduleCatchupMs);
@@ -673,88 +682,120 @@ async function runTimeAutomations() {
         if (scheduleExecutionDate !== today) { scheduleExecutionDate = today; executedScheduleKeys.clear(); }
 
         for (const device of db.devices) {
-            const auto = db.automations[device.id]; const cache = deviceCache[device.id];
+            const auto = db.automations[device.id];
+            const cache = deviceCache[device.id];
             if (!auto || !cache) continue;
 
+            // 1. Timers
             if (auto.timer?.active && nowMs >= auto.timer.executeAt) {
-                const success = await toggleDevice(device.id, !!auto.timer.action);
+                const desired = !!auto.timer.action;
+                const success = await toggleDevice(device.id, desired);
                 if (success) {
                     auto.timer.active = false; auto.mode = 'manual'; auto.standbyTimer = 0;
-                    logActivity(device.id, 'timer', `Timer fired: turned ${!!auto.timer.action ? 'ON' : 'OFF'}`);
+                    logActivity(device.id, 'timer', `Timer fired: turned ${desired ? 'ON' : 'OFF'}`);
                     markStateDirty();
                 }
             }
 
+            // 2. Day/Night Mode Instant Responsiveness
             if (cache.online && auto.mode !== 'manual') {
-                let targetState = cache.isPowerOn; let modeReason = null;
+                let targetState = cache.isPowerOn;
+                let modeReason = null;
+                
                 if (auto.mode === 'day') {
                     const start = timeToMins(auto.dayStart); const end = timeToMins(auto.dayEnd);
                     targetState = start <= end ? (nowMins >= start && nowMins < end) : (nowMins >= start || nowMins < end);
-                    modeReason = 'Day profile';
+                    modeReason = 'Day mode';
                 } else if (auto.mode === 'night') {
                     const start = timeToMins(auto.nightStart); const end = timeToMins(auto.nightEnd);
                     targetState = start <= end ? (nowMins >= start && nowMins < end) : (nowMins >= start || nowMins < end);
-                    modeReason = 'Night profile';
+                    modeReason = 'Night mode';
                 }
+
                 if (targetState !== cache.isPowerOn) {
                     const success = await toggleDevice(device.id, targetState);
-                    if (success && modeReason) { logActivity(device.id, 'mode', `${modeReason}: turned ${targetState ? 'ON' : 'OFF'}`); markStateDirty(); }
+                    if (success && modeReason) {
+                        logActivity(device.id, 'mode', `${modeReason} active: turned ${targetState ? 'ON' : 'OFF'}`);
+                        markStateDirty();
+                    }
                 }
             }
 
+            // 3. Schedules
             const scheduleCandidates = [];
             for (const schedule of (auto.schedules || [])) {
                 if (!schedule.enabled || !TIME_RE.test(String(schedule.time || ''))) continue;
                 const [hh, mm] = schedule.time.split(':').map(Number);
                 for (const dayOffset of [0, -1]) {
-                    const scheduledAt = new Date(now); scheduledAt.setDate(scheduledAt.getDate() + dayOffset); scheduledAt.setHours(hh, mm, 0, 0);
+                    const scheduledAt = new Date(now);
+                    scheduledAt.setDate(scheduledAt.getDate() + dayOffset);
+                    scheduledAt.setHours(hh, mm, 0, 0);
                     const scheduledClockMs = scheduledAt.getTime();
-                    if (scheduledClockMs > scheduleWindowStart && scheduledClockMs <= nowClockMs) scheduleCandidates.push({ schedule, scheduledAt, scheduledClockMs });
+                    if (scheduledClockMs > scheduleWindowStart && scheduledClockMs <= nowClockMs) {
+                        scheduleCandidates.push({ schedule, scheduledAt, scheduledClockMs });
+                    }
                 }
             }
+
             if (scheduleCandidates.length) {
                 scheduleCandidates.sort((a, b) => a.scheduledClockMs - b.scheduledClockMs);
                 const candidate = scheduleCandidates[scheduleCandidates.length - 1];
-                const schedule = candidate.schedule; const executionKey = `${dateKey(candidate.scheduledAt)}|${device.id}|${schedule.id}`;
+                const schedule = candidate.schedule;
+                const executionKey = `${dateKey(candidate.scheduledAt)}|${device.id}|${schedule.id}`;
                 if (!executedScheduleKeys.has(executionKey)) {
-                    const success = await toggleDevice(device.id, !!schedule.action);
+                    const desired = !!schedule.action;
+                    const success = await toggleDevice(device.id, desired);
                     if (success) {
                         executedScheduleKeys.add(executionKey);
-                        logActivity(device.id, 'schedule', `Schedule ${schedule.time}: turned ${!!schedule.action ? 'ON' : 'OFF'}`);
+                        logActivity(device.id, 'schedule', `Schedule ${schedule.time}: turned ${desired ? 'ON' : 'OFF'}`);
                         markStateDirty();
                     }
                 }
             }
         }
-    } catch (error) { logError('Automation ticker error:', error.message); } finally { automationTickerRunning = false; }
+    } catch (error) { logError('Automation ticker error:', error.message); } 
+    finally { automationTickerRunning = false; }
 }
 const automationTimer = setInterval(runTimeAutomations, AUTOMATION_TICK_MS);
 
 // -----------------------------------------------------------------------------
-// Tuya Polling & Outage Recovery
+// Tuya Polling & Power Outage State Recovery
 // -----------------------------------------------------------------------------
 let polling = false;
 let pollTimer = null;
 
 async function pollTuya() {
     if (polling) return;
-    polling = true; let cycleHadError = false; let nextDelay = TUYA_POLL_INTERVAL_MS;
+    polling = true;
+    let cycleHadError = false;
+    let nextDelay = TUYA_POLL_INTERVAL_MS;
+
     try {
-        if (!db) return; if (checkTimeRotation()) markStateDirty(); if (!db.devices.length) return;
+        if (!db) return;
+        if (checkTimeRotation()) markStateDirty();
+        if (!db.devices.length) return;
+
         const token = await getToken();
         if (!token) { cycleHadError = true; nextDelay = TUYA_TOKEN_RETRY_MS; return; }
 
-        const now = hubNow(); const hour = now.getHours(); const nowMs = Date.now();
+        const now = hubNow();
+        const hour = now.getHours();
+        const nowMs = Date.now();
 
         for (const device of db.devices) {
-            const cache = deviceCache[device.id]; const auto = db.automations[device.id]; const usage = db.usage[device.id];
+            const cache = deviceCache[device.id];
+            const auto = db.automations[device.id];
+            const usage = db.usage[device.id];
             if (!cache || !auto || !usage) continue;
+
             try {
                 const endpoint = `/v1.0/devices/${device.id}/status`;
                 const currentToken = await getToken();
-                if (!currentToken) throw new Error('No access token');
+                if (!currentToken) throw new Error('No Tuya access token');
                 const { t, sign } = generateSignature('GET', endpoint, '', currentToken);
-                const response = await axios.get(`${BASE_URL}${endpoint}`, { headers: { client_id: CLIENT_ID, access_token: currentToken, sign, t, sign_method: 'HMAC-SHA256' }, timeout: 8000 });
+                const response = await axios.get(`${BASE_URL}${endpoint}`, {
+                    headers: { client_id: CLIENT_ID, access_token: currentToken, sign, t, sign_method: 'HMAC-SHA256' }, timeout: 8000
+                });
 
                 if (!response.data?.success || !Array.isArray(response.data?.result)) {
                     cycleHadError = true; markDeviceOffline(device.id, response.data); continue;
@@ -766,20 +807,21 @@ async function pollTuya() {
                 const voltageRaw = Number(status.find((s) => s.code === 'cur_voltage')?.value);
                 const isPowerOn = typeof switchValue === 'boolean' ? switchValue : cache.isPowerOn;
 
-                // --- OUTAGE RECOVERY ---
+                // --- POWER OUTAGE RECOVERY ---
                 if (cache.wasOffline) {
                     cache.wasOffline = false;
                     if (auto.powerOutageRecovery && isPowerOn !== cache.intendedState) {
                         const restored = await toggleDevice(device.id, cache.intendedState);
-                        if (restored) logActivity(device.id, 'power_cycle', `Power restored: Returned to ${cache.intendedState ? 'ON' : 'OFF'}`);
+                        if (restored) logActivity(device.id, 'power_cycle', `Power restored. Returned to intended state: ${cache.intendedState ? 'ON' : 'OFF'}`);
                         continue; 
                     } else if (!auto.powerOutageRecovery) { cache.intendedState = isPowerOn; }
                 } else { cache.intendedState = isPowerOn; }
+                // -----------------------------
 
                 const currentPower = Number.isFinite(powerRaw) ? (powerRaw / 10) * POWER_CALIBRATION : 0;
                 const currentVoltage = Number.isFinite(voltageRaw) ? (voltageRaw / 10) * VOLTAGE_CALIBRATION : 0;
-                const maxDeltaMs = Math.max(TUYA_POLL_INTERVAL_MS * 3, 180_000);
-                const elapsedMs = Math.max(0, Math.min(nowMs - cache.lastCalcTime, maxDeltaMs));
+
+                const elapsedMs = Math.max(0, Math.min(nowMs - cache.lastCalcTime, Math.max(TUYA_POLL_INTERVAL_MS * 3, 180_000)));
                 const deltaHours = elapsedMs / 3_600_000;
 
                 cache.lastCalcTime = nowMs; cache.sampledAt = nowMs; cache.updatedAt = nowMs;
@@ -795,20 +837,23 @@ async function pollTuya() {
                 if (auto.voltageProtect && isPowerOn) {
                     const vMin = Number(auto.voltageMin) || 170; const vMax = Number(auto.voltageMax) || 260;
                     if (currentVoltage > vMax || (currentVoltage < vMin && currentVoltage > 50)) {
-                        const success = await toggleDevice(device.id, false);
-                        if (success) { auto.mode = 'manual'; auto.standbyTimer = 0; logActivity(device.id, 'voltage_guard', `Cut power at ${currentVoltage.toFixed(1)}V`); }
+                        if (await toggleDevice(device.id, false)) {
+                            auto.mode = 'manual'; auto.standbyTimer = 0;
+                            logActivity(device.id, 'voltage_guard', `Cut power at ${currentVoltage.toFixed(1)}V`);
+                        }
                         continue;
                     }
                 }
 
                 if (auto.budgetKill && isPowerOn) {
                     const monthKwh = usage.monthly[usage.monthly.length - 1] || 0;
-                    const currencyFactor = exchangeRates[db.settings.currency] || 1;
-                    const rate = db.settings.baseRateBDT * currencyFactor;
-                    const budget = db.settings.monthlyBudget * currencyFactor;
+                    const rate = db.settings.baseRateBDT * (exchangeRates[db.settings.currency] || 1);
+                    const budget = db.settings.monthlyBudget * (exchangeRates[db.settings.currency] || 1);
                     if (budget > 0 && monthKwh * rate >= budget) {
-                        const success = await toggleDevice(device.id, false);
-                        if (success) { auto.mode = 'manual'; auto.standbyTimer = 0; logActivity(device.id, 'budget_kill', 'Cut power: Monthly budget met'); }
+                        if (await toggleDevice(device.id, false)) {
+                            auto.mode = 'manual'; auto.standbyTimer = 0;
+                            logActivity(device.id, 'budget_kill', 'Cut power: monthly budget reached');
+                        }
                         continue;
                     }
                 }
@@ -816,40 +861,45 @@ async function pollTuya() {
                 if (isPowerOn && currentPower < 5) {
                     auto.standbyTimer = (Number(auto.standbyTimer) || 0) + deltaHours * 3600;
                     if (auto.standbyKill && auto.standbyTimer >= 600) {
-                        const success = await toggleDevice(device.id, false);
-                        if (success) { auto.standbyTimer = 0; auto.mode = 'manual'; logActivity(device.id, 'standby_kill', 'Cut power: Idle > 10m'); }
+                        if (await toggleDevice(device.id, false)) {
+                            auto.standbyTimer = 0; auto.mode = 'manual';
+                            logActivity(device.id, 'standby_kill', 'Cut power: idle in standby for 10+ minutes');
+                        }
                         continue;
                     }
                 } else { auto.standbyTimer = 0; }
-
-            } catch (error) { cycleHadError = true; markDeviceOffline(device.id, { code: 'NETWORK_ERROR' }); }
+            } catch (error) {
+                cycleHadError = true; markDeviceOffline(device.id, { code: 'NETWORK_ERROR' }); logError(`Poll error for device ${device.id}:`, error.message);
+            }
             await sleep(300);
         }
         markStateDirty();
         nextDelay = cycleHadError ? TUYA_ERROR_BACKOFF_MS : TUYA_POLL_INTERVAL_MS;
-    } catch (error) { cycleHadError = true; nextDelay = TUYA_ERROR_BACKOFF_MS; } 
+    } catch (error) { cycleHadError = true; nextDelay = TUYA_ERROR_BACKOFF_MS; logError('pollTuya loop crashed:', error); } 
     finally { polling = false; pollTimer = setTimeout(pollTuya, nextDelay); }
 }
 
+// -----------------------------------------------------------------------------
+// Error Handler & Shutdown
+// -----------------------------------------------------------------------------
 app.use((err, req, res, next) => {
     if (err?.message === 'Origin not allowed by CORS') return res.status(403).json({ success: false, error: 'Origin not allowed' });
+    logError('Unhandled route error:', err);
     return res.status(500).json({ success: false, error: 'Internal server error' });
 });
 
 initDB().then(() => {
     server = app.listen(PORT, '0.0.0.0', () => log(`Smart Hub v4 running on port ${PORT}`));
     updateExchangeRates(); runTimeAutomations(); pollTuya();
-}).catch((error) => { process.exit(1); });
+}).catch((error) => { logError('Failed to initialize database, exiting:', error); process.exit(1); });
 
 async function shutdown(signal) {
-    if (pollTimer) clearTimeout(pollTimer);
-    clearInterval(automationTimer); clearInterval(exchangeRateTimer);
-    try { if (db) { stateDirty = true; await flushState(); } } catch (error) { }
-    if (server) { await Promise.race([new Promise((resolve) => server.close(resolve)), sleep(5000)]); }
-    if (mongoClient) { try { await mongoClient.close(); } catch (error) {} }
+    log(`Received ${signal}, shutting down gracefully...`);
+    if (pollTimer) clearTimeout(pollTimer); clearInterval(automationTimer); clearInterval(exchangeRateTimer);
+    try { if (db) { stateDirty = true; await flushState(); } } catch (error) { logError('Final state save failed:', error.message); }
+    if (server) await Promise.race([new Promise((resolve) => server.close(resolve)), sleep(5000)]);
+    if (mongoClient) { try { await mongoClient.close(); } catch (error) { logError('Error closing Mongo connection:', error.message); } }
     process.exit(0);
 }
-
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM')); process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('unhandledRejection', (reason) => logError('Unhandled promise rejection:', reason));
