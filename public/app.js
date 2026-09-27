@@ -1,5 +1,5 @@
 // =============================================================================
-// Smart Hub Front-End Application Logic (V4.2 Revamp)
+// Smart Hub Front-End Application Logic (V4.3 Revamp)
 // =============================================================================
 const symbols = { BDT: '৳', USD: '$', EUR: '€', CNY: '¥' };
 let state = {
@@ -45,11 +45,11 @@ function updatePinUI() {
     const dots = document.getElementById('pinDots').children;
     for (let i = 0; i < 4; i++) {
         if (i < state.pinInput.length) {
-            dots[i].classList.add('bg-sky-400', 'border-sky-400', 'scale-110');
-            dots[i].classList.remove('bg-transparent', 'border-white/40');
+            dots[i].classList.add('bg-white', 'scale-110');
+            dots[i].classList.remove('bg-transparent');
         } else {
-            dots[i].classList.remove('bg-sky-400', 'border-sky-400', 'scale-110');
-            dots[i].classList.add('bg-transparent', 'border-white/40');
+            dots[i].classList.remove('bg-white', 'scale-110');
+            dots[i].classList.add('bg-transparent');
         }
     }
 }
@@ -66,7 +66,7 @@ function toast(message, type = 'info') {
     setTimeout(() => { 
         el.style.opacity = '0'; 
         el.style.transform = 'translateY(10px) scale(0.95)';
-        el.style.transition = 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'; 
+        el.style.transition = 'all 0.3s ease'; 
         setTimeout(() => el.remove(), 300); 
     }, 3200);
 }
@@ -121,23 +121,23 @@ const dict = {
         'Overview': 'ওভারভিউ', 'Analytics': 'অ্যানালিটিক্স', 'Automation': 'অটোমেশন', 'Settings': 'সেটিংস',
         'CONNECTING': 'সংযোগ হচ্ছে', 'ONLINE': 'অনলাইন', 'OFFLINE': 'অফলাইন', 'STANDBY': 'স্ট্যান্ডবাই',
         'ON': 'চালু', 'OFF': 'বন্ধ', 'VOLTAGE': 'ভোল্টেজ', 'WATTAGE': 'ওয়াটেজ',
-        'Master ON': 'মাস্টার চালু', 'Master OFF': 'মাস্টার বন্ধ', 'All Devices': 'ডিভাইস বহর',
-        'Insights': 'টেলিমেট্রি বিশ্লেষণ', 'TODAY vs YESTERDAY': 'আজ বনাম গতকাল', 'MONTHLY FORECAST': 'মাসিক পূর্বাভাস',
+        'Master ON': 'মাস্টার চালু', 'Master OFF': 'মাস্টার বন্ধ', 'All Devices': 'ডিভাইস সমূহ',
+        'Insights': 'বিশ্লেষণ', 'TODAY vs YESTERDAY': 'আজ বনাম গতকাল', 'MONTHLY FORECAST': 'মাসিক পূর্বাভাস',
         'PEAK HOUR TODAY': 'আজকের পিক ঘণ্টা',
         'BUDGET PROGRESS:': 'মাসিক বাজেট:', 'Live': 'লাইভ রিয়েলটাইম', 'Today (Hourly)': 'আজ (ঘণ্টা)',
         '7 Days': '৭ দিন', '4 Weeks': '৪ সপ্তাহ', '6 Months': '৬ মাস',
-        'Energy': 'এনার্জি', 'Cost': 'খরচ', 'Power (W)': 'পাওয়ার (W)', 'Voltage (V)': 'ভোল্টেজ (V)', 'Bar': 'বার চার্ট', 'Line': 'লাইন ওয়েভ',
-        'Operating Mode': 'ইন্টেলিজেন্ট প্রোফাইল', 'Manual': 'ম্যানুয়াল', 'Day': 'দিন মোড', 'Night': 'রাত মোড', 'Sleep': 'স্লিপ (৩ ঘণ্টা)',
-        'Standby Auto-Kill': 'স্ট্যান্ডবাই অটো-কিল', 'Stops power if <5W for 10m': '<৫ ওয়াট হলে ১০ মিনিটে বন্ধ', 'Timer': 'টাইমার',
+        'Energy': 'এনার্জি', 'Cost': 'খরচ', 'Power (W)': 'পাওয়ার (W)', 'Voltage (V)': 'ভোল্টেজ (V)', 'Bar': 'বার চার্ট', 'Line': 'লাইন চার্ট',
+        'Operating Mode': 'অপারেটিং মোড', 'Manual': 'ম্যানুয়াল', 'Day': 'দিন মোড', 'Night': 'রাত মোড', 'Sleep': 'স্লিপ (৩ ঘণ্টা)',
+        'Standby Auto-Kill': 'অটো-কিল', 'Stops power if <5W for 10m': '<৫ ওয়াট হলে ১০ মিনিটে বন্ধ', 'Timer': 'টাইমার',
         'Voltage Guard': 'ভোল্টেজ গার্ড', 'Auto-kill on dangerous voltage': 'বিপজ্জনক ভোল্টেজে অটো-কিল',
         'MIN (V)': 'সর্বনিম্ন (V)', 'MAX (V)': 'সর্বোচ্চ (V)',
-        'Strict Budget Lock': 'কঠোর বাজেট লক', 'Auto-kill if budget hits 100%': 'বাজেট ১০০% ছুঁলে এসি বন্ধ',
-        'Power Outage Recovery': 'বিদ্যুৎ বিভ্রাট পুনরুদ্ধার', 'Restore state when power returns': 'বিদ্যুৎ ফিরলে ডিভাইসের অবস্থা ফিরিয়ে দিন',
-        'Tariff & Preferences': 'ট্যারিফ এবং পছন্দসমূহ', 'RATE': 'ট্যারিফ বেস রেট', 'CURRENCY': 'মুদ্রা', 'WEATHER LOCATION': 'আবহাওয়ার অবস্থান',
-        'Save': 'সংরক্ষণ', 'Set Budget': 'বাজেট সেট করুন', 'Export CSV': '📥 এক্সপোর্ট CSV',
+        'Strict Budget Lock': 'কঠোর বাজেট লক', 'Auto-kill if budget hits 100%': 'বাজেট ১০০% ছুঁলে বন্ধ',
+        'Power Outage Recovery': 'বিদ্যুৎ বিভ্রাট রিকভারি', 'Restore state when power returns': 'বিদ্যুৎ ফিরলে পূর্বের অবস্থায় ফিরিয়ে দিন',
+        'Tariff & Preferences': 'ট্যারিফ এবং সেটিংস', 'RATE': 'রেট', 'CURRENCY': 'মুদ্রা', 'WEATHER LOCATION': 'আবহাওয়ার অবস্থান',
+        'Save': 'সংরক্ষণ', 'Set Budget': 'বাজেট সেট করুন', 'Export CSV': 'ডাউনলোড CSV',
         'System Management': 'সিস্টেম ম্যানেজমেন্ট', 'Add Device': 'ডিভাইস যোগ করুন', 'Remove Device': 'ডিভাইস মুছুন', 'Rename': 'নাম পরিবর্তন',
-        'Reboot': '🔌 পাওয়ার সাইকেল', 'Clear History DB': 'হিস্ট্রি মুছুন',
-        'Recent Activity': 'টেলিমেট্রি লগ', 'No recent activity yet.': 'কোনো কার্যকলাপ নেই।',
+        'Reboot': 'পাওয়ার সাইকেল', 'Clear History DB': 'হিস্ট্রি মুছুন',
+        'Recent Activity': 'লগ সমূহ', 'No recent activity yet.': 'কোনো কার্যকলাপ নেই।',
         'Connection lost - retrying...': 'সংযোগ বিচ্ছিন্ন — পুনরায় চেষ্টা করা হচ্ছে...',
         'Connecting to your hub...': 'আপনার হাবের সাথে সংযোগ হচ্ছে...',
     },
@@ -191,14 +191,14 @@ function switchTab(tabId) {
     
     // Explicit baseline classes for non-active states
     document.querySelectorAll('.tab-btn').forEach((el) => {
-        el.className = "tab-btn flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-3 sm:px-6 rounded-2xl font-bold text-[11px] sm:text-sm transition-all duration-300 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white";
+        el.className = "tab-btn flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 sm:px-6 rounded-2xl font-bold text-[11px] sm:text-sm transition-all duration-300 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white";
     });
     
     document.getElementById(tabId).classList.remove('hidden');
     
-    // Active floating pill styling
+    // Active floating pill styling (Matching image_de83e3.png)
     const activeBtn = document.getElementById('btn-' + tabId);
-    activeBtn.className = "tab-btn flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-3 sm:px-6 rounded-2xl font-bold text-[11px] sm:text-sm transition-all duration-300 bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 shadow-lg shadow-sky-500/10 border border-slate-200/50 dark:border-white/10";
+    activeBtn.className = "tab-btn flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 sm:px-6 rounded-2xl font-bold text-[11px] sm:text-sm transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm border border-slate-200 dark:border-white/10";
     
     if (tabId === 'tab-analytics') updateChart();
 }
@@ -453,7 +453,7 @@ function updateActivityRings(todayKwh, todayCost) {
     const dailyBudgetKwh = (budgetCost / 30) / rate;
     const energyPct = Math.min(1, Math.max(0, todayKwh / (dailyBudgetKwh || 1)));
     document.getElementById('ring-energy').style.strokeDashoffset = 251 - (251 * energyPct);
-    document.getElementById('val-energy').innerText = (state.lang === 'bn' ? todayKwh.toLocaleString('bn-BD', { maximumFractionDigits: 2 }) : todayKwh.toFixed(2)) + ' kWh';
+    document.getElementById('val-energy').innerText = (state.lang === 'bn' ? todayKwh.toLocaleString('bn-BD', { maximumFractionDigits: 2 }) : todayKwh.toFixed(2));
 
     const dailyBudgetCost = budgetCost / 30;
     const costPct = Math.min(1, Math.max(0, todayCost / (dailyBudgetCost || 1)));
@@ -470,25 +470,23 @@ function renderDeviceUI() {
     const usage = state.db.usage[state.activeId];
     if (!auto || !usage) return;
 
-    // Clear all mode button highlights
+    // Reset all mode buttons 
     document.querySelectorAll('.mode-btn').forEach((b) => {
-        b.className = "mode-btn flex flex-col items-center justify-center p-3.5 sm:p-5 rounded-2xl border-2 transition-all duration-300 border-transparent bg-slate-900/5 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/20";
+        b.className = "mode-btn flex flex-col items-center justify-center p-3.5 sm:p-5 rounded-2xl border transition-all duration-300 bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-white/20";
     });
 
-    // Check if 3hr sleep is currently running
     let isSleepActive = false;
     if (auto.timer && auto.timer.active && auto.timer.action === false) {
         const sleepBtn = document.getElementById('mode-sleep');
         if (sleepBtn) {
-            sleepBtn.className = "mode-btn flex flex-col items-center justify-center p-3.5 sm:p-5 rounded-2xl border-2 transition-all duration-300 border-indigo-500 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shadow-lg shadow-indigo-500/15";
+            sleepBtn.className = "mode-btn flex flex-col items-center justify-center p-3.5 sm:p-5 rounded-2xl border transition-all duration-300 bg-indigo-500 text-white border-transparent shadow-lg shadow-indigo-500/30 scale-[1.02]";
             isSleepActive = true;
         }
     }
 
-    // Highlight standard mode if sleep is not active
     const modeBtn = document.getElementById(`mode-${auto.mode}`);
     if (modeBtn && !(auto.mode === 'manual' && isSleepActive)) {
-        modeBtn.className = "mode-btn flex flex-col items-center justify-center p-3.5 sm:p-5 rounded-2xl border-2 transition-all duration-300 border-sky-500 bg-sky-500/10 text-sky-600 dark:text-sky-400 shadow-lg shadow-sky-500/15";
+        modeBtn.className = "mode-btn flex flex-col items-center justify-center p-3.5 sm:p-5 rounded-2xl border transition-all duration-300 bg-gradient-to-br from-sky-400 to-blue-600 text-white border-transparent shadow-lg shadow-blue-500/30 scale-[1.02]";
     }
 
     if (document.getElementById('standbyToggle').checked !== (auto.standbyKill || false)) document.getElementById('standbyToggle').checked = auto.standbyKill || false;
@@ -536,7 +534,7 @@ function renderDeviceUI() {
     const pct = budget > 0 ? Math.min(100, Math.max(0, ((mKwh * rate) / budget) * 100)) : 0;
     document.getElementById('budgetPercent').innerText = `${state.lang === 'bn' ? pct.toLocaleString('bn-BD', { maximumFractionDigits: 1 }) : pct.toFixed(1)}%`;
     document.getElementById('budgetBar').style.width = `${pct}%`;
-    document.getElementById('budgetBar').className = pct > 90 ? 'bg-gradient-to-r from-rose-500 to-red-600 h-full rounded-full transition-all duration-1000' : 'bg-gradient-to-r from-sky-500 to-blue-600 h-full rounded-full transition-all duration-1000';
+    document.getElementById('budgetBar').className = pct > 90 ? 'bg-gradient-to-r from-rose-500 to-red-600 h-full rounded-full transition-all duration-1000 shadow-md' : 'bg-gradient-to-r from-sky-400 to-blue-600 h-full rounded-full transition-all duration-1000 shadow-md';
 
     updateActivityRings(todayKwh, todayKwh * rate);
 
@@ -544,12 +542,12 @@ function renderDeviceUI() {
     list.innerHTML = '';
     (auto.schedules || []).forEach((s) => {
         const row = document.createElement('div');
-        row.className = 'flex justify-between items-center glass-card-subtle p-3 rounded-2xl text-xs mb-2';
+        row.className = 'flex justify-between items-center bg-slate-100 dark:bg-slate-800 p-3 rounded-2xl text-xs mb-2';
         const label = document.createElement('span'); 
-        label.className = 'font-mono font-bold flex items-center';
+        label.className = 'font-mono font-bold flex items-center text-slate-800 dark:text-slate-200';
         label.textContent = s.time + ' ';
         const badge = document.createElement('span');
-        badge.className = `ml-3 px-2 py-0.5 rounded-lg text-[10px] font-black tracking-wider uppercase ${s.action ? 'text-emerald-500 bg-emerald-500/10' : 'text-rose-500 bg-rose-500/10'}`;
+        badge.className = `ml-3 px-2 py-0.5 rounded-md text-[10px] font-black tracking-wider uppercase ${s.action ? 'text-emerald-600 bg-emerald-500/15' : 'text-rose-600 bg-rose-500/15'}`;
         badge.textContent = s.action ? t('ON') : t('OFF');
         label.appendChild(badge);
         const delBtn = document.createElement('button');
@@ -587,10 +585,10 @@ function renderDeviceGrid() {
         const isCurrent = d.id === state.activeId;
         
         const card = document.createElement('button');
-        card.className = `p-3 sm:p-4 rounded-2xl flex flex-col gap-1 text-left transition-all duration-300 border ${
+        card.className = `p-3.5 sm:p-5 rounded-[20px] flex flex-col gap-1.5 text-left transition-all duration-300 border ${
             isCurrent 
-                ? 'bg-sky-500/10 dark:bg-sky-500/15 border-sky-500/40 shadow-sm' 
-                : 'glass-card-subtle hover:border-slate-300 dark:hover:border-white/20'
+                ? 'bg-sky-50 dark:bg-sky-500/10 border-sky-300 dark:border-sky-500/30 shadow-sm' 
+                : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
         }`;
         card.onclick = () => { 
             state.activeId = d.id; 
@@ -602,17 +600,17 @@ function renderDeviceGrid() {
         topRow.className = 'flex items-center justify-between gap-2 w-full';
         
         const dot = document.createElement('span');
-        dot.className = `w-2 h-2 rounded-full ${!online ? 'bg-slate-400' : isOn ? 'bg-emerald-500 shadow-sm shadow-emerald-500' : 'bg-slate-400'}`;
+        dot.className = `w-2 h-2 rounded-full ${!online ? 'bg-slate-300 dark:bg-slate-600' : isOn ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-400'}`;
         
         const name = document.createElement('span'); 
-        name.className = `font-bold text-xs sm:text-sm truncate flex-1 ${isCurrent ? 'text-sky-600 dark:text-sky-400' : ''}`; 
+        name.className = `font-bold text-xs sm:text-sm truncate flex-1 ${isCurrent ? 'text-sky-700 dark:text-sky-400' : 'text-slate-800 dark:text-slate-200'}`; 
         name.textContent = d.name;
         
         topRow.appendChild(name);
         topRow.appendChild(dot);
 
         const bottomRow = document.createElement('div'); 
-        bottomRow.className = 'text-[11px] font-mono text-slate-500 dark:text-slate-400';
+        bottomRow.className = 'text-[10px] font-bold font-mono tracking-wider uppercase text-slate-500 dark:text-slate-400';
         bottomRow.textContent = !online ? t('OFFLINE') : `${(status.power || 0).toFixed(1)} W`;
 
         card.appendChild(topRow); 
@@ -644,22 +642,22 @@ function renderActivityLog() {
         row.className = 'flex items-center gap-3 py-3 text-xs';
         
         const icon = document.createElement('div'); 
-        icon.className = 'w-8 h-8 rounded-xl bg-slate-500/10 flex items-center justify-center text-sm shrink-0';
+        icon.className = 'w-9 h-9 rounded-[10px] bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-sm shrink-0 border border-slate-200 dark:border-white/5';
         icon.textContent = activityIcons[item.type] || activityIcons.default;
         
         const content = document.createElement('div'); 
         content.className = 'flex-1 min-w-0';
         
         const line1 = document.createElement('p'); 
-        line1.className = 'font-bold truncate text-slate-800 dark:text-slate-200';
+        line1.className = 'font-bold truncate text-slate-800 dark:text-slate-200 text-[13px]';
         line1.textContent = item.deviceName || item.deviceId;
         
         const line2 = document.createElement('p'); 
-        line2.className = 'text-[11px] text-slate-500 dark:text-slate-400 truncate';
+        line2.className = 'text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5';
         line2.textContent = item.message;
         
         const time = document.createElement('span'); 
-        time.className = 'text-[10px] font-mono text-slate-400 dark:text-slate-500 shrink-0 font-medium';
+        time.className = 'text-[9px] font-mono text-slate-400 dark:text-slate-500 shrink-0 font-bold uppercase tracking-widest';
         time.textContent = new Date(item.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         
         content.appendChild(line1); 
@@ -838,14 +836,15 @@ function updatePowerUI(isOn, isOnline = true) {
     const btn = document.getElementById('powerBtn'); 
     const txt = document.getElementById('powerText'); 
     const badge = document.getElementById('statusBadge');
+    const dot = document.getElementById('statusDot');
     const aura = document.getElementById('powerAura');
 
     if (!isOnline) {
-        btn.className = 'power-btn bg-slate-600 cursor-not-allowed border-4 border-slate-500/30'; 
+        btn.className = 'power-btn bg-slate-200 dark:bg-slate-800 cursor-not-allowed border-4 border-white dark:border-slate-700 text-slate-400 dark:text-slate-600'; 
         txt.innerText = t('OFFLINE'); 
         txt.className = 'text-4xl sm:text-5xl font-black mt-3 tracking-tight font-mono text-slate-400 dark:text-slate-600';
         badge.innerText = t('OFFLINE'); 
-        badge.className = 'px-4 py-1.5 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20 text-[10px] sm:text-xs font-black tracking-widest uppercase';
+        dot.className = 'w-2 h-2 rounded-full bg-slate-400';
         aura.className = 'power-aura';
         return;
     }
@@ -854,14 +853,14 @@ function updatePowerUI(isOn, isOnline = true) {
         txt.innerText = t('ON'); 
         txt.className = 'text-4xl sm:text-5xl font-black mt-3 tracking-tight font-mono text-emerald-500';
         badge.innerText = t('ONLINE'); 
-        badge.className = 'px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[10px] sm:text-xs font-black tracking-widest uppercase';
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]';
         aura.className = 'power-aura power-aura-active';
     } else {
         btn.className = 'power-btn power-off'; 
         txt.innerText = t('OFF'); 
         txt.className = 'text-4xl sm:text-5xl font-black mt-3 tracking-tight font-mono text-rose-500';
         badge.innerText = t('STANDBY'); 
-        badge.className = 'px-4 py-1.5 rounded-full bg-slate-500/10 text-slate-400 border border-slate-500/20 text-[10px] sm:text-xs font-black tracking-widest uppercase';
+        dot.className = 'w-2 h-2 rounded-full bg-rose-500';
         document.getElementById('val-power').innerText = state.lang === 'bn' ? '০.০ W' : '0.0 W';
         aura.className = 'power-aura';
     }
@@ -894,6 +893,24 @@ function getDynamicLabels(type) {
         }
     }
     return labels;
+}
+
+function handleMetricOptions() {
+    const tf = document.getElementById('chartTimeframe').value;
+    const selector = document.getElementById('chartDataType');
+    const energy = document.getElementById('opt-energy');
+    const cost = document.getElementById('opt-cost');
+    const power = document.getElementById('opt-power');
+    const voltage = document.getElementById('opt-voltage');
+
+    const realtime = tf === 'realtime';
+    energy.disabled = realtime;
+    cost.disabled = realtime;
+    power.disabled = !realtime;
+    voltage.disabled = !realtime;
+
+    if (realtime && (selector.value === 'energy' || selector.value === 'cost')) selector.value = 'power';
+    if (!realtime && (selector.value === 'power' || selector.value === 'voltage')) selector.value = 'energy';
 }
 
 function updateChart() {
@@ -982,7 +999,7 @@ function updateChart() {
             plugins: { 
                 legend: { display: false }, 
                 tooltip: { 
-                    backgroundColor: isDark ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.95)', 
+                    backgroundColor: isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)', 
                     titleColor: isDark ? '#f8fafc' : '#0f172a', 
                     bodyColor: isDark ? '#f8fafc' : '#0f172a', 
                     padding: 12, 
