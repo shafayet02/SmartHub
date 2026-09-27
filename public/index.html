@@ -814,4 +814,419 @@ Replace the contents of your `public/index.html` and `public/app.js` with the up
                     <span data-i18n="Automation">Automation</span>
                 </button>
                 <button onclick="switchTab('tab-settings')" id="btn-tab-settings" class="tab-btn flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-3 sm:px-6 rounded-[20px] font-bold text-[11px] sm:text-sm transition-all duration-300">
-                    <svg class="w-5 h-5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37
+                    <svg class="w-5 h-5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <span data-i18n="Settings">Settings</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- TAB: OVERVIEW -->
+        <main id="tab-overview" class="tab-content space-y-4 sm:space-y-6">
+            
+            <!-- Bento Box Power Console -->
+            <section class="glass-panel p-6 sm:p-10 flex flex-col md:flex-row items-center justify-between relative overflow-hidden gap-8">
+                <div class="flex flex-col items-center md:items-start text-center md:text-left z-10">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-slate-400" id="statusDot"></span>
+                        <span id="statusBadge" class="text-[10px] sm:text-xs font-black tracking-widest uppercase text-slate-500" data-i18n="CONNECTING">CONNECTING</span>
+                    </div>
+                    <p id="powerText" class="text-5xl sm:text-6xl font-black tracking-tight font-mono text-slate-800 dark:text-slate-200 transition-colors" data-i18n="OFF">OFF</p>
+                    <p id="timerText" class="text-xs sm:text-sm mt-3 font-bold text-amber-600 dark:text-amber-500 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/20 font-mono hidden"></p>
+                </div>
+
+                <div class="power-btn-container">
+                    <div id="powerAura" class="power-aura"></div>
+                    <button id="powerBtn" class="power-btn power-off" onclick="togglePower()" aria-label="Toggle device power">
+                        <svg class="w-10 h-10 sm:w-12 sm:h-12 drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Gradient Metric Cards with Radial Rings -->
+            <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <!-- Voltage Card -->
+                <div class="relative overflow-hidden bg-gradient-to-br from-[#0ea5e9] to-[#2563eb] text-white p-5 rounded-[24px] sm:rounded-[32px] flex flex-col shadow-lg shadow-blue-500/20 border border-white/10 group">
+                    <div class="absolute -top-3 -right-3 w-28 h-28 opacity-40 group-hover:opacity-60 transition-opacity flex items-center justify-center">
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="42" stroke="rgba(255,255,255,0.2)" stroke-width="8" fill="none" stroke-linecap="round" />
+                            <circle cx="50" cy="50" r="42" stroke="#fff" stroke-width="8" fill="none" stroke-dasharray="264" stroke-dashoffset="264" id="ring-volt" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="relative z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-md mb-6 sm:mb-8 border border-white/30">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                    <div class="relative z-10 mt-auto">
+                        <p class="font-black text-2xl sm:text-3xl font-mono tracking-tight text-white drop-shadow-sm" id="val-volt">-- V</p>
+                        <p class="text-[10px] sm:text-[11px] font-bold tracking-widest uppercase text-white/80 mt-1" data-i18n="VOLTAGE">VOLTAGE</p>
+                    </div>
+                </div>
+                
+                <!-- Wattage Card -->
+                <div class="relative overflow-hidden bg-gradient-to-br from-[#f97316] to-[#e11d48] text-white p-5 rounded-[24px] sm:rounded-[32px] flex flex-col shadow-lg shadow-orange-500/20 border border-white/10 group">
+                    <div class="absolute -top-3 -right-3 w-28 h-28 opacity-40 group-hover:opacity-60 transition-opacity flex items-center justify-center">
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="42" stroke="rgba(255,255,255,0.2)" stroke-width="8" fill="none" stroke-linecap="round" />
+                            <circle cx="50" cy="50" r="42" stroke="#fff" stroke-width="8" fill="none" stroke-dasharray="264" stroke-dashoffset="264" id="ring-power" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="relative z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-md mb-6 sm:mb-8 border border-white/30">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"></path></svg>
+                    </div>
+                    <div class="relative z-10 mt-auto">
+                        <p class="font-black text-2xl sm:text-3xl font-mono tracking-tight text-white drop-shadow-sm" id="val-power">-- W</p>
+                        <p class="text-[10px] sm:text-[11px] font-bold tracking-widest uppercase text-white/80 mt-1" data-i18n="WATTAGE">WATTAGE</p>
+                    </div>
+                </div>
+
+                <!-- Energy Card -->
+                <div class="relative overflow-hidden bg-gradient-to-br from-[#10b981] to-[#0d9488] text-white p-5 rounded-[24px] sm:rounded-[32px] flex flex-col shadow-lg shadow-emerald-500/20 border border-white/10 group">
+                    <div class="absolute -top-3 -right-3 w-28 h-28 opacity-40 group-hover:opacity-60 transition-opacity flex items-center justify-center">
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="42" stroke="rgba(255,255,255,0.2)" stroke-width="8" fill="none" stroke-linecap="round" />
+                            <circle cx="50" cy="50" r="42" stroke="#fff" stroke-width="8" fill="none" stroke-dasharray="264" stroke-dashoffset="264" id="ring-energy" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="relative z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-md mb-6 sm:mb-8 border border-white/30">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h16v16H4V4zM4 9h16M9 4v16"></path></svg>
+                    </div>
+                    <div class="relative z-10 mt-auto">
+                        <p class="font-black text-2xl sm:text-3xl font-mono tracking-tight text-white drop-shadow-sm" id="val-energy">--</p>
+                        <p class="text-[10px] sm:text-[11px] font-bold tracking-widest uppercase text-white/80 mt-1" data-i18n="Energy">ENERGY kWh</p>
+                    </div>
+                </div>
+
+                <!-- Cost Card -->
+                <div class="relative overflow-hidden bg-gradient-to-br from-[#8b5cf6] to-[#6d28d9] text-white p-5 rounded-[24px] sm:rounded-[32px] flex flex-col shadow-lg shadow-purple-500/20 border border-white/10 group">
+                    <div class="absolute -top-3 -right-3 w-28 h-28 opacity-40 group-hover:opacity-60 transition-opacity flex items-center justify-center">
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="42" stroke="rgba(255,255,255,0.2)" stroke-width="8" fill="none" stroke-linecap="round" />
+                            <circle cx="50" cy="50" r="42" stroke="#fff" stroke-width="8" fill="none" stroke-dasharray="264" stroke-dashoffset="264" id="ring-cost" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="relative z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-md mb-6 sm:mb-8 border border-white/30">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div class="relative z-10 mt-auto">
+                        <p class="font-black text-2xl sm:text-3xl font-mono tracking-tight text-white drop-shadow-sm" id="val-cost">--</p>
+                        <p class="text-[10px] sm:text-[11px] font-bold tracking-widest uppercase text-white/80 mt-1" data-i18n="Cost">TODAY COST</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Master Control Grid -->
+            <section class="flex gap-3 sm:gap-4">
+                <button onclick="masterToggle(true)" class="flex-1 glass-panel py-3.5 sm:py-4 px-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-extrabold text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 hover:bg-emerald-500/20 active:scale-[0.98] transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <span data-i18n="Master ON">Master ON</span>
+                </button>
+                <button onclick="masterToggle(false)" class="flex-1 glass-panel py-3.5 sm:py-4 px-4 bg-gradient-to-r from-rose-500/10 to-pink-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 font-extrabold text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 hover:bg-rose-500/20 active:scale-[0.98] transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                    <span data-i18n="Master OFF">Master OFF</span>
+                </button>
+            </section>
+
+            <!-- Device Fleet Overview -->
+            <section class="glass-panel p-5 sm:p-7">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm sm:text-base font-extrabold tracking-tight flex items-center gap-2">
+                        <svg class="w-5 h-5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                        <span data-i18n="All Devices">Device Fleet</span>
+                    </h2>
+                    <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold">Tap to focus</span>
+                </div>
+                <div id="deviceGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3"></div>
+            </section>
+        </main>
+
+        <!-- TAB: ANALYTICS -->
+        <main id="tab-analytics" class="tab-content hidden space-y-4 sm:space-y-6">
+            <section class="glass-panel p-5 sm:p-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-slate-500/10 pb-5 gap-4">
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-black tracking-tight" data-i18n="Insights">Telemetry & Insights</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">Explore consumption trends and cost projections</p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                        <select id="chartTimeframe" class="glass-input px-3 py-2 cursor-pointer text-xs sm:text-sm font-bold flex-1 md:flex-none" onchange="updateChart()">
+                            <option value="realtime" data-i18n="Live">Live Realtime</option>
+                            <option value="hourly" data-i18n="Today (Hourly)">Today (Hourly)</option>
+                            <option value="daily" data-i18n="7 Days">7 Days</option>
+                            <option value="weekly" data-i18n="4 Weeks">4 Weeks</option>
+                            <option value="monthly" data-i18n="6 Months">6 Months</option>
+                        </select>
+                        <select id="chartDataType" class="glass-input px-3 py-2 cursor-pointer text-xs sm:text-sm font-bold flex-1 md:flex-none" onchange="updateChart()">
+                            <option value="energy" id="opt-energy" data-i18n="Energy">Energy (kWh)</option>
+                            <option value="cost" id="opt-cost" data-i18n="Cost">Cost Tariff</option>
+                            <option value="power" id="opt-power" data-i18n="Power (W)">Power (W)</option>
+                            <option value="voltage" id="opt-voltage" data-i18n="Voltage (V)">Voltage (V)</option>
+                        </select>
+                        <select id="chartStyle" class="glass-input px-3 py-2 cursor-pointer text-xs sm:text-sm font-bold flex-1 md:flex-none" onchange="updateChart()">
+                            <option value="bar" data-i18n="Bar">Bar Chart</option>
+                            <option value="line" data-i18n="Line">Line Wave</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- KPI Metric Strip -->
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-6">
+                    <div class="glass-card-subtle p-4 sm:p-5">
+                        <p class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase" data-i18n="TODAY vs YESTERDAY">Today vs Yesterday</p>
+                        <div class="flex flex-wrap items-baseline gap-2 mt-2">
+                            <p class="text-2xl sm:text-3xl font-black font-mono text-emerald-500" id="todayUsage">--</p>
+                            <p class="text-xs sm:text-sm font-bold" id="usageDiff">--</p>
+                        </div>
+                    </div>
+                    <div class="glass-card-subtle p-4 sm:p-5">
+                        <p class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase" data-i18n="MONTHLY FORECAST">Monthly Forecast</p>
+                        <p class="text-2xl sm:text-3xl font-black font-mono text-purple-500 mt-2" id="monthForecast">--</p>
+                    </div>
+                    <div class="glass-card-subtle p-4 sm:p-5 col-span-2 md:col-span-1">
+                        <p class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase" data-i18n="PEAK HOUR TODAY">Peak Hour Today</p>
+                        <p class="text-2xl sm:text-3xl font-black font-mono text-orange-500 mt-2" id="peakHour">--</p>
+                    </div>
+                </div>
+
+                <!-- Chart Box -->
+                <div class="w-full relative" style="height: 270px;">
+                    <canvas id="usageChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Budget Progress Card -->
+            <section class="glass-panel p-5 sm:p-8">
+                <div class="flex justify-between items-center text-xs font-bold mb-3">
+                    <span class="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider" data-i18n="BUDGET PROGRESS:">Monthly Budget: <span id="budgetDisplay" class="text-slate-900 dark:text-white font-mono ml-1 font-black"></span></span>
+                    <span id="budgetPercent" class="text-sky-500 font-mono font-black text-sm">0%</span>
+                </div>
+                <div class="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-3 overflow-hidden p-0.5 border border-slate-300/40 dark:border-white/5">
+                    <div id="budgetBar" class="bg-gradient-to-r from-sky-500 to-blue-600 h-full rounded-full transition-all duration-1000 shadow-md" style="width: 0%"></div>
+                </div>
+            </section>
+        </main>
+
+        <!-- TAB: AUTOMATION -->
+        <main id="tab-automation" class="tab-content hidden space-y-4 sm:space-y-6">
+            <!-- Operating Mode Selector -->
+            <section class="glass-panel p-5 sm:p-8">
+                <div class="mb-5 border-b border-slate-200 dark:border-slate-700/50 pb-4">
+                    <h2 class="text-lg sm:text-xl font-black tracking-tight" data-i18n="Operating Mode">Intelligent Profiles</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">Activate automated running schedules and eco-profiles</p>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3.5 mb-6">
+                    <button id="mode-manual" onclick="setMode('manual')" class="mode-btn flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl border-2 transition-all duration-300 bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300">
+                        <svg class="w-8 h-8 sm:w-10 sm:h-10 mb-2.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"></path></svg>
+                        <span class="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider" data-i18n="Manual">Manual</span>
+                    </button>
+                    <button id="mode-day" onclick="setMode('day')" class="mode-btn flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl border-2 transition-all duration-300 bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300">
+                        <svg class="w-8 h-8 sm:w-10 sm:h-10 mb-2.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <span class="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider" data-i18n="Day">Day Mode</span>
+                    </button>
+                    <button id="mode-night" onclick="setMode('night')" class="mode-btn flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl border-2 transition-all duration-300 bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300">
+                        <svg class="w-8 h-8 sm:w-10 sm:h-10 mb-2.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                        <span class="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider" data-i18n="Night">Night Mode</span>
+                    </button>
+                    <button id="mode-sleep" onclick="activateSleepMode()" class="mode-btn flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl border-2 transition-all duration-300 bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300">
+                        <svg class="w-8 h-8 sm:w-10 sm:h-10 mb-2.5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span class="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider" data-i18n="Sleep">Sleep (3h)</span>
+                    </button>
+                </div>
+
+                <!-- Configurable Window Times -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 glass-card-subtle p-4 rounded-2xl">
+                    <div>
+                        <label class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 tracking-wider uppercase block mb-2">Day Mode Schedule (Start / End)</label>
+                        <div class="flex gap-2">
+                            <input type="time" id="dayStart" onchange="saveDayNightTimes()" class="glass-input px-3 py-2 w-full text-xs font-bold font-mono">
+                            <input type="time" id="dayEnd" onchange="saveDayNightTimes()" class="glass-input px-3 py-2 w-full text-xs font-bold font-mono">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 tracking-wider uppercase block mb-2">Night Mode Schedule (Start / End)</label>
+                        <div class="flex gap-2">
+                            <input type="time" id="nightStart" onchange="saveDayNightTimes()" class="glass-input px-3 py-2 w-full text-xs font-bold font-mono">
+                            <input type="time" id="nightEnd" onchange="saveDayNightTimes()" class="glass-input px-3 py-2 w-full text-xs font-bold font-mono">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Safety Guard Strips -->
+            <section class="glass-panel p-5 sm:p-8 space-y-3.5 sm:space-y-4">
+                <!-- Power Outage Recovery -->
+                <div class="flex justify-between items-center bg-gradient-to-r from-sky-500/10 via-transparent to-transparent p-4 rounded-2xl border border-sky-500/20">
+                    <div>
+                        <p class="font-extrabold text-sm text-sky-600 dark:text-sky-400" data-i18n="Power Outage Recovery">Power Outage State Recovery</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" data-i18n="Restore state when power returns">Restore state when power returns</p>
+                    </div>
+                    <label class="toggle-wrapper">
+                        <input type="checkbox" id="outageToggle" onchange="toggleAutomation('powerOutageRecovery')" class="toggle-checkbox"/>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <!-- Standby Kill -->
+                <div class="flex justify-between items-center glass-card-subtle p-4 rounded-2xl">
+                    <div>
+                        <p class="font-bold text-sm" data-i18n="Standby Auto-Kill">Standby Auto-Kill</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" data-i18n="Stops power if <5W for 10m">Stops power if &lt;5W for 10m</p>
+                    </div>
+                    <label class="toggle-wrapper">
+                        <input type="checkbox" id="standbyToggle" onchange="toggleAutomation('standbyKill')" class="toggle-checkbox"/>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <!-- Voltage Guard -->
+                <div class="glass-card-subtle p-4 rounded-2xl">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-bold text-sm" data-i18n="Voltage Guard">Voltage Guard</p>
+                            <p class="text-xs text-rose-500 font-medium mt-0.5" data-i18n="Auto-kill on dangerous voltage">Auto-kill on dangerous voltage</p>
+                        </div>
+                        <label class="toggle-wrapper">
+                            <input type="checkbox" id="voltageToggle" onchange="toggleAutomation('voltageProtect')" class="toggle-checkbox"/>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mt-4 pt-3.5 border-t border-slate-500/10">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1" data-i18n="MIN (V)">MIN (V)</label>
+                            <input type="number" id="vMinInput" onchange="saveVoltageLimits()" class="glass-input px-3 py-2 w-full text-xs font-mono font-bold">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1" data-i18n="MAX (V)">MAX (V)</label>
+                            <input type="number" id="vMaxInput" onchange="saveVoltageLimits()" class="glass-input px-3 py-2 w-full text-xs font-mono font-bold">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Budget Lock -->
+                <div class="flex justify-between items-center glass-card-subtle p-4 rounded-2xl">
+                    <div>
+                        <p class="font-bold text-sm" data-i18n="Strict Budget Lock">Strict Budget Lock</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" data-i18n="Auto-kill if budget hits 100%">Auto-kill if budget hits 100%</p>
+                    </div>
+                    <label class="toggle-wrapper">
+                        <input type="checkbox" id="budgetToggle" onchange="toggleAutomation('budgetKill')" class="toggle-checkbox"/>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <!-- Quick Timer & Chrono Schedules -->
+                <div class="pt-2">
+                    <p class="text-xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2.5">Countdown Timer</p>
+                    <div class="flex gap-2">
+                        <input type="number" id="timerMins" placeholder="Mins" min="1" class="glass-input px-4 py-2.5 w-24 text-xs font-mono font-bold">
+                        <select id="timerAction" class="glass-input px-3 py-2.5 flex-1 text-xs font-bold">
+                            <option value="true" data-i18n="ON">Turn ON</option>
+                            <option value="false" data-i18n="OFF">Turn OFF</option>
+                        </select>
+                        <button onclick="setTimer()" data-i18n="Timer" class="bg-blue-500 hover:bg-blue-600 text-white rounded-[14px] px-5 py-2.5 text-xs font-bold transition shadow-md shadow-blue-500/20">Set</button>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="text-xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2.5">Scheduled Events</p>
+                    <div class="flex gap-2 mb-3">
+                        <input type="time" id="schedTime" class="glass-input px-3 py-2.5 flex-1 text-xs font-mono font-bold">
+                        <select id="schedAction" class="glass-input px-3 py-2.5 text-xs font-bold">
+                            <option value="true" data-i18n="ON">Turn ON</option>
+                            <option value="false" data-i18n="OFF">Turn OFF</option>
+                        </select>
+                        <button onclick="addSchedule()" class="bg-slate-800 dark:bg-white text-white dark:text-slate-900 rounded-[14px] px-5 py-2.5 text-xs font-bold transition hover:scale-[0.98] shadow-md">+</button>
+                    </div>
+                    <div id="scheduleList" class="space-y-2 max-h-36 overflow-y-auto no-scrollbar"></div>
+                </div>
+            </section>
+
+            <!-- Activity Audit Feed -->
+            <section class="glass-panel p-5 sm:p-8">
+                <h2 class="text-base sm:text-lg font-black tracking-tight mb-3" data-i18n="Recent Activity">Activity Telemetry Log</h2>
+                <div id="activityLog" class="max-h-64 overflow-y-auto pr-1 divide-y divide-slate-500/10">
+                    <p class="text-xs text-slate-500 dark:text-slate-400" data-i18n="No recent activity yet.">No recent activity yet.</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- TAB: SETTINGS -->
+        <main id="tab-settings" class="tab-content hidden space-y-4 sm:space-y-6">
+            <!-- Tariff & General Settings -->
+            <section class="glass-panel p-5 sm:p-8">
+                <h2 class="text-lg sm:text-xl font-black tracking-tight mb-5" data-i18n="Tariff & Preferences">Tariff & Preferences</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+                    <div>
+                        <label class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2" data-i18n="RATE">Tariff Base Rate</label>
+                        <input type="number" id="rateInput" step="0.5" min="0" onchange="saveSettings()" class="glass-input px-4 py-3 w-full text-xs font-mono font-bold">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2" data-i18n="CURRENCY">Hub Currency</label>
+                        <select id="currencySelect" onchange="saveSettings()" class="glass-input px-4 py-3 w-full text-xs font-bold">
+                            <option value="BDT">BDT (৳)</option>
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="CNY">CNY (¥)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2" data-i18n="WEATHER LOCATION">Weather Geocoding Location</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="locInput" class="glass-input px-4 py-3 w-full text-xs font-semibold">
+                        <button onclick="saveLocation()" data-i18n="Save" class="bg-blue-500 text-white rounded-xl px-5 font-bold transition text-xs hover:bg-blue-600 shadow-md shadow-blue-500/20">Save</button>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="promptBudget()" class="flex-1 glass-card-subtle py-3 px-3 font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-slate-500/10 active:scale-[0.98] transition">
+                        <svg class="w-4 h-4 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <span data-i18n="Set Budget">Set Budget</span>
+                    </button>
+                    <button onclick="exportData()" class="flex-1 bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400 py-3 px-3 font-bold text-xs rounded-2xl flex items-center justify-center gap-1.5 hover:bg-sky-500/20 active:scale-[0.98] transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span data-i18n="Export CSV">Export CSV</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Device Hardware & State Controls -->
+            <section class="glass-panel p-5 sm:p-8">
+                <h2 class="text-lg sm:text-xl font-black tracking-tight mb-5" data-i18n="System Management">System Management</h2>
+                <div class="flex flex-col sm:flex-row gap-3 mb-4">
+                    <button onclick="addNewDevice()" class="bg-slate-800 dark:bg-white text-white dark:text-slate-900 py-3 px-4 rounded-2xl flex-1 text-xs font-bold flex items-center justify-center gap-2 transition hover:scale-[0.98] shadow-md">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                        <span data-i18n="Add Device">Add Device</span>
+                    </button>
+                    <div class="flex gap-3 flex-1">
+                        <button onclick="renameDevice()" class="glass-card-subtle font-bold flex-1 py-3 px-2 text-xs flex items-center justify-center gap-2 hover:bg-slate-500/10 transition">
+                            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            <span data-i18n="Rename">Rename</span>
+                        </button>
+                        <button onclick="removeDevice()" class="bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 font-bold flex-1 py-3 px-2 rounded-2xl text-xs flex items-center justify-center gap-2 hover:bg-rose-500/20 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            <span data-i18n="Remove Device">Remove</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="powerCycle()" class="flex-1 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-bold py-3 rounded-2xl text-xs flex items-center justify-center gap-2 hover:bg-amber-500/20 transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        <span data-i18n="Reboot">Power Cycle</span>
+                    </button>
+                    <button onclick="clearData()" class="flex-1 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 font-bold py-3 rounded-2xl text-xs flex items-center justify-center gap-2 hover:bg-rose-500/20 transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z"></path></svg>
+                        <span data-i18n="Clear History DB">Clear History</span>
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/app.js"></script>
+</body>
+</html>
