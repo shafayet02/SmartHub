@@ -3,580 +3,769 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Smart Hub V4 - Neumorphic</title>
-    <meta name="description" content="A cloud-connected smart home dashboard for monitoring power, cost and automations across your devices.">
-    <meta name="theme-color" content="#e0e5ec" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#292d32" media="(prefers-color-scheme: dark)">
+    <title>Smart Hub V4</title>
+    <meta name="description" content="Next-gen cloud-connected smart home hub with real-time telemetry, live analytics, and safety automations.">
+    <meta name="theme-color" content="#f1f5f9" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#030712" media="(prefers-color-scheme: dark)">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E">
     <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23007aff'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E">
+    
+    <!-- Fonts & Tailwind -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
-    <style>
-        :root {
-            /* Light Theme Neumorphism */
-            --bg-light: #e0e5ec;
-            --shadow-light-1: #ffffff;
-            --shadow-light-2: #a3b1c6;
-            
-            /* Dark Theme Neumorphism */
-            --bg-dark: #292d32;
-            --shadow-dark-1: #383d44;
-            --shadow-dark-2: #1a1d20;
-
-            color-scheme: light dark;
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        hub: {
+                            blue: '#0ea5e9',
+                            orange: '#f97316',
+                            green: '#10b981',
+                            purple: '#8b5cf6',
+                            rose: '#f43f5e',
+                        }
+                    }
+                }
+            }
         }
+    </script>
 
+    <style>
+        :root { color-scheme: light dark; }
+        * { -webkit-tap-highlight-color: transparent; }
+        
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif; 
-            -webkit-font-smoothing: antialiased; 
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
             min-height: 100vh; 
             overflow-x: hidden; 
-            background-color: var(--bg-light);
-            color: #4a5568;
             transition: background-color 0.4s ease, color 0.4s ease;
-            padding-top: env(safe-area-inset-top, 0px); 
+            padding-top: env(safe-area-inset-top, 0px);
             padding-bottom: env(safe-area-inset-bottom, 0px);
+            background-color: #f8fafc;
+            color: #0f172a;
         }
 
         .dark body { 
-            background-color: var(--bg-dark);
-            color: #a0aec0;
+            background-color: #030712; 
+            color: #f8fafc; 
         }
 
-        /* --- Neumorphic Core Classes --- */
-        .neu-flat {
-            background: var(--bg-light);
-            box-shadow: 8px 8px 16px var(--shadow-light-2), -8px -8px 16px var(--shadow-light-1);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-        .neu-pressed {
-            background: var(--bg-light);
-            box-shadow: inset 6px 6px 10px var(--shadow-light-2), inset -6px -6px 10px var(--shadow-light-1);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        /* Ambient Glass Orbs */
+        .ambient-bg { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+        .bg-orb { position: absolute; border-radius: 50%; filter: blur(140px); animation: floatOrb 22s infinite ease-in-out alternate; }
+        @keyframes floatOrb { 
+            0% { transform: translate(0, 0) scale(1); } 
+            50% { transform: translate(60px, 80px) scale(1.15); } 
+            100% { transform: translate(-40px, 40px) scale(0.95); } 
         }
 
-        .dark .neu-flat {
-            background: var(--bg-dark);
-            box-shadow: 8px 8px 16px var(--shadow-dark-2), -8px -8px 16px var(--shadow-dark-1);
+        .ambient-light .orb-1 { width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(14,165,233,0.18), transparent 70%); top: -10%; left: -10%; }
+        .ambient-light .orb-2 { width: 55vw; height: 55vw; background: radial-gradient(circle, rgba(139,92,246,0.15), transparent 70%); bottom: -10%; right: -10%; animation-delay: -7s; }
+        .ambient-light .orb-3 { width: 40vw; height: 40vw; background: radial-gradient(circle, rgba(16,185,129,0.14), transparent 70%); top: 40%; left: 30%; animation-delay: -14s; }
+
+        .dark .ambient-dark .orb-1 { width: 55vw; height: 55vw; background: radial-gradient(circle, rgba(14,165,233,0.12), transparent 70%); top: -15%; left: -15%; }
+        .dark .ambient-dark .orb-2 { width: 65vw; height: 65vw; background: radial-gradient(circle, rgba(139,92,246,0.12), transparent 70%); bottom: -15%; right: -15%; animation-delay: -6s; }
+        .dark .ambient-dark .orb-3 { width: 45vw; height: 45vw; background: radial-gradient(circle, rgba(16,185,129,0.10), transparent 70%); top: 35%; left: 25%; animation-delay: -12s; }
+
+        /* Glassmorphism Card System */
+        .glass-panel { 
+            background: rgba(255, 255, 255, 0.72); 
+            backdrop-filter: blur(28px) saturate(190%); 
+            -webkit-backdrop-filter: blur(28px) saturate(190%);
+            border: 1px solid rgba(255, 255, 255, 0.7); 
+            box-shadow: 0 12px 35px -8px rgba(15, 23, 42, 0.06), 0 4px 12px -2px rgba(15, 23, 42, 0.03); 
+            border-radius: 28px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .dark .neu-pressed {
-            background: var(--bg-dark);
-            box-shadow: inset 6px 6px 10px var(--shadow-dark-2), inset -6px -6px 10px var(--shadow-dark-1);
+        .dark .glass-panel { 
+            background: rgba(15, 23, 42, 0.65); 
+            backdrop-filter: blur(32px) saturate(200%); 
+            -webkit-backdrop-filter: blur(32px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
         }
 
-        /* --- Components --- */
-        .neu-input {
-            background: var(--bg-light);
-            border: none;
+        .glass-card-subtle {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(16px);
+            border-radius: 22px;
+        }
+        .dark .glass-card-subtle {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+        }
+
+        /* Glass Input */
+        .glass-input {
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            border-radius: 16px;
+            color: #0f172a;
+            transition: all 0.2s ease;
+        }
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15);
             outline: none;
-            color: #2d3748;
         }
-        .neu-input:focus {
-            box-shadow: inset 8px 8px 12px var(--shadow-light-2), inset -8px -8px 12px var(--shadow-light-1);
+        .dark .glass-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #f8fafc;
         }
-        .dark .neu-input {
-            background: var(--bg-dark);
-            color: #e2e8f0;
-        }
-        .dark .neu-input:focus {
-            box-shadow: inset 8px 8px 12px var(--shadow-dark-2), inset -8px -8px 12px var(--shadow-dark-1);
+        .dark .glass-input:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.2);
         }
 
-        .neu-btn:hover { transform: translateY(-2px); }
-        .neu-btn:active { transform: translateY(2px); box-shadow: inset 4px 4px 8px var(--shadow-light-2), inset -4px -4px 8px var(--shadow-light-1); }
-        .dark .neu-btn:active { box-shadow: inset 4px 4px 8px var(--shadow-dark-2), inset -4px -4px 8px var(--shadow-dark-1); }
-        .neu-btn:disabled { opacity: 0.5; pointer-events: none; }
-
-        /* Power Button Special */
-        .power-btn-base {
-            width: 130px; height: 130px; border-radius: 50%;
-            display: flex; justify-content: center; align-items: center;
-            cursor: pointer; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            margin: 0 auto; z-index: 10;
+        /* High-End Tactile Power Core */
+        .power-btn-container {
+            position: relative;
+            width: 170px;
+            height: 170px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        @media (min-width: 640px) { .power-btn-base { width: 150px; height: 150px; } }
+        @media (min-width: 640px) {
+            .power-btn-container { width: 190px; height: 190px; }
+        }
+
+        .power-btn { 
+            width: 135px; 
+            height: 135px; 
+            border-radius: 50%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            cursor: pointer; 
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); 
+            z-index: 10; 
+            position: relative;
+            outline: none;
+        }
+        @media (min-width: 640px) {
+            .power-btn { width: 150px; height: 150px; }
+        }
+
+        .power-off { 
+            background: linear-gradient(135deg, #f43f5e, #e11d48); 
+            box-shadow: 0 16px 36px -8px rgba(244, 63, 94, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.35); 
+            color: white; 
+            border: 4px solid rgba(255, 255, 255, 0.25);
+        }
         
-        /* Neumorphic Toggle Switch */
-        .toggle-wrapper { position: relative; width: 54px; height: 28px; display: inline-block; flex-shrink: 0; }
+        .power-on { 
+            background: linear-gradient(135deg, #10b981, #059669); 
+            box-shadow: 0 16px 38px -6px rgba(16, 185, 129, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.4); 
+            color: white; 
+            border: 4px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .power-btn:hover { transform: scale(1.03); }
+        .power-btn:active { transform: scale(0.94); }
+        .power-btn:disabled { cursor: not-allowed; opacity: 0.6; transform: none; box-shadow: none; }
+
+        /* Pulsing Aura Rings */
+        .power-aura {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            pointer-events: none;
+            transition: all 0.5s ease;
+        }
+        .power-aura-active {
+            animation: pulseAura 2.6s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+        }
+        @keyframes pulseAura {
+            0% { transform: scale(0.9); opacity: 0.8; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+            70% { transform: scale(1.18); opacity: 0; box-shadow: 0 0 0 24px rgba(16, 185, 129, 0); }
+            100% { transform: scale(1.22); opacity: 0; }
+        }
+
+        /* Toggle switches */
+        .toggle-wrapper { position: relative; width: 48px; height: 28px; display: inline-block; flex-shrink: 0; }
         .toggle-checkbox { opacity: 0; width: 0; height: 0; position: absolute; }
-        .toggle-track { 
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
-            border-radius: 34px; cursor: pointer;
+        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s cubic-bezier(0.4, 0.0, 0.2, 1); border-radius: 34px; }
+        .dark .toggle-slider { background-color: #334155; }
+        .toggle-slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px; background-color: white; transition: .3s cubic-bezier(0.4, 0.0, 0.2, 1); border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+        .toggle-checkbox:checked + .toggle-slider { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
+        .toggle-checkbox:checked + .toggle-slider:before { transform: translateX(20px); }
+
+        /* Radial Rings Animation */
+        .radial-ring circle { 
+            transition: stroke-dashoffset 1s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.4s ease; 
         }
-        .toggle-knob {
-            position: absolute; height: 20px; width: 20px; left: 4px; bottom: 4px;
-            border-radius: 50%; transition: .3s cubic-bezier(0.4, 0.0, 0.2, 1);
-        }
-        .toggle-checkbox:checked + .toggle-track .toggle-knob { transform: translateX(26px); }
 
-        /* Colored Accents */
-        .text-accent-blue { color: #32ade6; } .dark .text-accent-blue { color: #0a84ff; }
-        .text-accent-orange { color: #ff9500; } .dark .text-accent-orange { color: #ff9f0a; }
-        .text-accent-green { color: #34c759; } .dark .text-accent-green { color: #30d158; }
-        .text-accent-purple { color: #af52de; } .dark .text-accent-purple { color: #bf5af2; }
-        .text-accent-red { color: #ff3b30; } .dark .text-accent-red { color: #ff453a; }
-
-        .fade-in { animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* Overlays & Banners */
+        /* Skeleton & Overlay */
         .skeleton-overlay { position: fixed; inset: 0; z-index: 90; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; background: inherit; }
-        .spinner { width: 44px; height: 44px; border-radius: 50%; border: 4px solid var(--shadow-light-2); border-top-color: #32ade6; animation: spin 0.8s linear infinite; }
-        .dark .spinner { border-color: var(--shadow-dark-1); border-top-color: #0a84ff; }
+        .spinner { width: 44px; height: 44px; border-radius: 50%; border: 3px solid rgba(14, 165, 233, 0.15); border-top-color: #0ea5e9; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* Offline Banner */
         .offline-banner { 
             position: fixed; top: 0; left: 0; right: 0; z-index: 95; 
-            text-align: center; font-weight: 800; font-size: 0.85rem; padding: 0.75rem; 
-            color: #ff3b30; transform: translateY(-100%); opacity: 0; visibility: hidden;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            text-align: center; font-weight: 700; font-size: 0.85rem; padding: 0.75rem; 
+            background: linear-gradient(135deg, #f43f5e, #fb923c); color: white; 
+            transform: translateY(-100%); opacity: 0; visibility: hidden;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
             padding-top: calc(0.75rem + env(safe-area-inset-top, 0px)); 
+            box-shadow: 0 10px 25px -5px rgba(244, 63, 94, 0.4);
         }
         .offline-banner.show { transform: translateY(0); opacity: 1; visibility: visible; }
 
-        .toast-container { position: fixed; bottom: max(5.5rem, calc(1.25rem + env(safe-area-inset-bottom))); left: 50%; transform: translateX(-50%); z-index: 110; display: flex; flex-direction: column-reverse; gap: 0.75rem; width: min(92vw, 380px); pointer-events: none; }
-        .toast { pointer-events: auto; padding: 1rem 1.25rem; border-radius: 20px; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; animation: toastIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
-        @keyframes toastIn { from { opacity: 0; transform: translateY(15px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        
-        .ring-svg circle { transition: stroke-dashoffset 1s cubic-bezier(0.4, 0.0, 0.2, 1); }
+        /* Toast Container */
+        .toast-container { 
+            position: fixed; 
+            bottom: max(5.5rem, calc(1.5rem + env(safe-area-inset-bottom))); 
+            left: 50%; 
+            transform: translateX(-50%); 
+            z-index: 110; 
+            display: flex; 
+            flex-direction: column-reverse; 
+            gap: 0.5rem; 
+            width: min(92vw, 380px); 
+            pointer-events: none; 
+        }
+        .toast { 
+            pointer-events: auto; 
+            padding: 0.85rem 1.25rem; 
+            border-radius: 20px; 
+            font-size: 0.875rem; 
+            font-weight: 600; 
+            color: white; 
+            box-shadow: 0 16px 30px -6px rgba(0,0,0,0.3); 
+            animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+            display: flex; 
+            align-items: center; 
+            gap: 0.6rem; 
+            backdrop-filter: blur(12px);
+        }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(12px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .toast-success { background: rgba(16, 185, 129, 0.95); border: 1px solid rgba(255, 255, 255, 0.2); } 
+        .toast-error { background: rgba(244, 63, 94, 0.95); border: 1px solid rgba(255, 255, 255, 0.2); } 
+        .toast-info { background: rgba(14, 165, 233, 0.95); border: 1px solid rgba(255, 255, 255, 0.2); }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="p-4 sm:p-6 lg:p-10 pb-28 sm:pb-10">
+<body class="p-3.5 sm:p-6 lg:p-10 pb-28 sm:pb-12 antialiased">
+    <!-- Fluid Canvas Mesh Ambient Backing -->
+    <div class="ambient-bg ambient-light dark:hidden">
+        <div class="bg-orb orb-1"></div>
+        <div class="bg-orb orb-2"></div>
+        <div class="bg-orb orb-3"></div>
+    </div>
+    <div class="ambient-bg ambient-dark hidden dark:block">
+        <div class="bg-orb orb-1"></div>
+        <div class="bg-orb orb-2"></div>
+        <div class="bg-orb orb-3"></div>
+    </div>
 
-    <!-- PIN Auth Overlay -->
-    <div id="pinOverlay" class="fixed inset-0 z-[100] hidden flex-col items-center justify-center transition-opacity neu-flat">
-        <h2 class="text-2xl font-black mb-8 tracking-widest text-gray-400 dark:text-gray-500">HUB LOCKED</h2>
-        <div class="flex gap-5 mb-12 neu-pressed p-4 rounded-full" id="pinDots">
-            <div class="w-4 h-4 rounded-full neu-flat transition-all duration-300"></div>
-            <div class="w-4 h-4 rounded-full neu-flat transition-all duration-300"></div>
-            <div class="w-4 h-4 rounded-full neu-flat transition-all duration-300"></div>
-            <div class="w-4 h-4 rounded-full neu-flat transition-all duration-300"></div>
+    <!-- Security PIN Modal -->
+    <div id="pinOverlay" class="fixed inset-0 z-[100] bg-slate-950/85 backdrop-blur-2xl hidden flex-col items-center justify-center text-white px-6">
+        <div class="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center text-2xl mb-4 border border-white/10 shadow-2xl">🔒</div>
+        <h2 class="text-xl sm:text-2xl font-black mb-2 tracking-tight text-white">Hub Security Lock</h2>
+        <p class="text-xs sm:text-sm text-slate-400 font-medium mb-8">Enter your 4-digit master PIN code</p>
+        
+        <div class="flex gap-4 mb-10" id="pinDots">
+            <div class="w-3.5 h-3.5 rounded-full border-2 border-white/40 bg-transparent transition-all duration-300"></div>
+            <div class="w-3.5 h-3.5 rounded-full border-2 border-white/40 bg-transparent transition-all duration-300"></div>
+            <div class="w-3.5 h-3.5 rounded-full border-2 border-white/40 bg-transparent transition-all duration-300"></div>
+            <div class="w-3.5 h-3.5 rounded-full border-2 border-white/40 bg-transparent transition-all duration-300"></div>
         </div>
-        <div class="grid grid-cols-3 gap-6 sm:gap-8 text-2xl font-bold">
-            <button class="w-16 h-16 rounded-full neu-flat neu-btn flex items-center justify-center text-gray-600 dark:text-gray-300" onclick="enterPinDigit('1')">1</button>
-            <button class="w-16 h-16 rounded-full neu-flat neu-btn flex items-center justify-center text-gray-600 dark:text-gray-300" onclick="enterPinDigit('2')">2</button>
-            <button class="w-16 h-16 rounded-full neu-flat neu-btn flex items-center justify-center text-gray-600 dark:text-gray-300" onclick="enterPinDigit('3')">3</button>
-            <button class="w-16 h-16 rounded-full neu-flat neu-btn flex items-center justify-center text-gray-600 dark:text-gray-300" onclick="enterPinDigit('4')">4</button>
-            <button class="w-16 h-16 rounded-full neu-flat neu-btn flex items-center justify-center text-gray-600 dark:text-gray-300" onclick="enterPinDigit('5')">5</button>
-            <button class="w-16 h-16 rounded-full neu-flat neu-btn flex items-center justify-center text-gray-600 dark:text-gray-300" onclick="enterPinDigit('6')">6</button>
-            <button class="w-16 h-16 rounded-full neu-flat neu-btn flex items-center justify-center text-gray-600 dark:text-gray-300" onclick="enterPinDigit('7')">7</button>
-            <button class="w-16 h-16 rounded-full neu-flat neu-btn flex items-center justify-center text-gray-600 dark:text-gray-300" onclick="enterPinDigit('8')">8</button>
-            <button class="w-16 h-16 rounded-full neu-flat neu-btn flex items-center justify-center text-gray-600 dark:text-gray-300" onclick="enterPinDigit('9')">9</button>
+
+        <div class="grid grid-cols-3 gap-3 sm:gap-5 text-xl font-bold max-w-xs w-full">
+            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-90 transition border border-white/5" onclick="enterPinDigit('1')">1</button>
+            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-90 transition border border-white/5" onclick="enterPinDigit('2')">2</button>
+            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-90 transition border border-white/5" onclick="enterPinDigit('3')">3</button>
+            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-90 transition border border-white/5" onclick="enterPinDigit('4')">4</button>
+            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-90 transition border border-white/5" onclick="enterPinDigit('5')">5</button>
+            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-90 transition border border-white/5" onclick="enterPinDigit('6')">6</button>
+            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-90 transition border border-white/5" onclick="enterPinDigit('7')">7</button>
+            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-90 transition border border-white/5" onclick="enterPinDigit('8')">8</button>
+            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-90 transition border border-white/5" onclick="enterPinDigit('9')">9</button>
             <div></div>
-            <button class="w-16 h-16 rounded-full neu-flat neu-btn flex items-center justify-center text-gray-600 dark:text-gray-300" onclick="enterPinDigit('0')">0</button>
-            <button class="w-16 h-16 rounded-full neu-flat neu-btn flex justify-center items-center text-accent-red" onclick="clearPin()">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z"></path></svg>
+            <button class="h-16 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-90 transition border border-white/5" onclick="enterPinDigit('0')">0</button>
+            <button class="h-16 rounded-2xl bg-transparent hover:bg-rose-500/20 active:scale-90 transition flex justify-center items-center text-rose-400" onclick="clearPin()">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z"></path></svg>
             </button>
         </div>
     </div>
 
-    <!-- Offline Banner -->
-    <div id="offlineBanner" class="offline-banner neu-pressed">⚠️ <span data-i18n="Connection lost - retrying...">Connection lost — retrying...</span></div>
+    <!-- Offline Alert Strip -->
+    <div id="offlineBanner" class="offline-banner">
+        <span class="inline-block mr-1">⚠️</span> <span data-i18n="Connection lost - retrying...">Connection lost — retrying...</span>
+    </div>
     <div id="toastContainer" class="toast-container"></div>
 
+    <!-- App Boot Skeleton -->
     <div id="bootSkeleton" class="skeleton-overlay">
         <div class="spinner"></div>
-        <p class="font-black tracking-widest text-sm text-gray-500 mt-4" data-i18n="Connecting to your hub...">CONNECTING...</p>
+        <p class="font-bold text-sm text-slate-500 dark:text-slate-400 tracking-wide" data-i18n="Connecting to your hub...">Connecting to your hub...</p>
     </div>
 
-    <div class="max-w-5xl mx-auto space-y-8 sm:space-y-10 relative z-10">
-        <!-- Header Section -->
-        <div class="neu-flat rounded-[30px] p-6 sm:p-8 flex flex-col sm:flex-row justify-between items-center sm:items-start gap-6">
-            <div class="w-full sm:w-auto flex justify-between items-center">
+    <div class="max-w-4xl mx-auto space-y-4 sm:space-y-6 relative z-10">
+        <!-- Top Glass App Bar -->
+        <header class="glass-panel p-4 sm:p-6 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
+            <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-gray-800 dark:text-gray-100" id="clockTime">00:00</h1>
-                    <p class="font-bold text-xs sm:text-sm mt-2 text-gray-500 uppercase tracking-widest" id="clockDate">Loading Date...</p>
+                    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight font-mono" id="clockTime">00:00</h1>
+                    <p class="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 mt-0.5 tracking-wide" id="clockDate">Loading Date...</p>
                 </div>
-                <!-- Mobile Top Actions -->
-                <div class="flex gap-4 sm:hidden items-center">
-                    <label class="relative flex items-center cursor-pointer neu-pressed rounded-full p-1 h-12 w-20">
+                <!-- Mobile Language & Dark Mode -->
+                <div class="flex items-center gap-2 md:hidden">
+                    <label class="relative flex items-center cursor-pointer bg-slate-900/5 dark:bg-white/10 rounded-full p-1 h-9 w-16 transition shadow-inner">
                         <input type="checkbox" class="sr-only peer lang-toggle-cb" onchange="toggleLang()">
-                        <span class="absolute w-[calc(50%-4px)] h-[calc(100%-8px)] neu-flat rounded-full transition-all duration-300 peer-checked:translate-x-[calc(100+4px)] z-0"></span>
-                        <span class="absolute left-0 w-1/2 flex justify-center text-[10px] font-black z-10 peer-checked:text-gray-400 text-accent-blue transition-colors select-none pointer-events-none">EN</span>
-                        <span class="absolute right-0 w-1/2 flex justify-center text-[10px] font-black z-10 peer-checked:text-accent-blue text-gray-400 transition-colors select-none pointer-events-none">BN</span>
+                        <span class="absolute w-[calc(50%-4px)] h-[calc(100%-8px)] bg-white dark:bg-slate-800 rounded-full shadow-md transition-all duration-300 peer-checked:translate-x-[calc(100%+4px)]"></span>
+                        <span class="absolute left-0 w-1/2 flex justify-center text-[10px] font-black z-10 peer-checked:text-slate-400 text-slate-900 dark:text-white transition-colors pointer-events-none select-none">EN</span>
+                        <span class="absolute right-0 w-1/2 flex justify-center text-[10px] font-black z-10 peer-checked:text-slate-900 dark:peer-checked:text-white text-slate-400 transition-colors pointer-events-none select-none">BN</span>
                     </label>
-                    <button onclick="toggleTheme()" class="w-12 h-12 rounded-full neu-flat neu-btn flex items-center justify-center text-xl" aria-label="Toggle theme">🌙</button>
+                    <button onclick="toggleTheme()" class="w-9 h-9 rounded-full bg-slate-900/5 dark:bg-white/10 flex items-center justify-center hover:bg-slate-900/10 dark:hover:bg-white/15 transition text-sm" aria-label="Toggle theme">🌙</button>
                 </div>
             </div>
-            
-            <div class="flex w-full sm:w-auto items-center justify-between sm:justify-end gap-4 sm:gap-6">
-                <!-- Weather Widget -->
-                <div class="flex items-center gap-3 sm:gap-4 neu-pressed px-5 py-3 rounded-2xl shrink-0">
-                    <div class="text-right">
-                        <p class="font-black text-sm sm:text-lg text-accent-blue" id="weatherTemp">--°C</p>
-                        <p class="text-[9px] sm:text-[10px] font-black tracking-widest text-gray-500 uppercase" id="weatherDesc">Loading...</p>
-                    </div>
-                    <div class="text-3xl sm:text-4xl" id="weatherIcon">⛅</div>
-                </div>
-                
-                <div class="relative w-full sm:w-auto">
-                    <select id="deviceSelector" onchange="switchDevice()" aria-label="Select device" class="neu-pressed neu-input rounded-2xl font-bold px-5 py-4 sm:py-3 w-full sm:w-48 appearance-none text-sm cursor-pointer border-none"></select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                    </div>
-                </div>
-                
-                <button id="installBtn" onclick="triggerInstall()" class="hidden w-12 h-12 rounded-full neu-flat neu-btn items-center justify-center text-xl shrink-0" title="Install App">⬇️</button>
-                
-                <!-- Desktop Actions -->
-                <div class="hidden sm:flex gap-4 shrink-0 items-center">
-                    <label class="relative flex items-center cursor-pointer neu-pressed rounded-full p-1 h-12 w-20">
-                        <input type="checkbox" class="sr-only peer lang-toggle-cb" onchange="toggleLang()">
-                        <span class="absolute w-[calc(50%-4px)] h-[calc(100%-8px)] neu-flat rounded-full transition-all duration-300 peer-checked:translate-x-full z-0"></span>
-                        <span class="absolute left-0 w-1/2 flex justify-center text-xs font-black z-10 peer-checked:text-gray-400 text-accent-blue transition-colors select-none pointer-events-none">EN</span>
-                        <span class="absolute right-0 w-1/2 flex justify-center text-xs font-black z-10 peer-checked:text-accent-blue text-gray-400 transition-colors select-none pointer-events-none">BN</span>
-                    </label>
-                    <button onclick="toggleTheme()" class="w-12 h-12 rounded-full neu-flat neu-btn flex items-center justify-center text-xl" aria-label="Toggle theme">🌙</button>
-                </div>
-            </div>
-        </div>
 
-        <!-- Sticky Bottom Navigation for Mobile / Top Nav for Desktop -->
-        <div class="fixed bottom-0 left-0 right-0 z-50 sm:relative sm:z-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-0 bg-[var(--bg-light)] dark:bg-[var(--bg-dark)] sm:bg-transparent">
-            <div class="mx-auto sm:mx-0 w-full sm:w-max flex justify-around sm:justify-start p-2 rounded-[24px] sm:rounded-full neu-pressed gap-2">
-                <button onclick="switchTab('tab-overview')" id="btn-tab-overview" class="tab-btn flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 py-3 px-6 rounded-2xl sm:rounded-full font-black text-[10px] sm:text-sm neu-flat text-accent-blue">
-                    <span class="text-xl sm:text-lg">🏠</span> <span data-i18n="Overview">Overview</span>
+            <!-- Telemetry Bar & Controls -->
+            <div class="flex flex-wrap items-center justify-between md:justify-end gap-2.5 sm:gap-4">
+                <!-- Weather Chip -->
+                <div class="flex items-center gap-3 bg-gradient-to-r from-sky-500/10 via-blue-500/10 to-indigo-500/10 dark:from-sky-500/15 dark:to-indigo-500/15 border border-sky-500/20 px-3.5 py-2 rounded-2xl shrink-0">
+                    <div class="text-right leading-tight">
+                        <p class="font-extrabold text-sm sm:text-base text-sky-600 dark:text-sky-400 font-mono" id="weatherTemp">--°C</p>
+                        <p class="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" id="weatherDesc">Loading...</p>
+                    </div>
+                    <div class="text-2xl sm:text-3xl select-none" id="weatherIcon">⛅</div>
+                </div>
+
+                <!-- Device Dropdown Selector -->
+                <div class="relative flex-1 md:flex-none">
+                    <select id="deviceSelector" onchange="switchDevice()" aria-label="Select device" class="glass-input font-bold px-4 py-2.5 w-full md:w-auto cursor-pointer appearance-none text-xs sm:text-sm pr-9"></select>
+                    <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">▼</div>
+                </div>
+
+                <button id="installBtn" onclick="triggerInstall()" class="hidden w-10 h-10 rounded-2xl bg-sky-500/10 text-sky-500 border border-sky-500/20 items-center justify-center hover:bg-sky-500/20 transition shrink-0" title="Install App">⬇️</button>
+
+                <!-- Desktop Language Toggle & Dark Mode -->
+                <div class="hidden md:flex items-center gap-2 shrink-0">
+                    <label class="relative flex items-center cursor-pointer bg-slate-900/5 dark:bg-white/10 rounded-full p-1 h-9 w-20 transition shadow-inner">
+                        <input type="checkbox" class="sr-only peer lang-toggle-cb" onchange="toggleLang()">
+                        <span class="absolute w-[calc(50%-4px)] h-[calc(100%-8px)] bg-white dark:bg-slate-800 rounded-full shadow-md transition-all duration-300 peer-checked:translate-x-full"></span>
+                        <span class="absolute left-0 w-1/2 flex justify-center text-[10px] font-black z-10 peer-checked:text-slate-400 text-slate-900 dark:text-white transition-colors pointer-events-none select-none">EN</span>
+                        <span class="absolute right-0 w-1/2 flex justify-center text-[10px] font-black z-10 peer-checked:text-slate-900 dark:peer-checked:text-white text-slate-400 transition-colors pointer-events-none select-none">BN</span>
+                    </label>
+                    <button onclick="toggleTheme()" class="w-9 h-9 rounded-full bg-slate-900/5 dark:bg-white/10 flex items-center justify-center hover:bg-slate-900/10 dark:hover:bg-white/15 transition text-sm" aria-label="Toggle theme">🌙</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Segmented Floating Dock Navigation -->
+        <nav class="fixed bottom-3 left-3 right-3 sm:static z-50 p-1 sm:p-0">
+            <div class="glass-panel mx-auto max-w-md sm:max-w-none p-1.5 flex justify-between gap-1 shadow-2xl sm:shadow-sm border border-white/60 dark:border-white/10">
+                <button onclick="switchTab('tab-overview')" id="btn-tab-overview" class="tab-btn flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-3 sm:px-6 rounded-2xl font-bold text-[11px] sm:text-sm transition-all duration-300">
+                    <span class="text-lg sm:text-base">🏠</span> <span data-i18n="Overview">Overview</span>
                 </button>
-                <button onclick="switchTab('tab-analytics')" id="btn-tab-analytics" class="tab-btn flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 py-3 px-6 rounded-2xl sm:rounded-full font-black text-[10px] sm:text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
-                    <span class="text-xl sm:text-lg">📊</span> <span data-i18n="Analytics">Analytics</span>
+                <button onclick="switchTab('tab-analytics')" id="btn-tab-analytics" class="tab-btn flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-3 sm:px-6 rounded-2xl font-bold text-[11px] sm:text-sm transition-all duration-300">
+                    <span class="text-lg sm:text-base">📊</span> <span data-i18n="Analytics">Analytics</span>
                 </button>
-                <button onclick="switchTab('tab-automation')" id="btn-tab-automation" class="tab-btn flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 py-3 px-6 rounded-2xl sm:rounded-full font-black text-[10px] sm:text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
-                    <span class="text-xl sm:text-lg">⚡</span> <span data-i18n="Automation">Automation</span>
+                <button onclick="switchTab('tab-automation')" id="btn-tab-automation" class="tab-btn flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-3 sm:px-6 rounded-2xl font-bold text-[11px] sm:text-sm transition-all duration-300">
+                    <span class="text-lg sm:text-base">⚡</span> <span data-i18n="Automation">Automation</span>
                 </button>
-                <button onclick="switchTab('tab-settings')" id="btn-tab-settings" class="tab-btn flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 py-3 px-6 rounded-2xl sm:rounded-full font-black text-[10px] sm:text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
-                    <span class="text-xl sm:text-lg">⚙️</span> <span data-i18n="Settings">Settings</span>
+                <button onclick="switchTab('tab-settings')" id="btn-tab-settings" class="tab-btn flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-3 sm:px-6 rounded-2xl font-bold text-[11px] sm:text-sm transition-all duration-300">
+                    <span class="text-lg sm:text-base">⚙️</span> <span data-i18n="Settings">Settings</span>
                 </button>
             </div>
-        </div>
+        </nav>
 
         <!-- TAB: OVERVIEW -->
-        <div id="tab-overview" class="tab-content fade-in space-y-6 sm:space-y-8">
-            
-            <!-- Separated Power Control -->
-            <div class="neu-flat rounded-[30px] p-8 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-8">
-                
-                <div class="flex flex-col items-center sm:items-start text-center sm:text-left w-full sm:w-auto">
-                    <div id="statusBadge" class="px-5 py-2 rounded-full neu-pressed text-[10px] sm:text-xs font-black tracking-[0.2em] text-gray-500 uppercase" data-i18n="CONNECTING">CONNECTING</div>
-                    <p id="powerText" class="text-4xl sm:text-5xl font-black mt-6 tracking-widest text-gray-500 uppercase" data-i18n="OFF">OFF</p>
-                    <p id="timerText" class="text-sm mt-4 font-black tracking-widest text-accent-orange hidden"></p>
+        <main id="tab-overview" class="tab-content space-y-4 sm:space-y-6">
+            <!-- Dedicated Tactile Power Deck -->
+            <section class="glass-panel p-6 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+                <div class="flex flex-col items-center md:items-start text-center md:text-left z-10">
+                    <div id="statusBadge" class="px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-extrabold tracking-widest uppercase transition-all duration-300" data-i18n="CONNECTING">CONNECTING</div>
+                    <p id="powerText" class="text-4xl sm:text-5xl font-black mt-3 tracking-tight font-mono transition-colors duration-300" data-i18n="OFF">OFF</p>
+                    <p id="timerText" class="text-xs sm:text-sm mt-2 font-bold text-amber-500 font-mono hidden"></p>
                 </div>
 
-                <div class="w-full sm:w-auto flex justify-center">
-                    <!-- The Power Button -->
-                    <button id="powerBtn" class="power-btn-base neu-flat text-gray-500" onclick="togglePower()" aria-label="Toggle power">
-                        <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <!-- Tactical Button with Animated Halo Core -->
+                <div class="power-btn-container">
+                    <div id="powerAura" class="power-aura"></div>
+                    <button id="powerBtn" class="power-btn power-off" onclick="togglePower()" aria-label="Toggle device power">
+                        <svg class="w-14 h-14 sm:w-16 sm:h-16 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
                     </button>
                 </div>
-            </div>
+            </section>
 
-            <!-- Separated Live Activity Rings (2x2 Grid) -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-                <!-- Voltage Ring -->
-                <div class="neu-flat rounded-[24px] p-5 flex flex-col items-center justify-center relative">
-                    <div class="relative w-24 h-24 flex items-center justify-center ring-svg neu-pressed rounded-full">
+            <!-- 4-Pod Live Activity Dial Matrix -->
+            <section class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                <!-- Voltage Pod -->
+                <div class="glass-panel p-4 sm:p-5 flex flex-col items-center justify-center relative overflow-hidden group hover:border-sky-500/30">
+                    <div class="relative w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center radial-ring">
                         <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" class="text-blue-500/10 dark:text-blue-500/20" stroke-width="8"></circle>
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" class="text-accent-blue" stroke-width="8" stroke-dasharray="251" stroke-dashoffset="251" id="ring-volt" stroke-linecap="round"></circle>
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" class="text-sky-500/15" stroke-width="8"></circle>
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#0ea5e9" stroke-width="8" stroke-dasharray="251" stroke-dashoffset="251" id="ring-volt" stroke-linecap="round"></circle>
                         </svg>
-                        <span class="text-2xl z-10">⚡</span>
+                        <div class="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center text-lg font-bold shadow-inner">⚡</div>
                     </div>
-                    <p class="mt-5 font-black text-xl text-accent-blue" id="val-volt">-- V</p>
-                    <p class="text-[10px] font-black tracking-widest mt-2 text-gray-400 uppercase" data-i18n="VOLTAGE">VOLTAGE</p>
+                    <p class="mt-3.5 font-black text-lg sm:text-xl font-mono text-sky-500" id="val-volt">-- V</p>
+                    <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase mt-0.5" data-i18n="VOLTAGE">VOLTAGE</p>
                 </div>
-                
-                <!-- Power Ring -->
-                <div class="neu-flat rounded-[24px] p-5 flex flex-col items-center justify-center relative">
-                    <div class="relative w-24 h-24 flex items-center justify-center ring-svg neu-pressed rounded-full">
-                        <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" class="text-orange-500/10 dark:text-orange-500/20" stroke-width="8"></circle>
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" class="text-accent-orange" stroke-width="8" stroke-dasharray="251" stroke-dashoffset="251" id="ring-power" stroke-linecap="round"></circle>
-                        </svg>
-                        <span class="text-2xl z-10">🔌</span>
-                    </div>
-                    <p class="mt-5 font-black text-xl text-accent-orange" id="val-power">-- W</p>
-                    <p class="text-[10px] font-black tracking-widest mt-2 text-gray-400 uppercase" data-i18n="WATTAGE">WATTAGE</p>
-                </div>
-                
-                <!-- Energy Ring -->
-                <div class="neu-flat rounded-[24px] p-5 flex flex-col items-center justify-center relative">
-                    <div class="relative w-24 h-24 flex items-center justify-center ring-svg neu-pressed rounded-full">
-                        <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" class="text-green-500/10 dark:text-green-500/20" stroke-width="8"></circle>
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" class="text-accent-green" stroke-width="8" stroke-dasharray="251" stroke-dashoffset="251" id="ring-energy" stroke-linecap="round"></circle>
-                        </svg>
-                        <span class="text-2xl z-10">🔋</span>
-                    </div>
-                    <p class="mt-5 font-black text-xl text-accent-green" id="val-energy">-- kWh</p>
-                    <p class="text-[10px] font-black tracking-widest mt-2 text-gray-400 uppercase" data-i18n="Energy">Energy</p>
-                </div>
-                
-                <!-- Cost Ring -->
-                <div class="neu-flat rounded-[24px] p-5 flex flex-col items-center justify-center relative">
-                    <div class="relative w-24 h-24 flex items-center justify-center ring-svg neu-pressed rounded-full">
-                        <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" class="text-purple-500/10 dark:text-purple-500/20" stroke-width="8"></circle>
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" class="text-accent-purple" stroke-width="8" stroke-dasharray="251" stroke-dashoffset="251" id="ring-cost" stroke-linecap="round"></circle>
-                        </svg>
-                        <span class="text-2xl z-10">💰</span>
-                    </div>
-                    <p class="mt-5 font-black text-xl text-accent-purple" id="val-cost">--</p>
-                    <p class="text-[10px] font-black tracking-widest mt-2 text-gray-400 uppercase" data-i18n="Cost">Cost</p>
-                </div>
-            </div>
 
-            <div class="flex flex-col sm:flex-row gap-4 sm:gap-6">
-                <button onclick="masterToggle(true)" class="flex-1 neu-flat neu-btn rounded-[24px] py-5 flex items-center justify-center gap-3">
-                    <span class="text-2xl">⚡</span> <span class="font-black text-accent-green tracking-widest uppercase" data-i18n="Master ON">Master ON</span>
+                <!-- Wattage Pod -->
+                <div class="glass-panel p-4 sm:p-5 flex flex-col items-center justify-center relative overflow-hidden group hover:border-orange-500/30">
+                    <div class="relative w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center radial-ring">
+                        <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" class="text-orange-500/15" stroke-width="8"></circle>
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#f97316" stroke-width="8" stroke-dasharray="251" stroke-dashoffset="251" id="ring-power" stroke-linecap="round"></circle>
+                        </svg>
+                        <div class="w-9 h-9 rounded-xl bg-orange-500/10 text-orange-500 flex items-center justify-center text-lg font-bold shadow-inner">🔌</div>
+                    </div>
+                    <p class="mt-3.5 font-black text-lg sm:text-xl font-mono text-orange-500" id="val-power">-- W</p>
+                    <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase mt-0.5" data-i18n="WATTAGE">WATTAGE</p>
+                </div>
+
+                <!-- Energy Pod -->
+                <div class="glass-panel p-4 sm:p-5 flex flex-col items-center justify-center relative overflow-hidden group hover:border-emerald-500/30">
+                    <div class="relative w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center radial-ring">
+                        <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" class="text-emerald-500/15" stroke-width="8"></circle>
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#10b981" stroke-width="8" stroke-dasharray="251" stroke-dashoffset="251" id="ring-energy" stroke-linecap="round"></circle>
+                        </svg>
+                        <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-lg font-bold shadow-inner">🔋</div>
+                    </div>
+                    <p class="mt-3.5 font-black text-lg sm:text-xl font-mono text-emerald-500" id="val-energy">-- kWh</p>
+                    <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase mt-0.5" data-i18n="Energy">ENERGY</p>
+                </div>
+
+                <!-- Cost Pod -->
+                <div class="glass-panel p-4 sm:p-5 flex flex-col items-center justify-center relative overflow-hidden group hover:border-purple-500/30">
+                    <div class="relative w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center radial-ring">
+                        <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" class="text-purple-500/15" stroke-width="8"></circle>
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#8b5cf6" stroke-width="8" stroke-dasharray="251" stroke-dashoffset="251" id="ring-cost" stroke-linecap="round"></circle>
+                        </svg>
+                        <div class="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center text-lg font-bold shadow-inner">💰</div>
+                    </div>
+                    <p class="mt-3.5 font-black text-lg sm:text-xl font-mono text-purple-500" id="val-cost">--</p>
+                    <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase mt-0.5" data-i18n="Cost">TODAY COST</p>
+                </div>
+            </section>
+
+            <!-- Master Control Grid -->
+            <section class="flex gap-3 sm:gap-4">
+                <button onclick="masterToggle(true)" class="flex-1 glass-panel py-3.5 sm:py-4 px-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-extrabold text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 hover:bg-emerald-500/20 active:scale-[0.98] transition">
+                    <span class="text-base sm:text-lg">⚡</span> <span data-i18n="Master ON">Master ON</span>
                 </button>
-                <button onclick="masterToggle(false)" class="flex-1 neu-flat neu-btn rounded-[24px] py-5 flex items-center justify-center gap-3">
-                    <span class="text-2xl">🛑</span> <span class="font-black text-accent-red tracking-widest uppercase" data-i18n="Master OFF">Master OFF</span>
+                <button onclick="masterToggle(false)" class="flex-1 glass-panel py-3.5 sm:py-4 px-4 bg-gradient-to-r from-rose-500/10 to-pink-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 font-extrabold text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 hover:bg-rose-500/20 active:scale-[0.98] transition">
+                    <span class="text-base sm:text-lg">🛑</span> <span data-i18n="Master OFF">Master OFF</span>
                 </button>
-            </div>
+            </section>
 
-            <div class="neu-flat rounded-[30px] p-6 sm:p-8">
-                <h2 class="text-xl font-black mb-6 uppercase tracking-widest" data-i18n="All Devices">All Devices</h2>
-                <div id="deviceGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-4"></div>
-            </div>
-        </div>
+            <!-- Device Fleet Overview -->
+            <section class="glass-panel p-5 sm:p-7">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm sm:text-base font-extrabold tracking-tight flex items-center gap-2">
+                        <span>📱</span> <span data-i18n="All Devices">Device Fleet</span>
+                    </h2>
+                    <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold">Tap to focus</span>
+                </div>
+                <div id="deviceGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3"></div>
+            </section>
+        </main>
 
         <!-- TAB: ANALYTICS -->
-        <div id="tab-analytics" class="tab-content hidden space-y-6 sm:space-y-8 fade-in">
-            <div class="neu-flat rounded-[30px] p-6 sm:p-10">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-5 border-b border-gray-300 dark:border-gray-700 pb-6">
-                    <h2 class="text-2xl font-black uppercase tracking-widest" data-i18n="Insights">Insights</h2>
-                    <div class="flex flex-wrap gap-3 w-full sm:w-auto">
-                        <select id="chartTimeframe" class="neu-pressed neu-input rounded-xl px-4 py-3 cursor-pointer text-sm font-black flex-1 sm:flex-none" onchange="updateChart()">
-                            <option value="realtime" data-i18n="Live">Live</option><option value="hourly" data-i18n="Today (Hourly)">Today (Hourly)</option>
-                            <option value="daily" data-i18n="7 Days">7 Days</option><option value="weekly" data-i18n="4 Weeks">4 Weeks</option><option value="monthly" data-i18n="6 Months">6 Months</option>
+        <main id="tab-analytics" class="tab-content hidden space-y-4 sm:space-y-6">
+            <section class="glass-panel p-5 sm:p-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-slate-500/10 pb-5 gap-4">
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-black tracking-tight" data-i18n="Insights">Telemetry & Insights</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">Explore consumption trends and cost projections</p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                        <select id="chartTimeframe" class="glass-input px-3 py-2 cursor-pointer text-xs sm:text-sm font-bold flex-1 md:flex-none" onchange="updateChart()">
+                            <option value="realtime" data-i18n="Live">Live Realtime</option>
+                            <option value="hourly" data-i18n="Today (Hourly)">Today (Hourly)</option>
+                            <option value="daily" data-i18n="7 Days">7 Days</option>
+                            <option value="weekly" data-i18n="4 Weeks">4 Weeks</option>
+                            <option value="monthly" data-i18n="6 Months">6 Months</option>
                         </select>
-                        <select id="chartDataType" class="neu-pressed neu-input rounded-xl px-4 py-3 cursor-pointer text-sm font-black flex-1 sm:flex-none" onchange="updateChart()">
-                            <option value="energy" id="opt-energy" data-i18n="Energy">Energy</option><option value="cost" id="opt-cost" data-i18n="Cost">Cost</option>
-                            <option value="power" id="opt-power" data-i18n="Power (W)">Power (W)</option><option value="voltage" id="opt-voltage" data-i18n="Voltage (V)">Voltage (V)</option>
+                        <select id="chartDataType" class="glass-input px-3 py-2 cursor-pointer text-xs sm:text-sm font-bold flex-1 md:flex-none" onchange="updateChart()">
+                            <option value="energy" id="opt-energy" data-i18n="Energy">Energy (kWh)</option>
+                            <option value="cost" id="opt-cost" data-i18n="Cost">Cost Tariff</option>
+                            <option value="power" id="opt-power" data-i18n="Power (W)">Power (W)</option>
+                            <option value="voltage" id="opt-voltage" data-i18n="Voltage (V)">Voltage (V)</option>
                         </select>
-                        <select id="chartStyle" class="neu-pressed neu-input rounded-xl px-4 py-3 cursor-pointer text-sm font-black flex-1 sm:flex-none hidden sm:block" onchange="updateChart()">
-                            <option value="bar" data-i18n="Bar">Bar</option><option value="line" data-i18n="Line">Line</option>
+                        <select id="chartStyle" class="glass-input px-3 py-2 cursor-pointer text-xs sm:text-sm font-bold flex-1 md:flex-none" onchange="updateChart()">
+                            <option value="bar" data-i18n="Bar">Bar Chart</option>
+                            <option value="line" data-i18n="Line">Line Wave</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
-                    <div class="p-5 sm:p-6 neu-pressed rounded-[24px]">
-                        <p class="text-[10px] sm:text-xs font-black tracking-widest text-gray-500 uppercase" data-i18n="TODAY vs YESTERDAY">TODAY vs YESTERDAY</p>
-                        <div class="flex flex-col sm:flex-row sm:items-end gap-1 sm:gap-3 mt-3">
-                            <p class="text-3xl sm:text-4xl font-black text-accent-green" id="todayUsage">--</p>
-                            <p class="text-sm font-black mb-1" id="usageDiff">--</p>
+                <!-- KPI Metric Strip -->
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-6">
+                    <div class="glass-card-subtle p-4 sm:p-5">
+                        <p class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase" data-i18n="TODAY vs YESTERDAY">Today vs Yesterday</p>
+                        <div class="flex flex-wrap items-baseline gap-2 mt-2">
+                            <p class="text-2xl sm:text-3xl font-black font-mono text-emerald-500" id="todayUsage">--</p>
+                            <p class="text-xs sm:text-sm font-bold" id="usageDiff">--</p>
                         </div>
                     </div>
-                    <div class="p-5 sm:p-6 neu-pressed rounded-[24px]">
-                        <p class="text-[10px] sm:text-xs font-black tracking-widest text-gray-500 uppercase" data-i18n="MONTHLY FORECAST">MONTHLY FORECAST</p>
-                        <p class="text-3xl sm:text-4xl font-black mt-3 text-accent-purple" id="monthForecast">--</p>
+                    <div class="glass-card-subtle p-4 sm:p-5">
+                        <p class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase" data-i18n="MONTHLY FORECAST">Monthly Forecast</p>
+                        <p class="text-2xl sm:text-3xl font-black font-mono text-purple-500 mt-2" id="monthForecast">--</p>
                     </div>
-                    <div class="p-5 sm:p-6 neu-pressed rounded-[24px] col-span-2 sm:col-span-1">
-                        <p class="text-[10px] sm:text-xs font-black tracking-widest text-gray-500 uppercase" data-i18n="PEAK HOUR TODAY">PEAK HOUR TODAY</p>
-                        <p class="text-3xl sm:text-4xl font-black mt-3 text-accent-orange" id="peakHour">--</p>
+                    <div class="glass-card-subtle p-4 sm:p-5 col-span-2 md:col-span-1">
+                        <p class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase" data-i18n="PEAK HOUR TODAY">Peak Hour Today</p>
+                        <p class="text-2xl sm:text-3xl font-black font-mono text-orange-500 mt-2" id="peakHour">--</p>
                     </div>
                 </div>
-                <div style="height: 300px; width: 100%;" class="neu-pressed rounded-[24px] p-4"><canvas id="usageChart"></canvas></div>
-            </div>
 
-            <div class="neu-flat rounded-[30px] p-6 sm:p-10">
-                 <div class="flex justify-between items-center mb-5">
-                    <span class="text-xs font-black tracking-widest text-gray-500 uppercase" data-i18n="BUDGET PROGRESS:">BUDGET PROGRESS: <span id="budgetDisplay" class="text-gray-800 dark:text-gray-200 inline ml-2"></span></span>
-                    <span id="budgetPercent" class="text-accent-blue font-black text-lg">0%</span>
+                <!-- Chart Box -->
+                <div class="w-full relative" style="height: 270px;">
+                    <canvas id="usageChart"></canvas>
                 </div>
-                <div class="w-full neu-pressed rounded-full h-5 p-1">
-                    <div id="budgetBar" class="bg-blue-500 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
+            </section>
+
+            <!-- Budget Progress Card -->
+            <section class="glass-panel p-5 sm:p-8">
+                <div class="flex justify-between items-center text-xs font-bold mb-3">
+                    <span class="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider" data-i18n="BUDGET PROGRESS:">Monthly Budget: <span id="budgetDisplay" class="text-slate-900 dark:text-white font-mono ml-1 font-black"></span></span>
+                    <span id="budgetPercent" class="text-sky-500 font-mono font-black text-sm">0%</span>
                 </div>
-            </div>
-        </div>
+                <div class="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-3 overflow-hidden p-0.5 border border-slate-300/40 dark:border-white/5">
+                    <div id="budgetBar" class="bg-gradient-to-r from-sky-500 to-blue-600 h-full rounded-full transition-all duration-1000 shadow-md" style="width: 0%"></div>
+                </div>
+            </section>
+        </main>
 
         <!-- TAB: AUTOMATION -->
-        <div id="tab-automation" class="tab-content hidden space-y-6 sm:space-y-8 fade-in">
-            <div class="neu-flat rounded-[30px] p-6 sm:p-10">
-                <h2 class="text-xl font-black mb-6 uppercase tracking-widest" data-i18n="Operating Mode">Operating Mode</h2>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                    <button id="mode-manual" onclick="setMode('manual')" class="mode-btn flex flex-col items-center justify-center p-4 sm:p-5 rounded-[20px] neu-flat neu-btn text-gray-500">
-                        <span class="text-3xl mb-3 drop-shadow-sm">🖐️</span>
-                        <span class="text-[11px] sm:text-xs font-black uppercase tracking-wider" data-i18n="Manual">Manual</span>
+        <main id="tab-automation" class="tab-content hidden space-y-4 sm:space-y-6">
+            <!-- Operating Mode Selector -->
+            <section class="glass-panel p-5 sm:p-8">
+                <div class="mb-5">
+                    <h2 class="text-lg sm:text-xl font-black tracking-tight" data-i18n="Operating Mode">Intelligent Profiles</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Activate automated running schedules and eco-profiles</p>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3.5 mb-6">
+                    <button id="mode-manual" onclick="setMode('manual')" class="mode-btn flex flex-col items-center justify-center p-3.5 sm:p-5 rounded-2xl border-2 transition-all duration-300">
+                        <span class="text-2xl sm:text-3xl mb-1.5">🖐️</span>
+                        <span class="text-xs sm:text-sm font-bold" data-i18n="Manual">Manual</span>
                     </button>
-                    <button id="mode-day" onclick="setMode('day')" class="mode-btn flex flex-col items-center justify-center p-4 sm:p-5 rounded-[20px] neu-flat neu-btn text-gray-500">
-                        <span class="text-3xl mb-3 drop-shadow-sm">☀️</span>
-                        <span class="text-[11px] sm:text-xs font-black uppercase tracking-wider" data-i18n="Day">Day</span>
+                    <button id="mode-day" onclick="setMode('day')" class="mode-btn flex flex-col items-center justify-center p-3.5 sm:p-5 rounded-2xl border-2 transition-all duration-300">
+                        <span class="text-2xl sm:text-3xl mb-1.5">☀️</span>
+                        <span class="text-xs sm:text-sm font-bold" data-i18n="Day">Day Mode</span>
                     </button>
-                    <button id="mode-night" onclick="setMode('night')" class="mode-btn flex flex-col items-center justify-center p-4 sm:p-5 rounded-[20px] neu-flat neu-btn text-gray-500">
-                        <span class="text-3xl mb-3 drop-shadow-sm">🌙</span>
-                        <span class="text-[11px] sm:text-xs font-black uppercase tracking-wider" data-i18n="Night">Night</span>
+                    <button id="mode-night" onclick="setMode('night')" class="mode-btn flex flex-col items-center justify-center p-3.5 sm:p-5 rounded-2xl border-2 transition-all duration-300">
+                        <span class="text-2xl sm:text-3xl mb-1.5">🌙</span>
+                        <span class="text-xs sm:text-sm font-bold" data-i18n="Night">Night Mode</span>
                     </button>
-                    <button id="mode-sleep" onclick="activateSleepMode()" class="mode-btn flex flex-col items-center justify-center p-4 sm:p-5 rounded-[20px] neu-flat neu-btn text-gray-500">
-                        <span class="text-3xl mb-3 drop-shadow-sm">💤</span>
-                        <span class="text-[11px] sm:text-xs font-black uppercase tracking-wider" data-i18n="Sleep">Sleep</span>
+                    <button id="mode-sleep" onclick="activateSleepMode()" class="mode-btn flex flex-col items-center justify-center p-3.5 sm:p-5 rounded-2xl border-2 transition-all duration-300">
+                        <span class="text-2xl sm:text-3xl mb-1.5">💤</span>
+                        <span class="text-xs sm:text-sm font-bold" data-i18n="Sleep">Sleep (3h)</span>
                     </button>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 neu-pressed p-6 rounded-[24px]">
+                <!-- Configurable Window Times -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 glass-card-subtle p-4 rounded-2xl">
                     <div>
-                        <label class="text-[10px] font-black tracking-widest text-gray-500 uppercase block mb-3">DAY TIME (START/END)</label>
-                        <div class="flex gap-3">
-                            <input type="time" id="dayStart" onchange="saveDayNightTimes()" class="neu-input neu-flat rounded-xl px-4 py-3 w-full text-sm font-black">
-                            <input type="time" id="dayEnd" onchange="saveDayNightTimes()" class="neu-input neu-flat rounded-xl px-4 py-3 w-full text-sm font-black">
+                        <label class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 tracking-wider uppercase block mb-2">Day Mode Schedule (Start / End)</label>
+                        <div class="flex gap-2">
+                            <input type="time" id="dayStart" onchange="saveDayNightTimes()" class="glass-input px-3 py-2 w-full text-xs font-bold font-mono">
+                            <input type="time" id="dayEnd" onchange="saveDayNightTimes()" class="glass-input px-3 py-2 w-full text-xs font-bold font-mono">
                         </div>
                     </div>
                     <div>
-                        <label class="text-[10px] font-black tracking-widest text-gray-500 uppercase block mb-3">NIGHT TIME (START/END)</label>
-                        <div class="flex gap-3">
-                            <input type="time" id="nightStart" onchange="saveDayNightTimes()" class="neu-input neu-flat rounded-xl px-4 py-3 w-full text-sm font-black">
-                            <input type="time" id="nightEnd" onchange="saveDayNightTimes()" class="neu-input neu-flat rounded-xl px-4 py-3 w-full text-sm font-black">
+                        <label class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 tracking-wider uppercase block mb-2">Night Mode Schedule (Start / End)</label>
+                        <div class="flex gap-2">
+                            <input type="time" id="nightStart" onchange="saveDayNightTimes()" class="glass-input px-3 py-2 w-full text-xs font-bold font-mono">
+                            <input type="time" id="nightEnd" onchange="saveDayNightTimes()" class="glass-input px-3 py-2 w-full text-xs font-bold font-mono">
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <div class="neu-flat rounded-[30px] p-6 sm:p-10 space-y-5">
-                
-                <!-- Outage Recovery Toggle -->
-                <div class="flex justify-between items-center neu-pressed p-5 rounded-[20px]">
+            <!-- Safety Guard Strips -->
+            <section class="glass-panel p-5 sm:p-8 space-y-3.5 sm:space-y-4">
+                <!-- Power Outage Recovery -->
+                <div class="flex justify-between items-center bg-gradient-to-r from-sky-500/10 via-transparent to-transparent p-4 rounded-2xl border border-sky-500/20">
                     <div>
-                        <p class="font-black text-sm text-accent-blue tracking-wide" data-i18n="Power Outage Recovery">Power Outage Recovery</p>
-                        <p class="text-[11px] font-bold mt-1 text-gray-500" data-i18n="Restore state when power returns">Restore state when power returns</p>
+                        <p class="font-extrabold text-sm text-sky-600 dark:text-sky-400" data-i18n="Power Outage Recovery">Power Outage State Recovery</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" data-i18n="Restore state when power returns">Restore state when power returns</p>
                     </div>
                     <label class="toggle-wrapper">
                         <input type="checkbox" id="outageToggle" onchange="toggleAutomation('powerOutageRecovery')" class="toggle-checkbox"/>
-                        <span class="toggle-track neu-pressed"><span class="toggle-knob neu-flat"></span></span>
+                        <span class="toggle-slider"></span>
                     </label>
                 </div>
 
-                <div class="flex justify-between items-center neu-pressed p-5 rounded-[20px]">
+                <!-- Standby Kill -->
+                <div class="flex justify-between items-center glass-card-subtle p-4 rounded-2xl">
                     <div>
-                        <p class="font-black text-sm tracking-wide text-gray-700 dark:text-gray-200" data-i18n="Standby Auto-Kill">Standby Auto-Kill</p>
-                        <p class="text-[11px] font-bold mt-1 text-gray-500" data-i18n="Stops power if <5W for 10m">Stops power if &lt;5W for 10m</p>
+                        <p class="font-bold text-sm" data-i18n="Standby Auto-Kill">Standby Auto-Kill</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" data-i18n="Stops power if <5W for 10m">Stops power if &lt;5W for 10m</p>
                     </div>
                     <label class="toggle-wrapper">
                         <input type="checkbox" id="standbyToggle" onchange="toggleAutomation('standbyKill')" class="toggle-checkbox"/>
-                        <span class="toggle-track neu-pressed"><span class="toggle-knob neu-flat"></span></span>
+                        <span class="toggle-slider"></span>
                     </label>
                 </div>
 
-                <div class="neu-pressed p-5 rounded-[20px]">
+                <!-- Voltage Guard -->
+                <div class="glass-card-subtle p-4 rounded-2xl">
                     <div class="flex justify-between items-center">
                         <div>
-                            <p class="font-black text-sm tracking-wide text-gray-700 dark:text-gray-200" data-i18n="Voltage Guard">Voltage Guard</p>
-                            <p class="text-[11px] font-bold mt-1 text-accent-red" data-i18n="Auto-kill on dangerous voltage">Auto-kill on dangerous voltage</p>
+                            <p class="font-bold text-sm" data-i18n="Voltage Guard">Voltage Guard</p>
+                            <p class="text-xs text-rose-500 font-medium mt-0.5" data-i18n="Auto-kill on dangerous voltage">Auto-kill on dangerous voltage</p>
                         </div>
                         <label class="toggle-wrapper">
                             <input type="checkbox" id="voltageToggle" onchange="toggleAutomation('voltageProtect')" class="toggle-checkbox"/>
-                            <span class="toggle-track neu-pressed"><span class="toggle-knob neu-flat"></span></span>
+                            <span class="toggle-slider"></span>
                         </label>
                     </div>
-                    <div class="flex gap-5 mt-5 pt-5 border-t border-gray-300 dark:border-gray-700">
-                        <div class="flex-1">
-                            <label class="text-[10px] font-black tracking-widest text-gray-500 uppercase block mb-3" data-i18n="MIN (V)">MIN (V)</label>
-                            <input type="number" id="vMinInput" onchange="saveVoltageLimits()" class="neu-input neu-flat rounded-xl px-4 py-3 w-full text-sm font-black">
+                    <div class="grid grid-cols-2 gap-3 mt-4 pt-3.5 border-t border-slate-500/10">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1" data-i18n="MIN (V)">MIN (V)</label>
+                            <input type="number" id="vMinInput" onchange="saveVoltageLimits()" class="glass-input px-3 py-2 w-full text-xs font-mono font-bold">
                         </div>
-                        <div class="flex-1">
-                            <label class="text-[10px] font-black tracking-widest text-gray-500 uppercase block mb-3" data-i18n="MAX (V)">MAX (V)</label>
-                            <input type="number" id="vMaxInput" onchange="saveVoltageLimits()" class="neu-input neu-flat rounded-xl px-4 py-3 w-full text-sm font-black">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1" data-i18n="MAX (V)">MAX (V)</label>
+                            <input type="number" id="vMaxInput" onchange="saveVoltageLimits()" class="glass-input px-3 py-2 w-full text-xs font-mono font-bold">
                         </div>
                     </div>
                 </div>
 
-                <div class="flex justify-between items-center neu-pressed p-5 rounded-[20px] mb-8">
+                <!-- Budget Lock -->
+                <div class="flex justify-between items-center glass-card-subtle p-4 rounded-2xl">
                     <div>
-                        <p class="font-black text-sm tracking-wide text-gray-700 dark:text-gray-200" data-i18n="Strict Budget Lock">Strict Budget Lock</p>
-                        <p class="text-[11px] font-bold mt-1 text-gray-500" data-i18n="Auto-kill if budget hits 100%">Auto-kill if budget hits 100%</p>
+                        <p class="font-bold text-sm" data-i18n="Strict Budget Lock">Strict Budget Lock</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" data-i18n="Auto-kill if budget hits 100%">Auto-kill if budget hits 100%</p>
                     </div>
                     <label class="toggle-wrapper">
                         <input type="checkbox" id="budgetToggle" onchange="toggleAutomation('budgetKill')" class="toggle-checkbox"/>
-                        <span class="toggle-track neu-pressed"><span class="toggle-knob neu-flat"></span></span>
+                        <span class="toggle-slider"></span>
                     </label>
                 </div>
 
-                <div class="mt-8 pt-8 border-t border-gray-300 dark:border-gray-700">
-                    <div class="mb-6 flex flex-wrap sm:flex-nowrap gap-3">
-                        <input type="number" id="timerMins" placeholder="Mins" min="1" class="neu-input neu-pressed rounded-xl px-4 py-4 w-full sm:w-28 text-sm font-black text-center">
-                        <select id="timerAction" class="neu-input neu-pressed rounded-xl px-4 py-4 flex-1 text-sm font-black text-center"><option value="true" data-i18n="ON">ON</option><option value="false" data-i18n="OFF">OFF</option></select>
-                        <button onclick="setTimer()" data-i18n="Timer" class="neu-flat neu-btn rounded-xl px-6 py-4 w-full sm:w-auto text-sm font-black text-accent-blue uppercase tracking-widest">Timer</button>
-                    </div>
-                    <div>
-                        <div class="flex gap-3 mb-5">
-                            <input type="time" id="schedTime" class="neu-input neu-pressed rounded-xl px-4 py-4 flex-1 text-sm font-black text-center">
-                            <select id="schedAction" class="neu-input neu-pressed rounded-xl px-4 py-4 w-28 text-sm font-black text-center"><option value="true" data-i18n="ON">ON</option><option value="false" data-i18n="OFF">OFF</option></select>
-                            <button onclick="addSchedule()" class="neu-flat neu-btn rounded-xl px-6 py-4 text-xl font-black text-accent-green">+</button>
-                        </div>
-                        <div id="scheduleList" class="space-y-3 max-h-40 overflow-y-auto pr-2 no-scrollbar"></div>
+                <!-- Quick Timer & Chrono Schedules -->
+                <div class="pt-2">
+                    <p class="text-xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2.5">Countdown Timer</p>
+                    <div class="flex gap-2">
+                        <input type="number" id="timerMins" placeholder="Mins" min="1" class="glass-input px-4 py-2.5 w-24 text-xs font-mono font-bold">
+                        <select id="timerAction" class="glass-input px-3 py-2.5 flex-1 text-xs font-bold">
+                            <option value="true" data-i18n="ON">Turn ON</option>
+                            <option value="false" data-i18n="OFF">Turn OFF</option>
+                        </select>
+                        <button onclick="setTimer()" data-i18n="Timer" class="apple-btn px-5 py-2.5 text-xs font-bold">Set</button>
                     </div>
                 </div>
-            </div>
 
-            <div class="neu-flat rounded-[30px] p-6 sm:p-10">
-                <h2 class="text-xl font-black mb-6 uppercase tracking-widest" data-i18n="Recent Activity">Recent Activity</h2>
-                <div id="activityLog" class="max-h-72 overflow-y-auto pr-2 no-scrollbar">
-                    <p class="font-bold text-sm text-gray-500" data-i18n="No recent activity yet.">No recent activity yet.</p>
+                <div>
+                    <p class="text-xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2.5">Scheduled Events</p>
+                    <div class="flex gap-2 mb-3">
+                        <input type="time" id="schedTime" class="glass-input px-3 py-2.5 flex-1 text-xs font-mono font-bold">
+                        <select id="schedAction" class="glass-input px-3 py-2.5 text-xs font-bold">
+                            <option value="true" data-i18n="ON">Turn ON</option>
+                            <option value="false" data-i18n="OFF">Turn OFF</option>
+                        </select>
+                        <button onclick="addSchedule()" class="apple-btn px-5 py-2.5 text-xs font-bold">+</button>
+                    </div>
+                    <div id="scheduleList" class="space-y-2 max-h-36 overflow-y-auto no-scrollbar"></div>
                 </div>
-            </div>
-        </div>
+            </section>
+
+            <!-- Activity Audit Feed -->
+            <section class="glass-panel p-5 sm:p-8">
+                <h2 class="text-base sm:text-lg font-black tracking-tight mb-3" data-i18n="Recent Activity">Activity Telemetry Log</h2>
+                <div id="activityLog" class="max-h-64 overflow-y-auto pr-1 divide-y divide-slate-500/10">
+                    <p class="text-xs text-slate-500 dark:text-slate-400" data-i18n="No recent activity yet.">No recent activity yet.</p>
+                </div>
+            </section>
+        </main>
 
         <!-- TAB: SETTINGS -->
-        <div id="tab-settings" class="tab-content hidden space-y-6 sm:space-y-8 fade-in">
-            <div class="neu-flat rounded-[30px] p-6 sm:p-10">
-                <h2 class="text-xl font-black mb-8 uppercase tracking-widest" data-i18n="Tariff & Preferences">Tariff & Preferences</h2>
-                <div class="flex flex-col sm:flex-row gap-5 mb-8">
-                    <div class="flex-1">
-                        <label class="text-[10px] font-black tracking-widest text-gray-500 uppercase block mb-3" data-i18n="RATE">RATE</label>
-                        <input type="number" id="rateInput" step="0.5" min="0" onchange="saveSettings()" class="neu-input neu-pressed rounded-xl px-5 py-4 w-full text-sm font-black">
+        <main id="tab-settings" class="tab-content hidden space-y-4 sm:space-y-6">
+            <!-- Tariff & General Settings -->
+            <section class="glass-panel p-5 sm:p-8">
+                <h2 class="text-lg sm:text-xl font-black tracking-tight mb-5" data-i18n="Tariff & Preferences">Tariff & Preferences</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+                    <div>
+                        <label class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2" data-i18n="RATE">Tariff Base Rate</label>
+                        <input type="number" id="rateInput" step="0.5" min="0" onchange="saveSettings()" class="glass-input px-4 py-3 w-full text-xs font-mono font-bold">
                     </div>
-                    <div class="flex-1">
-                        <label class="text-[10px] font-black tracking-widest text-gray-500 uppercase block mb-3" data-i18n="CURRENCY">CURRENCY</label>
-                        <select id="currencySelect" onchange="saveSettings()" class="neu-input neu-pressed rounded-xl px-5 py-4 w-full text-sm font-black">
-                            <option value="BDT">BDT (৳)</option><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option><option value="CNY">CNY (¥)</option>
+                    <div>
+                        <label class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2" data-i18n="CURRENCY">Hub Currency</label>
+                        <select id="currencySelect" onchange="saveSettings()" class="glass-input px-4 py-3 w-full text-xs font-bold">
+                            <option value="BDT">BDT (৳)</option>
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="CNY">CNY (¥)</option>
                         </select>
                     </div>
                 </div>
-                <div class="mb-8">
-                    <label class="text-[10px] font-black tracking-widest text-gray-500 uppercase block mb-3" data-i18n="WEATHER LOCATION">WEATHER LOCATION</label>
-                    <div class="flex gap-3">
-                        <input type="text" id="locInput" class="neu-input neu-pressed rounded-xl px-5 py-4 w-full text-sm font-black">
-                        <button onclick="saveLocation()" data-i18n="Save" class="neu-flat neu-btn rounded-xl px-6 font-black uppercase tracking-widest text-accent-blue">Save</button>
-                    </div>
-                </div>
-                <div class="flex flex-col sm:flex-row gap-4">
-                    <button onclick="promptBudget()" class="flex-1 neu-flat neu-btn rounded-2xl py-4 flex items-center justify-center gap-3">
-                        <span class="text-xl">🎯</span> <span class="font-black text-gray-700 dark:text-gray-200 uppercase tracking-widest" data-i18n="Set Budget">Set Budget</span>
-                    </button>
-                    <button onclick="exportData()" class="flex-1 neu-flat neu-btn rounded-2xl py-4 flex items-center justify-center gap-3">
-                        <span class="text-xl">📥</span> <span class="font-black text-accent-blue uppercase tracking-widest" data-i18n="Export CSV">Export CSV</span>
-                    </button>
-                </div>
-            </div>
 
-            <div class="neu-flat rounded-[30px] p-6 sm:p-10">
-                <h2 class="text-xl font-black mb-8 uppercase tracking-widest" data-i18n="System Management">System Management</h2>
-                <div class="flex flex-col sm:flex-row gap-4 mb-5">
-                    <button onclick="addNewDevice()" class="flex-1 neu-flat neu-btn rounded-2xl py-4 flex items-center justify-center gap-3">
-                        <span class="text-xl text-accent-green">➕</span> <span class="font-black text-gray-700 dark:text-gray-200 uppercase tracking-widest" data-i18n="Add Device">Add Device</span>
+                <div class="mb-6">
+                    <label class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2" data-i18n="WEATHER LOCATION">Weather Geocoding Location</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="locInput" class="glass-input px-4 py-3 w-full text-xs font-semibold">
+                        <button onclick="saveLocation()" data-i18n="Save" class="apple-btn px-5 text-xs font-bold">Save</button>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="promptBudget()" class="flex-1 glass-card-subtle py-3 px-3 font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-slate-500/10 active:scale-[0.98] transition">
+                        <span>🎯</span> <span data-i18n="Set Budget">Set Budget</span>
                     </button>
-                    <div class="flex gap-4 flex-1">
-                        <button onclick="renameDevice()" class="flex-1 neu-flat neu-btn rounded-2xl py-4 flex items-center justify-center gap-2">
-                            <span class="text-lg">✏️</span> <span class="font-black text-gray-700 dark:text-gray-200 uppercase tracking-widest text-xs" data-i18n="Rename">Rename</span>
+                    <button onclick="exportData()" class="flex-1 bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400 py-3 px-3 font-bold text-xs rounded-2xl flex items-center justify-center gap-1.5 hover:bg-sky-500/20 active:scale-[0.98] transition">
+                        <span>📥</span> <span data-i18n="Export CSV">Export CSV</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Device Hardware & State Controls -->
+            <section class="glass-panel p-5 sm:p-8">
+                <h2 class="text-lg sm:text-xl font-black tracking-tight mb-5" data-i18n="System Management">System Management</h2>
+                <div class="flex flex-col sm:flex-row gap-3 mb-4">
+                    <button onclick="addNewDevice()" class="apple-btn py-3 px-4 flex-1 text-xs font-bold flex items-center justify-center gap-2">
+                        <span>➕</span> <span data-i18n="Add Device">Add Device</span>
+                    </button>
+                    <div class="flex gap-3 flex-1">
+                        <button onclick="renameDevice()" class="glass-card-subtle font-bold flex-1 py-3 px-2 text-xs flex items-center justify-center gap-2 hover:bg-slate-500/10 transition">
+                            <span>✏️</span> <span data-i18n="Rename">Rename</span>
                         </button>
-                        <button onclick="removeDevice()" class="flex-1 neu-flat neu-btn rounded-2xl py-4 flex items-center justify-center gap-2">
-                            <span class="text-lg">🗑️</span> <span class="font-black text-accent-red uppercase tracking-widest text-xs" data-i18n="Remove Device">Remove</span>
+                        <button onclick="removeDevice()" class="bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 font-bold flex-1 py-3 px-2 rounded-2xl text-xs flex items-center justify-center gap-2 hover:bg-rose-500/20 transition">
+                            <span>🗑️</span> <span data-i18n="Remove Device">Remove</span>
                         </button>
                     </div>
                 </div>
-                <div class="flex flex-col sm:flex-row gap-4">
-                    <button onclick="powerCycle()" class="flex-1 neu-flat neu-btn rounded-2xl py-4 flex items-center justify-center gap-3">
-                        <span class="text-xl">🔌</span> <span class="font-black text-accent-orange uppercase tracking-widest text-xs sm:text-sm" data-i18n="Reboot">Reboot</span>
+
+                <div class="flex gap-3">
+                    <button onclick="powerCycle()" class="flex-1 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-bold py-3 rounded-2xl text-xs flex items-center justify-center gap-2 hover:bg-amber-500/20 transition">
+                        <span>🔌</span> <span data-i18n="Reboot">Power Cycle</span>
                     </button>
-                    <button onclick="clearData()" class="flex-1 neu-flat neu-btn rounded-2xl py-4 flex items-center justify-center gap-3">
-                        <span class="text-xl">🧹</span> <span class="font-black text-accent-red uppercase tracking-widest text-xs sm:text-sm" data-i18n="Clear History DB">Clear History</span>
+                    <button onclick="clearData()" class="flex-1 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 font-bold py-3 rounded-2xl text-xs flex items-center justify-center gap-2 hover:bg-rose-500/20 transition">
+                        <span>🧹</span> <span data-i18n="Clear History DB">Clear History</span>
                     </button>
                 </div>
-            </div>
-        </div>
+            </section>
+        </main>
     </div>
 
     <script src="/app.js"></script>
