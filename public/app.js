@@ -43,11 +43,11 @@ function updatePinUI() {
     const dots = document.getElementById('pinDots').children;
     for (let i = 0; i < 4; i++) {
         if (i < state.pinInput.length) {
-            dots[i].classList.add('bg-white');
-            dots[i].classList.remove('bg-transparent');
+            dots[i].classList.add('neu-pressed');
+            dots[i].classList.remove('neu-flat');
         } else {
-            dots[i].classList.remove('bg-white');
-            dots[i].classList.add('bg-transparent');
+            dots[i].classList.remove('neu-pressed');
+            dots[i].classList.add('neu-flat');
         }
     }
 }
@@ -58,10 +58,10 @@ function updatePinUI() {
 function toast(message, type = 'info') {
     const container = document.getElementById('toastContainer');
     const el = document.createElement('div');
-    el.className = `toast toast-${type}`;
-    el.textContent = message;
+    el.className = `toast neu-flat border-l-4 ${type === 'error' ? 'border-[#ff3b30] text-[#ff3b30]' : type === 'success' ? 'border-[#34c759] text-[#34c759]' : 'border-[#32ade6] text-[#32ade6]'}`;
+    el.innerHTML = `<span class="text-xl">${type === 'error' ? '⚠️' : type === 'success' ? '✅' : 'ℹ️'}</span> <span class="text-gray-700 dark:text-gray-200">${message}</span>`;
     container.appendChild(el);
-    setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; setTimeout(() => el.remove(), 300); }, 3200);
+    setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(15px) scale(0.9)'; setTimeout(() => el.remove(), 300); }, 3200);
 }
 
 function actionError(error, fallback = 'Something went wrong') {
@@ -181,21 +181,16 @@ function toggleTheme() {
 // Absolute Navigation Tab Switcher
 // ---------------------------------------------------------------------------
 function switchTab(tabId) {
-    // 1. Hide all tab content
     document.querySelectorAll('.tab-content').forEach((el) => el.classList.add('hidden'));
     
-    // 2. Bruteforce reset ALL tab buttons to the exact inactive styling 
-    // (This guarantees no ghost classes get left behind)
     document.querySelectorAll('.tab-btn').forEach((el) => {
-        el.className = "tab-btn flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-5 rounded-xl sm:rounded-full font-bold text-[10px] sm:text-sm transition-all duration-300 hover:scale-[0.98] text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white";
+        el.className = "tab-btn flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 py-3 px-6 rounded-2xl sm:rounded-full font-black text-[10px] sm:text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors";
     });
     
-    // 3. Show selected tab content
     document.getElementById(tabId).classList.remove('hidden');
     
-    // 4. Force inject exact active pill classes to the selected button
     const activeBtn = document.getElementById('btn-' + tabId);
-    activeBtn.className = "tab-btn flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-5 rounded-xl sm:rounded-full font-bold text-[10px] sm:text-sm transition-all duration-300 hover:scale-[0.98] bg-white dark:bg-[#2c2c2e] text-black dark:text-white shadow-sm";
+    activeBtn.className = "tab-btn flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 py-3 px-6 rounded-2xl sm:rounded-full font-black text-[10px] sm:text-sm neu-flat text-accent-blue transition-colors";
     
     if (tabId === 'tab-analytics') updateChart();
 }
@@ -425,7 +420,7 @@ async function masterToggle(isOn) {
 }
 
 // ---------------------------------------------------------------------------
-// Rendering: 2x2 Separated Activity Rings
+// Rendering: Separated Activity Rings
 // ---------------------------------------------------------------------------
 function updateActivityRings(todayKwh, todayCost) {
     const voltRaw = parseFloat(document.getElementById('val-volt').innerText) || 0;
@@ -460,28 +455,23 @@ function renderDeviceUI() {
     const usage = state.db.usage[state.activeId];
     if (!auto || !usage) return;
 
-    // Reset all mode buttons (Manual, Day, Night, Sleep)
+    // Reset all mode buttons
     document.querySelectorAll('.mode-btn').forEach((b) => {
-        b.classList.remove('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400', 'shadow-md', 'border-indigo-500', 'bg-indigo-500/10', 'text-indigo-600', 'dark:text-indigo-400');
-        b.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+        b.className = "mode-btn flex flex-col items-center justify-center p-4 sm:p-5 rounded-[20px] neu-flat neu-btn text-gray-500 transition-all";
     });
 
-    // Handle Conditional Sleep Highlight Logic
     let highlightedSleep = false;
     if (auto.timer && auto.timer.active && auto.timer.action === false) {
         const sleepBtn = document.getElementById('mode-sleep');
         if (sleepBtn) {
-            sleepBtn.classList.add('border-indigo-500', 'bg-indigo-500/10', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-md');
-            sleepBtn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+            sleepBtn.className = "mode-btn flex flex-col items-center justify-center p-4 sm:p-5 rounded-[20px] neu-pressed text-accent-purple transition-all";
             highlightedSleep = true;
         }
     }
 
-    // Handle standard Mode highlight if sleep isn't overriding Manual
     const modeBtn = document.getElementById(`mode-${auto.mode}`);
     if (modeBtn && !(auto.mode === 'manual' && highlightedSleep)) {
-        modeBtn.classList.add('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400', 'shadow-md');
-        modeBtn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+        modeBtn.className = "mode-btn flex flex-col items-center justify-center p-4 sm:p-5 rounded-[20px] neu-pressed text-accent-blue transition-all";
     }
 
     if (document.getElementById('standbyToggle').checked !== (auto.standbyKill || false)) document.getElementById('standbyToggle').checked = auto.standbyKill || false;
@@ -509,7 +499,7 @@ function renderDeviceUI() {
         const percent = ((todayKwh - yesterdayKwh) / yesterdayKwh) * 100;
         const pStr = state.lang === 'bn' ? percent.toLocaleString('bn-BD', { maximumFractionDigits: 0 }) : percent.toFixed(0);
         diffEl.innerText = percent > 0 ? `+${pStr}%` : `${pStr}%`;
-        diffEl.className = percent > 0 ? 'text-sm font-bold mb-1 text-red-500' : 'text-sm font-bold mb-1 text-green-500';
+        diffEl.className = percent > 0 ? 'text-sm font-black mb-1 text-accent-red' : 'text-sm font-black mb-1 text-accent-green';
     } else { diffEl.innerText = ''; }
 
     const mKwh = usage.monthly[usage.monthly.length - 1] || 0;
@@ -529,7 +519,7 @@ function renderDeviceUI() {
     const pct = budget > 0 ? Math.min(100, Math.max(0, ((mKwh * rate) / budget) * 100)) : 0;
     document.getElementById('budgetPercent').innerText = `${state.lang === 'bn' ? pct.toLocaleString('bn-BD', { maximumFractionDigits: 1 }) : pct.toFixed(1)}%`;
     document.getElementById('budgetBar').style.width = `${pct}%`;
-    document.getElementById('budgetBar').className = pct > 90 ? 'bg-red-500 h-3 rounded-full transition-all duration-1000' : 'bg-blue-500 h-3 rounded-full transition-all duration-1000';
+    document.getElementById('budgetBar').className = pct > 90 ? 'bg-red-500 h-full rounded-full transition-all duration-1000' : 'bg-blue-500 h-full rounded-full transition-all duration-1000';
 
     updateActivityRings(todayKwh, todayKwh * rate);
 
@@ -537,15 +527,15 @@ function renderDeviceUI() {
     list.innerHTML = '';
     (auto.schedules || []).forEach((s) => {
         const row = document.createElement('div');
-        row.className = 'flex justify-between items-center bg-black/5 dark:bg-white/5 p-3 rounded-xl text-sm mb-2';
-        const label = document.createElement('span'); label.className = 'font-mono font-bold';
+        row.className = 'flex justify-between items-center neu-flat p-4 rounded-[20px] text-sm mb-3';
+        const label = document.createElement('span'); label.className = 'font-black tracking-widest text-gray-700 dark:text-gray-200';
         label.textContent = s.time + ' ';
         const badge = document.createElement('span');
-        badge.className = `ml-3 px-2 py-1 rounded-lg text-xs font-black ${s.action ? 'text-green-500 bg-green-500/10' : 'text-red-500 bg-red-500/10'}`;
+        badge.className = `ml-4 px-3 py-1 rounded-full text-[10px] font-black uppercase ${s.action ? 'text-accent-green neu-pressed' : 'text-accent-red neu-pressed'}`;
         badge.textContent = s.action ? t('ON') : t('OFF');
         label.appendChild(badge);
         const delBtn = document.createElement('button');
-        delBtn.className = 'text-gray-400 hover:text-red-500 font-bold transition'; delBtn.textContent = '✕';
+        delBtn.className = 'text-gray-400 hover:text-red-500 font-black text-lg transition-colors'; delBtn.textContent = '✕';
         delBtn.onclick = () => removeSchedule(s.id);
         row.appendChild(label); row.appendChild(delBtn);
         list.appendChild(row);
@@ -575,16 +565,20 @@ function renderDeviceGrid() {
         const status = (state.allStatuses && state.allStatuses[d.id]) || {};
         const isOn = !!status.isPowerOn, online = !!status.online;
         const card = document.createElement('button');
-        card.className = `device-chip bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 ${d.id === state.activeId ? 'active-device' : ''}`;
+        
+        card.className = d.id === state.activeId 
+            ? `neu-pressed rounded-[24px] p-5 flex flex-col gap-3 cursor-pointer text-left`
+            : `neu-flat neu-btn rounded-[24px] p-5 flex flex-col gap-3 cursor-pointer text-left`;
+
         card.onclick = () => { state.activeId = d.id; document.getElementById('deviceSelector').value = d.id; switchDevice(); };
 
-        const topRow = document.createElement('div'); topRow.className = 'flex items-center justify-between gap-2';
+        const topRow = document.createElement('div'); topRow.className = 'flex items-center justify-between gap-3 w-full';
         const dot = document.createElement('span');
-        dot.className = `status-dot ${!online ? 'bg-gray-400' : isOn ? 'bg-green-500' : 'bg-gray-400'}`;
-        const name = document.createElement('span'); name.className = 'font-bold text-sm truncate'; name.textContent = d.name;
+        dot.className = `w-3 h-3 rounded-full flex-shrink-0 ${!online ? 'bg-gray-400' : isOn ? 'bg-[#34c759] shadow-[0_0_8px_#34c759]' : 'bg-gray-400'}`;
+        const name = document.createElement('span'); name.className = 'font-black text-xs uppercase tracking-widest truncate text-gray-700 dark:text-gray-200'; name.textContent = d.name;
         topRow.appendChild(dot); topRow.appendChild(name);
 
-        const bottomRow = document.createElement('div'); bottomRow.className = 'apple-sub text-xs font-semibold';
+        const bottomRow = document.createElement('div'); bottomRow.className = 'text-xs font-black tracking-widest text-gray-400 mt-1';
         bottomRow.textContent = !online ? t('OFFLINE') : `${(status.power || 0).toFixed(1)} W`;
 
         card.appendChild(topRow); card.appendChild(bottomRow);
@@ -605,20 +599,20 @@ function renderActivityLog() {
     if (!container) return;
     const items = (state.db && state.db.activityLog) || [];
     if (items.length === 0) {
-        container.innerHTML = `<p class="apple-sub text-sm">${t('No recent activity yet.')}</p>`;
+        container.innerHTML = `<p class="font-bold text-sm text-gray-500" data-i18n="No recent activity yet.">${t('No recent activity yet.')}</p>`;
         return;
     }
     container.innerHTML = '';
     items.slice(0, 20).forEach((item) => {
-        const row = document.createElement('div'); row.className = 'activity-row';
-        const icon = document.createElement('div'); icon.className = 'activity-icon text-gray-700 dark:text-gray-200';
+        const row = document.createElement('div'); row.className = 'flex gap-4 items-start py-4 border-b border-gray-300/50 dark:border-gray-700/50 last:border-0';
+        const icon = document.createElement('div'); icon.className = 'w-10 h-10 rounded-2xl flex-shrink-0 flex items-center justify-center text-lg neu-pressed text-gray-500';
         icon.textContent = activityIcons[item.type] || activityIcons.default;
-        const text = document.createElement('div'); text.className = 'flex-1';
-        const line1 = document.createElement('p'); line1.className = 'font-bold text-sm';
+        const text = document.createElement('div'); text.className = 'flex-1 pt-1';
+        const line1 = document.createElement('p'); line1.className = 'font-black text-xs uppercase tracking-widest text-gray-700 dark:text-gray-200';
         line1.textContent = item.deviceName || item.deviceId;
-        const line2 = document.createElement('p'); line2.className = 'apple-sub text-xs mt-0.5';
+        const line2 = document.createElement('p'); line2.className = 'font-bold text-xs mt-1 text-gray-500';
         line2.textContent = item.message;
-        const time = document.createElement('p'); time.className = 'apple-sub text-[0.65rem] font-bold tracking-wider mt-1 uppercase';
+        const time = document.createElement('p'); time.className = 'text-[10px] font-black tracking-widest mt-2 uppercase text-gray-400';
         time.textContent = new Date(item.ts).toLocaleString(state.lang === 'bn' ? 'bn-BD' : 'en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
         text.appendChild(line1); text.appendChild(line2); text.appendChild(time);
         row.appendChild(icon); row.appendChild(text);
@@ -664,19 +658,15 @@ async function promptBudget() {
 async function setMode(mode) {
     if(!state.activeId) return;
     
-    // Optimistic UI update (clears sleep as well)
     document.querySelectorAll('.mode-btn').forEach((b) => {
-        b.classList.remove('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400', 'shadow-md', 'border-indigo-500', 'bg-indigo-500/10', 'text-indigo-600', 'dark:text-indigo-400');
-        b.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+        b.className = "mode-btn flex flex-col items-center justify-center p-4 sm:p-5 rounded-[20px] neu-flat neu-btn text-gray-500 transition-all";
     });
     const modeBtn = document.getElementById(`mode-${mode}`);
     if (modeBtn) {
-        modeBtn.classList.add('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400', 'shadow-md');
-        modeBtn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+        modeBtn.className = "mode-btn flex flex-col items-center justify-center p-4 sm:p-5 rounded-[20px] neu-pressed text-accent-blue transition-all";
     }
     
     try { 
-        // Changing to any mode naturally disables sleep (since sleep sets manual mode + active timer)
         if(mode !== 'manual') {
             await apiFetch(`/api/automations/${state.activeId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ timer: { active: false, executeAt: 0, action: false } }) });
         }
@@ -730,15 +720,12 @@ function activateSleepMode() {
     document.getElementById('timerMins').value = 180; 
     document.getElementById('timerAction').value = 'false'; 
     
-    // Optimistic UI change to visually engage Sleep right away
     document.querySelectorAll('.mode-btn').forEach((b) => {
-        b.classList.remove('border-blue-500', 'bg-blue-500/10', 'text-blue-600', 'dark:text-blue-400', 'shadow-md', 'border-indigo-500', 'bg-indigo-500/10', 'text-indigo-600', 'dark:text-indigo-400');
-        b.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+        b.className = "mode-btn flex flex-col items-center justify-center p-4 sm:p-5 rounded-[20px] neu-flat neu-btn text-gray-500 transition-all";
     });
     const sleepBtn = document.getElementById('mode-sleep');
     if(sleepBtn) {
-        sleepBtn.classList.add('border-indigo-500', 'bg-indigo-500/10', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-md');
-        sleepBtn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+        sleepBtn.className = "mode-btn flex flex-col items-center justify-center p-4 sm:p-5 rounded-[20px] neu-pressed text-accent-purple transition-all";
     }
     
     setTimer(); 
@@ -794,7 +781,6 @@ async function togglePower() {
     btn.disabled = true;
     updatePowerUI(newState, true);
     
-    // Changing power manually defaults to manual mode
     setMode('manual');
 
     try {
@@ -808,16 +794,25 @@ function updatePowerUI(isOn, isOnline = true) {
     state.isPowerOn = isOn;
     const btn = document.getElementById('powerBtn'); const txt = document.getElementById('powerText'); const badge = document.getElementById('statusBadge');
     if (!isOnline) {
-        btn.className = 'power-btn bg-gray-600 cursor-not-allowed'; txt.innerText = t('OFFLINE'); txt.className = 'text-2xl sm:text-3xl font-black text-gray-500 tracking-widest mt-2 sm:mt-0';
-        badge.innerText = t('OFFLINE'); badge.className = 'px-4 py-1.5 rounded-full bg-red-500/20 text-red-500 text-[10px] sm:text-xs font-extrabold tracking-widest';
+        btn.className = 'power-btn-base neu-pressed text-gray-600 dark:text-gray-400 cursor-not-allowed'; 
+        txt.innerText = t('OFFLINE'); 
+        txt.className = 'text-4xl sm:text-5xl font-black mt-6 tracking-widest text-gray-500 uppercase';
+        badge.innerText = t('OFFLINE'); 
+        badge.className = 'px-5 py-2 rounded-full neu-pressed text-[10px] sm:text-xs font-black tracking-[0.2em] text-accent-red uppercase';
         return;
     }
     if (isOn) {
-        btn.className = 'power-btn power-on'; txt.innerText = t('ON'); txt.className = 'text-2xl sm:text-3xl font-black text-green-500 tracking-widest transition-colors mt-2 sm:mt-0';
-        badge.innerText = t('ONLINE'); badge.className = 'px-4 py-1.5 rounded-full bg-green-500/20 text-green-500 text-[10px] sm:text-xs font-extrabold tracking-widest transition-colors';
+        btn.className = 'power-btn-base power-on'; 
+        txt.innerText = t('ON'); 
+        txt.className = 'text-4xl sm:text-5xl font-black mt-6 tracking-widest text-accent-green uppercase transition-colors';
+        badge.innerText = t('ONLINE'); 
+        badge.className = 'px-5 py-2 rounded-full neu-pressed text-[10px] sm:text-xs font-black tracking-[0.2em] text-accent-green uppercase transition-colors';
     } else {
-        btn.className = 'power-btn power-off'; txt.innerText = t('OFF'); txt.className = 'text-2xl sm:text-3xl font-black text-red-500 tracking-widest transition-colors mt-2 sm:mt-0';
-        badge.innerText = t('STANDBY'); badge.className = 'px-4 py-1.5 rounded-full bg-gray-500/20 text-gray-500 text-[10px] sm:text-xs font-extrabold tracking-widest transition-colors';
+        btn.className = 'power-btn-base neu-flat text-gray-500 power-off'; 
+        txt.innerText = t('OFF'); 
+        txt.className = 'text-4xl sm:text-5xl font-black mt-6 tracking-widest text-gray-500 uppercase transition-colors';
+        badge.innerText = t('STANDBY'); 
+        badge.className = 'px-5 py-2 rounded-full neu-pressed text-[10px] sm:text-xs font-black tracking-[0.2em] text-gray-500 uppercase transition-colors';
         document.getElementById('val-power').innerText = state.lang === 'bn' ? '০.০ W' : '0.0 W';
     }
     
@@ -878,7 +873,8 @@ function updateChart() {
     const ctx = document.getElementById('usageChart').getContext('2d');
 
     const isDark = document.documentElement.classList.contains('dark');
-    const textColor = isDark ? '#98989d' : '#8e8e93';
+    const textColor = isDark ? '#a0aec0' : '#4a5568';
+    const gridColor = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)';
     const curr = state.db.settings.currency;
     const rate = state.db.settings.baseRateBDT * (state.db.currentRates[curr] || 1);
 
@@ -924,11 +920,11 @@ function updateChart() {
     if (state.chart) state.chart.destroy();
     state.chart = new Chart(ctx, {
         type: style,
-        data: { labels, datasets: [{ label, data, backgroundColor: style === 'line' ? `${color}22` : color, borderColor: color, borderWidth: 3, fill: style === 'line', tension: 0.4, borderRadius: style === 'bar' ? 8 : 0, pointRadius: style === 'line' ? 4 : 0 }] },
+        data: { labels, datasets: [{ label, data, backgroundColor: style === 'line' ? `${color}15` : color, borderColor: color, borderWidth: 3, fill: style === 'line', tension: 0.4, borderRadius: style === 'bar' ? 8 : 0, pointRadius: style === 'line' ? 4 : 0 }] },
         options: {
             responsive: true, maintainAspectRatio: false, animation: { duration: tf === 'realtime' ? 0 : 500 },
             plugins: { legend: { display: false }, tooltip: { backgroundColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)', titleColor: isDark ? 'white' : 'black', bodyColor: isDark ? 'white' : 'black', padding: 12, cornerRadius: 12, displayColors: false } },
-            scales: { y: { grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }, ticks: { color: textColor, font: { weight: 'bold' } }, beginAtZero: dt !== 'voltage' }, x: { grid: { display: false }, ticks: { color: textColor, font: { weight: 'bold' } } } },
+            scales: { y: { grid: { color: gridColor }, ticks: { color: textColor, font: { weight: 'bold' } }, beginAtZero: dt !== 'voltage' }, x: { grid: { display: false }, ticks: { color: textColor, font: { weight: 'bold' } } } },
         },
     });
 }
